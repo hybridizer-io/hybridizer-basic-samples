@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SparseMatrix
+namespace MatrixCusparse
 {
     class VectorReader
     {
@@ -18,6 +18,17 @@ namespace SparseMatrix
             {
                 res[i] = rand.NextFloat();
             }
+            return res;
+        }
+
+        public static float[] GetSplatVector(int size, float value)
+        {
+            float[] res = new float[size];
+            for (int i = 0; i < size; ++i)
+            {
+                res[i] = value;
+            }
+
             return res;
         }
 

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Hybridizer.Runtime.CUDAImports;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,6 +19,7 @@ namespace SparseMatrix
 
             SparseMatrix A = new SparseMatrix(SparseMatrixReader.ReadMatrixFromFile(args[0]));
             float[] X;
+            
 
             if (!String.IsNullOrEmpty(vectorFile))
             {
@@ -27,15 +30,53 @@ namespace SparseMatrix
                 X = VectorReader.GetRandomVector(A.rows.Length - 1);
             }
 
+            int redo = 1000;
+            double memoryOperationsSize = (double) redo * (3.0 * (double) (A.data.Length * sizeof(float)) + (double) (2 * A.rows.Length * sizeof(uint)) + (double) (A.indices.Length * sizeof(uint)));
+            Console.WriteLine("matrix read --- starting computations");
 
             float[] B = new float[A.rows.Length - 1];
 
-            Multiply(B, A, X, X.Length);
+            #region CSharp
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
 
-            for (int i = 0; i < A.rows.Length - 1; ++i)
+            for (int i = 0; i < redo; ++i)
             {
-                Console.WriteLine("{0}", B[i]);
+                Multiply(B, A, X, X.Length);
             }
+            timer.Stop();
+
+            double BW = 1.0E-9 * memoryOperationsSize / (timer.ElapsedMilliseconds * 1.0E-3);
+
+            Console.WriteLine("time C# = " + timer.ElapsedMilliseconds + " ms");
+            Console.WriteLine("DONE -- BW = " + BW + " GB/S");
+            #endregion
+
+            #region CUDA
+            HybRunner runner = HybRunner.Cuda("SparseMatrix_CUDA.dll").SetDistrib(20, 256);
+            dynamic wrapper = runner.Wrap(new Program());
+
+            Stopwatch timer_cuda = new Stopwatch();
+            timer_cuda.Start();
+
+            for (int i = 0; i < redo; ++i)
+            {
+                wrapper.Multiply(B, A, X, X.Length);
+            }
+            timer_cuda.Stop();
+
+            double BWCUDA = 1.0E-9 * memoryOperationsSize / (timer_cuda.ElapsedMilliseconds * 1.0E-3);
+            double BWWithout = 1.0E-9 * memoryOperationsSize / (runner.LastKernelDuration.ElapsedMilliseconds * 1.0E-3);
+
+            Console.WriteLine("time CUDA      = " + timer_cuda.ElapsedMilliseconds + " ms");
+            Console.WriteLine("without memcpy = " + runner.LastKernelDuration.ElapsedMilliseconds + " ms");
+            Console.WriteLine("DONE -- BW = " + BWCUDA + " GB/S  Without memcpy = " + BWWithout + " GB/S");
+            #endregion
+
+            //for (int i = 0; i < A.rows.Length - 1; ++i)
+            //{
+            //    Console.WriteLine("{0}", B[i]);
+            //}
         }
 
         private static void ReadArguments(string[] args, out string matrixFile, out string vectorFile)
@@ -60,9 +101,10 @@ namespace SparseMatrix
 
         }
 
+        [EntryPoint]
         public static void Multiply(float[] res, SparseMatrix m, float[] v, int N)
         {
-            for (int i = 0; i < N; ++i)
+            Parallel.For(0, N, (i) =>
             {
                 uint rowless = m.rows[i];
                 uint rowup = m.rows[i + 1];
@@ -71,9 +113,8 @@ namespace SparseMatrix
                 {
                     tmp += v[m.indices[j]] * m.data[j];
                 }
-
                 res[i] = tmp;
-            }
+            });
         }
     }
 }
