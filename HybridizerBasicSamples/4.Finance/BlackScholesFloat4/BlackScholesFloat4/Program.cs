@@ -1,4 +1,5 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
+using Hybridizer.Basic.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

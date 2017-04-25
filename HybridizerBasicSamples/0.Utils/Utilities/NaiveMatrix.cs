@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NaiveMatrix
+namespace Hybridizer.Basic.Utilities
 {
     public class NaiveMatrix
     {
@@ -27,6 +27,13 @@ namespace NaiveMatrix
             set { this.values[i] = value; }
         }
 
+        public float[] Values
+        {
+            get { return this.values; }
+
+            set { this.values = value; }
+        }
+
         public void FillMatrix()
         {
             Random rand = new Random();
@@ -34,7 +41,7 @@ namespace NaiveMatrix
             {
                 for (int j = 0; j < this.Width; ++j)
                 {
-                    this[i * this.Width + j] = (float)rand.NextDouble();
+                    this[i * this.Width + j] = rand.NextFloat();
                 }
 
             }
@@ -73,7 +80,7 @@ namespace NaiveMatrix
             {
                 for (int j = 0; j < this.Width; ++j)
                 {
-                    if (this[i * this.Width + j] != m[i * m.Width + j])
+                    if (Math.Abs(this[i * this.Width + j] - m[i * m.Width + j]) > 1.0E-3)
                         return false;
                 }
             }
