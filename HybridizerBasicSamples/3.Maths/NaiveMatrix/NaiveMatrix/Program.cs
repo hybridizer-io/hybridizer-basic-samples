@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NaiveMatrixNamespace
+namespace Hybridizer.Basic.Maths
 {
     class Program
     {

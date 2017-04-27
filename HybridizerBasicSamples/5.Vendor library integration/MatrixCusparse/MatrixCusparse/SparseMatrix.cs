@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MatrixCusparse
+namespace Hybridizer.Basic.Integration
 {
     public class SparseMatrix
     {

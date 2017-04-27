@@ -1,5 +1,6 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
+using Hybridizer.Basic.Utilities;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -8,29 +9,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SparseMatrix
+namespace Hybridizer.Basic.Maths
 {
     class Program
     {
         static void Main(string[] args)
         {
-            string matrixFile, vectorFile;
-            ReadArguments(args, out matrixFile, out vectorFile);
 
-            SparseMatrix A = new SparseMatrix(SparseMatrixReader.ReadMatrixFromFile(args[0]));
-            float[] X;
-            
+            SparseMatrix A = SparseMatrix.Laplacian_1D(10000000);
 
-            if (!String.IsNullOrEmpty(vectorFile))
-            {
-                X = VectorReader.ReadVectorFromFile(vectorFile);
-            }
-            else
-            {
-                X = VectorReader.GetRandomVector(A.rows.Length - 1);
-            }
+            float[] X = VectorReader.GetSplatVector(10000000, 1.0F);
 
-            int redo = 1000;
+            int redo = 2;
             double memoryOperationsSize = (double) redo * (3.0 * (double) (A.data.Length * sizeof(float)) + (double) (2 * A.rows.Length * sizeof(uint)) + (double) (A.indices.Length * sizeof(uint)));
             Console.WriteLine("matrix read --- starting computations");
 

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConjugateGradient
+namespace Hybridizer.Basic.Maths
 {
     public class SparseMatrix
     {

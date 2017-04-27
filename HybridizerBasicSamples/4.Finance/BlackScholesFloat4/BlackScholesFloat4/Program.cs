@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BlackScholesFloat4
+namespace Hybridizer.Basic.Finance
 {
     class Program
     {

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConjugateGradient
+namespace Hybridizer.Basic.Maths
 {
     class Program
     {
@@ -48,7 +48,7 @@ namespace ConjugateGradient
                 alpha = Rtmp / ScalarProductVector(P, alphaA);
                 Xtmp = AddVector(Xtmp, MultiplyVectorByFloat(alpha, P));
                 R = SubstractVector(R, MultiplyVectorByFloat(alpha, alphaA));
-                if (NormVector(R) < eps)
+                if (SquaredNormL2(R) < eps*eps)
                 {
                     break;
                 }
@@ -74,11 +74,12 @@ namespace ConjugateGradient
                 {
                     tmp += v[m.indices[j]] * m.data[j];
                 }
+
                 res[i] = tmp;
             }
+
             return res;
         }
-
         
         public static float ScalarProductVector(float[] A, float[] B)
         {
@@ -91,14 +92,15 @@ namespace ConjugateGradient
             return res;
         }
         
-        public static float NormVector(float[] vector)
+        public static float SquaredNormL2(float[] vector)
         {
             float res = 0.0f;
             for (int i = 0; i < vector.Length; ++i)
             {
                 res += vector[i] * vector[i];
             }
-            return (float)Math.Sqrt((double)res);
+
+            return res;
 
         }
     }

@@ -5,10 +5,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Hybridizer.Basic.Utilities;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MatrixCusparse
+namespace Hybridizer.Basic.Integration
 {
     class Program
     {

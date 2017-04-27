@@ -33,9 +33,19 @@ namespace Hybridizer.Basic.Utilities
             return res;
         }
 
+        enum NameFileExtension
+        {
+            mtx
+        };
         public static float[] ReadVectorFromFile(String filePath)
         {
+            
             string path = GetPath(filePath);
+
+            if(IsInEnum(Path.GetExtension(path)))
+            {
+                throw new NotImplementedException("Not implemented function for the extension : " + Path.GetExtension(path));
+            }
 
             int rowCount;
             string line;
@@ -58,6 +68,18 @@ namespace Hybridizer.Basic.Utilities
             }
 
             return res;
+        }
+
+        public static bool IsInEnum(string s)
+        {
+            foreach(string enumeration in Enum.GetValues(typeof(NameFileExtension)))
+            {
+                if(s.Equals("." + (string)enumeration))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static string GetPath(string filePath)
