@@ -7,7 +7,7 @@ using System.Drawing;
 using Hybridizer.Runtime.CUDAImports;
 using System.Diagnostics;
 
-namespace Sobel
+namespace Hybridizer.Basic.Imaging
 {
     class Program
     {

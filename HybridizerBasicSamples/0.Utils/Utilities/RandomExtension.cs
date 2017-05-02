@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MatrixCusparse
+namespace Hybridizer.Basic.Utilities
 {
-    static class RandomExtension
+    public static class RandomExtension
     {
         public static float NextFloat(this Random a, float min = 0.0f, float max = 1.0f)
         {

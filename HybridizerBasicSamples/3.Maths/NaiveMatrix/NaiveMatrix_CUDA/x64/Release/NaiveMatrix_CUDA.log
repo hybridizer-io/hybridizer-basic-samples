@@ -1,0 +1,63 @@
+﻿  
+  C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix_CUDA>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"     --keep-dir x64\Release -maxrregcount=0  --machine 64 --compile      -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_WINDLL -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS /Zi  /MD " -o x64\Release\hybridizer.wrappers.cu.obj "C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix_CUDA\generated-sources\hybridizer.wrappers.cu" -clean 
+CUDACOMPILE : nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+  hybridizer.wrappers.cu
+  Build satellite full path: C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.VSIntegration.BuildSatellite.exe
+  Hybridizer binary full path: C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.exe
+  Satellite working directory: C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix_CUDA\generated-sources
+  Builtins: C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins
+  Hybridizer out: [INFO] : entering BuildSatellite program 
+  Hybridizer out: [INFO] : Loaded assembly from C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix\bin\x64\Release\NaiveMatrix.exe 
+  Hybridizer out: [WARNING] : EntryPoint attribute with empty or null name for method <ComputeRowsOfProduct> in type <NaiveMatrix.Program>, using default symbols instead 
+  Hybridizer out: [INFO] : Found type <NaiveMatrix.Program> with <1> methods 
+  Hybridizer out: [INFO] : Done searching assembly for hybridizer directives 
+  Hybridizer out: Hybridizer full path: C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.exe 
+  Hybridizer out: [INFO] : found type Altimesh.Hybridizer.Application.Program 
+  Hybridizer out: [INFO] : found method Void Main(System.String[]) 
+  Hybridizer out: 2017/04/11 13:23:06:670 [INFO]  Hybridizer-BASIC (c) Altimesh 2011-2016 - 1.0.5176.7608 
+  Hybridizer out: 2017/04/11 13:23:07:092 [INFO]  Hybridizer license: Trial version - for evaluation purpose only 
+  Hybridizer out: 2017/04/11 13:23:07:295 [INFO]  Processing assembly C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix\bin\x64\Release\NaiveMatrix.exe 
+  Hybridizer out: 2017/04/11 13:23:07:310 [WARN]  WARNING : using default builtins 
+  Hybridizer out: 2017/04/11 13:23:07:326 [INFO]  Loaded built-in configuration from C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins 
+  Hybridizer out: 2017/04/11 13:23:07:326 [INFO]  Processing type NaiveMatrix.Program 
+  Hybridizer out: 2017/04/11 13:23:07:388 [INFO]  Registering methods 
+  Hybridizer out: 2017/04/11 13:23:07:451 [INFO]  Reading for method Void ComputeRowsOfProduct(NaiveMatrix.NaiveMatrix, NaiveMatrix.NaiveMatrix, NaiveMatrix.NaiveMatrix, Int32, Int32, Int32) from assembly NaiveMatrix, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null 
+  Hybridizer out: 2017/04/11 13:23:07:592 [INFO]  Flavor CUDA has 1 methods 
+  Hybridizer out: 2017/04/11 13:23:07:607 [INFO]  Flavor CUDA has 1 methods 
+  Hybridizer out: 2017/04/11 13:23:07:623 [INFO]  Listing types found for flavor <CUDA> 
+  Hybridizer out: 2017/04/11 13:23:07:623 [INFO]  found type <System.Object> used by :  
+  Hybridizer out: 2017/04/11 13:23:07:623 [INFO]               <NaiveMatrix.Program>  
+  Hybridizer out: 2017/04/11 13:23:07:623 [INFO]               <NaiveMatrix.NaiveMatrix>  
+  Hybridizer out: 2017/04/11 13:23:07:623 [INFO]  found type <System.Single[]> used by :  
+  Hybridizer out: 2017/04/11 13:23:07:623 [INFO]               <NaiveMatrix.NaiveMatrix>  
+  Hybridizer out: 2017/04/11 13:23:07:623 [INFO]  found type <System.Int32> used by :  
+  Hybridizer out: 2017/04/11 13:23:07:623 [INFO]               <NaiveMatrix.NaiveMatrix>  
+  Hybridizer out: 2017/04/11 13:23:07:623 [INFO]  Done listing types found for flavor <CUDA> 
+  Hybridizer out: Not Found Altimesh.Hybridizer.Application.resources, Version=1.0.5176.0, Culture=fr-FR, PublicKeyToken=null 
+  Hybridizer out: Not Found Altimesh.Hybridizer.Application.resources, Version=1.0.5176.0, Culture=fr-FR, PublicKeyToken=null 
+  Hybridizer out: Not Found Altimesh.Hybridizer.Application.resources, Version=1.0.5176.0, Culture=fr, PublicKeyToken=null 
+  Hybridizer out: Not Found Altimesh.Hybridizer.Application.resources, Version=1.0.5176.0, Culture=fr, PublicKeyToken=null 
+  Hybridizer out: Not Found mscorlib.XmlSerializers, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089 
+  Hybridizer out: Not Found Altimesh.Hybridizer.Application.resources, Version=1.0.5176.0, Culture=fr-FR, PublicKeyToken=null 
+  Hybridizer out: Not Found Altimesh.Hybridizer.Application.resources, Version=1.0.5176.0, Culture=fr-FR, PublicKeyToken=null 
+  Hybridizer out: Not Found Altimesh.Hybridizer.Application.resources, Version=1.0.5176.0, Culture=fr, PublicKeyToken=null 
+  Hybridizer out: Not Found Altimesh.Hybridizer.Application.resources, Version=1.0.5176.0, Culture=fr, PublicKeyToken=null 
+  Hybridizer out: [INFO] : PTXJitter called <"C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.PTXJitterService.8.0.exe" 00000000000004F0 00000000000004EC> 
+  Hybridizer out: [INFO] : Fini Void Main(System.String[]) 
+  Hybridizer out: [WARNING] : License is about to expire in less than 1 month 
+  Hybridizer out: [DONE] 
+  Compiling CUDA source file generated-sources\hybridizer.wrappers.cu...
+  
+  C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix_CUDA>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\nvcc.exe" -gencode=arch=compute_20,code=\"sm_20,compute_20\" --use-local-env --cl-version 2015 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include"     --keep-dir x64\Release -maxrregcount=0  --machine 64 --compile -cudart static     -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_WINDLL -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS /Zi  /MD " -o x64\Release\hybridizer.wrappers.cu.obj "C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix_CUDA\generated-sources\hybridizer.wrappers.cu" 
+CUDACOMPILE : nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+  hybridizer.wrappers.cu
+  hybridizer.generated.cpp
+     Creating library C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix\bin\x64\Release\NaiveMatrix_CUDA.lib and object C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix\bin\x64\Release\NaiveMatrix_CUDA.exp
+  Generating code
+  Finished generating code
+  NaiveMatrix_CUDA.vcxproj -> C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix\bin\x64\Release\NaiveMatrix_CUDA.dll
+  NaiveMatrix_CUDA.vcxproj -> C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix\bin\x64\Release\NaiveMatrix_CUDA.pdb (Full PDB)
+  copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart*.dll" "C:\Users\axel\Documents\Source\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix\bin\x64\Release\"
+  C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart32_80.dll
+  C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cudart64_80.dll
+          2 fichier(s) copié(s).

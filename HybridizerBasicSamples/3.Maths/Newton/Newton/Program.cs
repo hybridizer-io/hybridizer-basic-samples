@@ -5,15 +5,15 @@ using System;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 
-namespace Mandelbrot
+namespace Hybridizer.Basic.Maths
 {
     class Program
     {
         const int maxiter = 1024;
         const int N = 2048;
-        const float fromX = -1.0f;
-        const float fromY = -1.0f;
-        const float size = 2.0f;
+        const float fromX = -1.5f;
+        const float fromY = -1.5f;
+        const float size = 3.0f;
         const float h = size / (float)N;
         const float tol = 0.0000001f;
 

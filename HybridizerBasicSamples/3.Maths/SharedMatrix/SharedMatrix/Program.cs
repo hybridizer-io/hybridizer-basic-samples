@@ -1,4 +1,5 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
+using Hybridizer.Basic.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-namespace SharedMatrix
+namespace Hybridizer.Basic.Maths
 {
     class Program
     {
