@@ -34,14 +34,20 @@ namespace Hybridizer.Basic.Utilities
             set { this.values = value; }
         }
 
-        public void FillMatrix()
+        public void FillMatrix(float min = 0.0f, float max = 1.0f)
         {
+            if(min >max)
+            {
+                float tmp = min;
+                min = max;
+                max = tmp;
+            }
             Random rand = new Random();
             for (int i = 0; i < this.Height; ++i)
             {
                 for (int j = 0; j < this.Width; ++j)
                 {
-                    this[i * this.Width + j] = rand.NextFloat();
+                    this[i * this.Width + j] = rand.NextFloat(min, max);
                 }
 
             }
