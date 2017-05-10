@@ -36,7 +36,6 @@ namespace HelloWorld
                 b[i] = rand.NextDouble();
             }
 
-
             // create an instance of HybRunner object to wrap calls on GPU
             HybRunner runner = HybRunner.Cuda("HelloWorld_CUDA.dll").SetDistrib(20,256);
 
@@ -49,7 +48,6 @@ namespace HelloWorld
             // run the method on GPU
             wrapped.Run(N, acuda, b);
             
-
             //Stop the stopwatch
             timer.Stop();
 
