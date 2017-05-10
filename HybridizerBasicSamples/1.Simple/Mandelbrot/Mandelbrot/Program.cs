@@ -22,7 +22,7 @@ namespace Mandelbrot
             float x = 0.0f;
             float y = 0.0f;
             float xx = 0.0f, yy = 0.0f;
-            while (xx + yy <= 4.0 && result < maxiter)
+            while (xx + yy <= 4.0f && result < maxiter)
             {
                 xx = x * x;
                 yy = y * y;
