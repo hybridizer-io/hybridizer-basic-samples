@@ -64,7 +64,7 @@ namespace Hybridizer.Basic.Maths
             return (float)Math.Sqrt(a);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining), IntrinsicFunction("fabs")]
+        [MethodImpl(MethodImplOptions.AggressiveInlining), IntrinsicFunction("fabsf")]
         private static float fabsf(float a)
         {
             return (float)Math.Abs(a);
