@@ -33,8 +33,11 @@ namespace Hybridizer.Basic.Finance
             Random rand = new Random(Guid.NewGuid().GetHashCode());
             for (int i = 0; i < OPT_N; ++i)
             {
+                callResult_cuda[i] = 0.0f;
                 callResult_net[i] = 0.0f;
                 putResult_net[i] = -1.0f;
+                putResult_cuda[i] = -1.0f;
+                
                 stockPrice_net[i] = (float)rand.NextDouble() * 25.0f + 5.0f;
                 optionStrike_net[i] = (float)rand.NextDouble() * 99.0f + 1.0f;
                 optionYears_net[i] = (float)rand.NextDouble() * 9.75f + 0.25f;
