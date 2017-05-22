@@ -36,6 +36,9 @@ namespace Hybridizer.Basic.Finance
             {
                 callResult_net[i] = new float4(0.0f, 0.0f, 0.0f, 0.0f);
                 putResult_net[i] = new float4(-1.0f, -1.0f, -1.0f, -1.0f) ;
+                callResult_cuda[i] = new float4(0.0f, 0.0f, 0.0f, 0.0f);
+                putResult_cuda[i] = new float4(-1.0f, -1.0f, -1.0f, -1.0f);
+
                 stockPrice_net[i] = rand.NextFloat4(5.0f, 30.0f);
                 optionStrike_net[i] = rand.NextFloat4(1.0f, 100.0f);
                 optionYears_net[i] = rand.NextFloat4(0.25f, 10f);
