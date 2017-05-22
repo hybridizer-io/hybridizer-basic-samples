@@ -23,3 +23,13 @@ bin
 obj
 /HybridizerBasicSamples/3.Maths/Newton/Newton_CUDA/generated-sources
 /HybridizerBasicSamples/3.Maths/Newton/Newton_CUDA/x64
+/HybridizerBasicSamples/2.Imaging/Sobel_CUDA/x64/Release/Sobel_CUDA.tlog
+/HybridizerBasicSamples/2.Imaging/Sobel_CUDA/generated-sources
+/HybridizerBasicSamples/2.Imaging/Sobel_CUDA/x64/Release
+/HybridizerBasicSamples/2.Imaging/Sobel/Hybridizer.Runtime.CUDAImports.dll
+/HybridizerBasicSamples/3.Maths/NaiveMatrix/NaiveMatrix/Hybridizer.Runtime.CUDAImports.dll
+/HybridizerBasicSamples/3.Maths/Newton/Newton/Hybridizer.Runtime.CUDAImports.dll
+/HybridizerBasicSamples/3.Maths/SharedMatrix/SharedMatrix/Hybridizer.Runtime.CUDAImports.dll
+/HybridizerBasicSamples/4.Finance/BlackScholes/BlackScholes/Hybridizer.Runtime.CUDAImports.dll
+/HybridizerBasicSamples/4.Finance/BlackScholesFloat4/BlackScholesFloat4/Hybridizer.Runtime.CUDAImports.dll
+/HybridizerBasicSamples/Visual Studio 2015/Visualizers/attribcache140.bin

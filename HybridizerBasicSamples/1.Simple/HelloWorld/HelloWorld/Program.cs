@@ -15,16 +15,14 @@ namespace HelloWorld
 
         static void Main(string[] args)
         {
-            //Initialize a stopwatch
-            Stopwatch timer = new Stopwatch();
-
-            int N = 1024 * 1024 * 64;
+            // 268 MB allocated on device -- should fit in every CUDA compatible GPU
+            int N = 1024 * 1024 * 16;
             double[] acuda = new double[N];
             double[] adotnet = new double[N];
 
             double[] b = new double[N];
 
-            double dataGo = N * 3 * 8 * 1e-09;
+            double dataGo = (double) N * 3.0 * 8.0 * 1e-09;
 
             Random rand = new Random();
 
@@ -36,36 +34,17 @@ namespace HelloWorld
                 b[i] = rand.NextDouble();
             }
 
-
             // create an instance of HybRunner object to wrap calls on GPU
             HybRunner runner = HybRunner.Cuda("HelloWorld_CUDA.dll").SetDistrib(20,256);
 
             // create a wrapper object to call GPU methods instead of C#
             dynamic wrapped = runner.Wrap(new Program());
-
-            //Start the stopwatch
-            timer.Start();
-
+            
             // run the method on GPU
             wrapped.Run(N, acuda, b);
             
-
-            //Stop the stopwatch
-            timer.Stop();
-
-            Console.WriteLine("CUDA Bandwith  :  {0} Gb/s", Math.Round(dataGo / (1.0E-3 * timer.ElapsedMilliseconds),3));
-            Console.WriteLine("without memcpy : {0} Gb/s", Math.Round(dataGo / (1.0E-3 * runner.LastKernelDuration.ElapsedMilliseconds), 3));
-
-            //Restart the stopwatch
-            timer.Restart();
-
-            // run the method on CPU
+            // run .Net method
             Run(N, adotnet, b);
-
-            //Stop the stopwatch
-            timer.Stop();
-
-            Console.WriteLine("C# Bandwith    : {0} Gb/s", Math.Round(dataGo / (1.0E-3 * timer.ElapsedMilliseconds), 3));
 
             // verify the results
             for (int k = 0; k < N; ++k)

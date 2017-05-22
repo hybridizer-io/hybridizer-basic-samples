@@ -11,7 +11,7 @@ namespace HelloWorld
         {
             for (int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
             {
-                Console.Out.Write("hello th = {0} bk = {1} a[i] = {2}\n", threadIdx.x, blockIdx.x, a[i]);
+                Console.Out.Write("hello from thread = {0} in block = {1} a[i] = {2}\n", threadIdx.x, blockIdx.x, a[i]);
             };
         }
 

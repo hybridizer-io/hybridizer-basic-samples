@@ -22,7 +22,7 @@ namespace Mandelbrot
             float x = 0.0f;
             float y = 0.0f;
             float xx = 0.0f, yy = 0.0f;
-            while (xx + yy <= 4.0 && result < maxiter)
+            while (xx + yy <= 4.0f && result < maxiter)
             {
                 xx = x * x;
                 yy = y * y;
@@ -74,30 +74,20 @@ namespace Mandelbrot
             int[] light_cuda = new int[N * N];
 
             #region c#
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
             for (int i = 0; i < redo; ++i)
             {
                 ComputeImage(light_net, false);
             }
-            watch.Stop();
-            double firstWatchResult = 1.0E-6 * ((double)(N * N) * (double)redo / (1.0E-3 * watch.ElapsedMilliseconds));
-            
             #endregion c#
 
             HybRunner runner = HybRunner.Cuda("Mandelbrot_CUDA.dll").SetDistrib(N, 256);
             wrapper = runner.Wrap(new Program());
 
             #region cuda
-            watch.Restart();
             for (int i = 0; i < redo; ++i)
             {
                 ComputeImage(light_cuda, true);
             }
-            watch.Stop();
-            Console.WriteLine("C#   MPixels/s :  {0}", firstWatchResult);
-            Console.WriteLine("CUDA MPixels/s :  {0}", 1.0E-6 * ((double)(N * N) * (double)redo / (1.0E-3 * watch.ElapsedMilliseconds)));
-            Console.WriteLine("without memcpy : {0}", 1.0E-6 * ((double)(N * N) / (1.0E-3 * runner.LastKernelDuration.ElapsedMilliseconds)));
             #endregion
 
             #region save to image
