@@ -61,6 +61,19 @@ public:
 		cudaEventSynchronize(endingTime);
 	}
 
+	void start(cudaStream_t stream)
+	{
+		cudaEventRecord(startingTime, stream);
+		cudaEventSynchronize(startingTime);
+	}
+
+	void stop(cudaStream_t stream)
+	{
+		cudaDeviceSynchronize();
+		cudaEventRecord(endingTime, stream);
+		cudaEventSynchronize(endingTime);
+	}
+
 	double seconds() const
 	{
 		float elapsedTime;
