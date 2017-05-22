@@ -54,7 +54,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Hybridizer.Runtime.CUDAImports">
-      <HintPath>..\..\..\..\..\..\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.Runtime.CUDAImports.dll</HintPath>
+      <HintPath>.\Hybridizer.Runtime.CUDAImports.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />

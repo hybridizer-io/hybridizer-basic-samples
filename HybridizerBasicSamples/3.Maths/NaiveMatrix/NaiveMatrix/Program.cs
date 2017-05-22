@@ -37,9 +37,7 @@ namespace Hybridizer.Basic.Maths
             NaiveMatrix res_cuda = new NaiveMatrix(widthB, heightA);
 
             double numberCompute = ((double)matrixA.Height * (double)matrixA.Width * (double)matrixB.Width) * 3.0E-9;
-
-            Stopwatch watch = new Stopwatch();
-
+            
             matrixA.FillMatrix();
             matrixB.FillMatrix();
 
@@ -49,22 +47,14 @@ namespace Hybridizer.Basic.Maths
 
             HybRunner runner = HybRunner.Cuda("NaiveMatrix_CUDA.dll").SetDistrib(4, 5, 8, 32, 32, 0);
             dynamic wrapper = runner.Wrap(new Program());
-
-            watch.Start();
-
+            
             for (int i = 0; i < redo; ++i)
             {
                 wrapper.ComputeRowsOfProduct(res_cuda, matrixA, matrixB, 0, res_cuda.Height);
             }
-
-            watch.Stop();
-
-            Console.WriteLine("CUDA GFlop/s : {0}", numberCompute * (double)redo / (watch.ElapsedMilliseconds * 1.0E-03));
-            Console.WriteLine("without memcpy         : {0}", numberCompute / (runner.LastKernelDuration.ElapsedMilliseconds * 1.0E-03));
             #endregion
 
             #region C#
-            watch.Restart();
 
             for (int i = 0; i < redo; ++i)
             {
@@ -73,8 +63,6 @@ namespace Hybridizer.Basic.Maths
                     ComputeRowsOfProduct(res_net, matrixA, matrixB, line, line + 1);
                 });
             }
-            watch.Stop();
-            Console.WriteLine("C#   GFlop/s :   {0}", numberCompute * (double)redo / (watch.ElapsedMilliseconds * 1.0E-03));
             #endregion
 
             // verify the results

@@ -25,7 +25,7 @@
     <ClCompile Include="$(HybridizerWorkingDirectory)\hybridizer.generated.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{19455D37-1085-45A9-B381-A52B8344CEF2}</ProjectGuid>
+    <ProjectGuid>{DD6B55F6-44DB-4849-B958-9B91A4BCC276}</ProjectGuid>
     <RootNamespace>BlackScholes_CUDA</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -58,7 +58,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />
-    <Import Project="..\..\..\..\..\..\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\Hybridizer.props" />
+    <Import Project="$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\Hybridizer.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -75,43 +75,39 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>C:\Users\axel\Documents\Source\HybridizerBasicSamples\4.Finance\BlackScholes\BlackScholes\bin\Debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>C:\Users\axel\Documents\Source\HybridizerBasicSamples\4.Finance\BlackScholes\BlackScholes\bin\Debug\</OutDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>C:\Users\axel\Documents\Source\HybridizerBasicSamples\4.Finance\BlackScholes\BlackScholes\bin\Release\</OutDir>
+    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\4.Finance\BlackScholes\BlackScholes\bin\x64\Debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>C:\Users\axel\Documents\Source\HybridizerBasicSamples\4.Finance\BlackScholes\BlackScholes\bin\Release\</OutDir>
+    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\4.Finance\BlackScholes\BlackScholes\bin\x64\Release\</OutDir>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <HybridizerFlavors>CUDA</HybridizerFlavors>
-    <HybridizerBuiltInFiles>C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
-    <HybridizerJitterServicePath>C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
+    <HybridizerBuiltInFiles>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
+    <HybridizerJitterServicePath>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
     <HybridizerJitterServiceOptions>--gpu-architecture=auto;--relocatable-device-code=false;-lineinfo;--std=c++11;-DNO_EXCEPTION</HybridizerJitterServiceOptions>
     <HybridizerDllFullPath>..\BlackScholes\BlackScholes.csproj</HybridizerDllFullPath>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <HybridizerFlavors>CUDA</HybridizerFlavors>
-    <HybridizerBuiltInFiles>C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
-    <HybridizerJitterServicePath>C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
+    <HybridizerBuiltInFiles>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
+    <HybridizerJitterServicePath>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
     <HybridizerJitterServiceOptions>--gpu-architecture=auto;--relocatable-device-code=false;-lineinfo;--std=c++11;-DNO_EXCEPTION</HybridizerJitterServiceOptions>
     <HybridizerDllFullPath>..\BlackScholes\BlackScholes.csproj</HybridizerDllFullPath>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <HybridizerFlavors>CUDA</HybridizerFlavors>
-    <HybridizerBuiltInFiles>C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
-    <HybridizerJitterServicePath>C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
+    <HybridizerBuiltInFiles>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
+    <HybridizerJitterServicePath>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
     <HybridizerJitterServiceOptions>--gpu-architecture=auto;--relocatable-device-code=false;-lineinfo;--std=c++11;-DNO_EXCEPTION</HybridizerJitterServiceOptions>
     <HybridizerDllFullPath>..\BlackScholes\BlackScholes.csproj</HybridizerDllFullPath>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <HybridizerFlavors>CUDA</HybridizerFlavors>
-    <HybridizerBuiltInFiles>C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
-    <HybridizerJitterServicePath>C:\Users\axel\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
+    <HybridizerBuiltInFiles>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\config\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
+    <HybridizerJitterServicePath>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
     <HybridizerJitterServiceOptions>--gpu-architecture=auto;--relocatable-device-code=false;-lineinfo;--std=c++11;-DNO_EXCEPTION</HybridizerJitterServiceOptions>
     <HybridizerDllFullPath>..\BlackScholes\BlackScholes.csproj</HybridizerDllFullPath>
   </PropertyGroup>
@@ -196,6 +192,6 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />
-    <Import Project="..\..\..\..\..\..\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\Hybridizer.targets" />
+    <Import Project="$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\Hybridizer.targets" />
   </ImportGroup>
 </Project>
