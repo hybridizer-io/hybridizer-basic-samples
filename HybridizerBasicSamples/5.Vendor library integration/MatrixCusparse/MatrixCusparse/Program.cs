@@ -1,5 +1,4 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
-using Hybridizer.Runtime.CUDAImports.cusparse;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,10 +7,11 @@ using System.Runtime.InteropServices;
 using Hybridizer.Basic.Utilities;
 using System.Text;
 using System.Threading.Tasks;
+using Hybridizer.Runtime.CUDAImports.cusparse;
 
 namespace Hybridizer.Basic.Integration
 {
-    class Program
+    unsafe class Program
     {
         static void Main(string[] args)
         {
@@ -23,30 +23,25 @@ namespace Hybridizer.Basic.Integration
             float[] x = VectorReader.GetSplatVector(a.rows.Length - 1, 1.0F);
             float[] b = new float[x.Length];
                
-            Stopwatch watch = new Stopwatch();
-
             float alpha = 1.0f;
             float beta = 0.0f;
 
             cusparseHandle_t handle;
-            CUBSPARSE_64_75.cusparseCreate(out handle);
+            CUBSPARSE_64_80.cusparseCreate(out handle);
 
             cusparseOperation_t transA = cusparseOperation_t.CUSPARSE_OPERATION_NON_TRANSPOSE;
 
             cusparseMatDescr_t descrA;
-            CUBSPARSE_64_75.cusparseCreateMatDescr(out descrA);
-            CUBSPARSE_64_75.cusparseSetMatType(descrA, cusparseMatrixType_t.CUSPARSE_MATRIX_TYPE_GENERAL);
-            CUBSPARSE_64_75.cusparseSetMatIndexBase(descrA , cusparseIndexBase_t.CUSPARSE_INDEX_BASE_ZERO);
+            CUBSPARSE_64_80.cusparseCreateMatDescr(out descrA);
+            CUBSPARSE_64_80.cusparseSetMatType(descrA, cusparseMatrixType_t.CUSPARSE_MATRIX_TYPE_GENERAL);
+            CUBSPARSE_64_80.cusparseSetMatIndexBase(descrA , cusparseIndexBase_t.CUSPARSE_INDEX_BASE_ZERO);
             
-            watch.Start();
-
             for (int i = 0; i < redo; ++i)
             {
                Multiply(handle, transA, a.rows.Length -1, x.Length,a.data.Length,alpha, descrA, a.data,a.rows,a.indices,x,beta,b);
             }
-
-            watch.Stop();
-            CUBSPARSE_64_75.cusparseDestroy(handle);
+            
+            CUBSPARSE_64_80.cusparseDestroy(handle);
 
             Console.Out.WriteLine("DONE");
 
@@ -75,8 +70,8 @@ namespace Hybridizer.Basic.Integration
         {
             cusparseScsrmv(handle, transA, m, n, nnz, &alpha, descrA, csrValA, csrRowPtrA, csrColIndA, x, &beta, b);
         }
-        
-        [DllImport("cusparse64_75.dll", EntryPoint = "cusparseScsrmv", CallingConvention = CallingConvention.Cdecl)]
+
+        [DllImport("cusparse64_80.dll", EntryPoint = "cusparseScsrmv", CallingConvention = CallingConvention.Cdecl)]
         public static extern unsafe cusparseStatus_t cusparseScsrmv(cusparseHandle_t handle,
                                               cusparseOperation_t transA,
                                               int m,

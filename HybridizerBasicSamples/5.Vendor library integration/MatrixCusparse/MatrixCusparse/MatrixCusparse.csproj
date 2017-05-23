@@ -58,7 +58,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Hybridizer.Runtime.CUDAImports">
-      <HintPath>..\..\..\..\..\..\AppData\Local\Microsoft\VisualStudio\14.0\Extensions\z5jzdi3d.fyr\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.Runtime.CUDAImports.dll</HintPath>
+      <HintPath>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.Runtime.CUDAImports.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -81,7 +81,7 @@
     <None Include="HV15R_x.mtx" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\..\..\..\..\..\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cusparse64_80.dll">
+    <Content Include="$(CUDA_PATH_V8_0)\bin\cusparse64_80.dll">
       <Link>cusparse64_80.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
