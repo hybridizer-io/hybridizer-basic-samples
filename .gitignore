@@ -33,3 +33,6 @@ obj
 /HybridizerBasicSamples/4.Finance/BlackScholes/BlackScholes/Hybridizer.Runtime.CUDAImports.dll
 /HybridizerBasicSamples/4.Finance/BlackScholesFloat4/BlackScholesFloat4/Hybridizer.Runtime.CUDAImports.dll
 /HybridizerBasicSamples/Visual Studio 2015/Visualizers/attribcache140.bin
+/HybridizerBasicSamples/3.Maths/ConjugateGradient/ConjugateGradient_CUDA/generated-sources
+/HybridizerBasicSamples/3.Maths/ConjugateGradient/ConjugateGradient_CUDA/x64/Release
+/HybridizerBasicSamples/Libraries/HybridizerCudaReduction/x64/Release
