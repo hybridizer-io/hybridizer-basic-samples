@@ -15,8 +15,6 @@ namespace MonteCarloHeatEquation
         [Kernel]
         void Coordinates(int i, out int ii, out int jj);
         [Kernel]
-        float GetBoundaryTemperature(int i, int j);
-        [Kernel]
         void Solve(float x, float y);
         [HybridizerIgnore]
         void SaveImage(string fileName, Func<float, Color> GetColor);

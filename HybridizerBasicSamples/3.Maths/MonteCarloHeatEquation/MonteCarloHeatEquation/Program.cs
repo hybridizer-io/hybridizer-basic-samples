@@ -31,10 +31,9 @@ namespace MonteCarloHeatEquation
         static void Main(string[] args)
         {
             const int N = 256;
-            const int iterCount = 100;
+            const int iterCount = 1000;
             
-            SquareProblem<SimpleWalker> problem = new SquareProblem<SimpleWalker>(N, ambientTemperature, iterCount);
-            problem.RefreshDevice();
+            SquareProblem<SimpleWalker, SimpleBoundaryCondition> problem = new SquareProblem<SimpleWalker, SimpleBoundaryCondition>(N, iterCount);
 
             cudaDeviceProp prop;
             cuda.GetDeviceProperties(out prop, 0);
@@ -47,13 +46,6 @@ namespace MonteCarloHeatEquation
 
             problem.RefreshHost();
             problem.SaveImage("square.bmp", GetColor);
-        }
-
-        private static float ambientTemperature(float x, float y)
-        {
-            if ((x == 1.0F && y >= 0.5F) || (x == 0.0F && y <= 0.5F))
-                return 1.0F;
-            return 0.0F;
         }
     }
 }
