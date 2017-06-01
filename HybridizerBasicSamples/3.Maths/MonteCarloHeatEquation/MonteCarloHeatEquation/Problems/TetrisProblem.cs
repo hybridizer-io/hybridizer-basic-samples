@@ -1,18 +1,17 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 
 namespace MonteCarloHeatEquation
 {
-    [HybridRegisterTemplate(Specialize = typeof(SquareProblem<SimpleWalker, SimpleBoundaryCondition>))]
-    public class SquareProblem<TRandomWalker, TBoundaryCondition>: I2DProblem 
-        where TRandomWalker : struct, IRandomWalker 
-        where TBoundaryCondition: struct, IBoundaryCondition
+    [HybridRegisterTemplate(Specialize = typeof(TetrisProblem<SimpleWalker, TetrisBoundaryCondition>))]
+    public class TetrisProblem<TRandomWalker, TBoundaryCondition> : I2DProblem
+        where TRandomWalker : struct, IRandomWalker
+        where TBoundaryCondition : struct, IBoundaryCondition
     {
 
         private FloatResidentArray _inner;
@@ -22,12 +21,12 @@ namespace MonteCarloHeatEquation
         private float _invIter;
 
         [HybridizerIgnore]
-        public SquareProblem(int N, int iter)
+        public TetrisProblem(int N, int iter)
         {
             _N = N;
             _h = 1.0F / (float)_N;
             _invIter = 1.0F / (float)iter;
-            _inner = new FloatResidentArray((N-1) * (N-1));
+            _inner = new FloatResidentArray((N - 1) * (N - 1));
             _iter = iter;
         }
 
@@ -42,13 +41,23 @@ namespace MonteCarloHeatEquation
             return (_N - 1) * (_N - 1);
         }
 
-        [Kernel] 
+        [Kernel]
         public void Coordinates(int i, out int ii, out int jj)
         {
             ii = (i % (_N - 1)) + 1;
             jj = (i / (_N - 1)) + 1;
         }
-        
+
+        private bool IsOutside(int i, int j)
+        {
+            if (i <= 0 || j <= 0 || i >= _N || j >= _N)
+                return true;
+            if (i <= _N / 3 && j >= 9 * _N / 10)
+                return true;
+            if (i >= 2*_N / 3 && j >= 9 * _N / 10)
+                return true;
+            return false;
+        }
 
         [Kernel]
         public void Solve(float x, float y)
@@ -58,26 +67,29 @@ namespace MonteCarloHeatEquation
             walker.Init();
             float temperature = 0.0F;
             float size = (float)_N;
-            for (int iter = 0; iter < _iter; ++iter)
+            if (!IsOutside((int)x, (int)y))
             {
-                float fx = x;
-                float fy = y;
-                
-                while (true)
+                for (int iter = 0; iter < _iter; ++iter)
                 {
-                    float tx, ty;
-                    walker.Walk(fx, fy, out tx, out ty);
+                    float fx = x;
+                    float fy = y;
 
-                    // when on border, break
-                    if(tx == 0.0F || ty == size || tx == size || ty == 0.0F)
+                    while (true)
                     {
-                        temperature += boundaryCondition.Temperature((float)tx * _h, (float)ty * _h);
-                        break;
-                    }
+                        float tx, ty;
+                        walker.Walk(fx, fy, out tx, out ty);
 
-                    // otherwise continue walk
-                    fx = tx;
-                    fy = ty;
+                        // when on border, break
+                        if (IsOutside((int)tx, (int)ty))
+                        {
+                            temperature += boundaryCondition.Temperature((float)tx * _h, (float)ty * _h);
+                            break;
+                        }
+
+                        // otherwise continue walk
+                        fx = tx;
+                        fy = ty;
+                    }
                 }
             }
 

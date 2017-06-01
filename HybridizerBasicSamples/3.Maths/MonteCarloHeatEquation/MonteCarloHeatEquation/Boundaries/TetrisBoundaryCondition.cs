@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace MonteCarloHeatEquation
 {
-    public struct SimpleBoundaryCondition : IBoundaryCondition
+    public struct TetrisBoundaryCondition: IBoundaryCondition
     {
         [Kernel]
         public float Temperature(float x, float y)
         {
-            if ((x == 1.0F && y >= 0.5F) || (x == 0.0F && y <= 0.5F))
+            if (y > 0.9F)
                 return 1.0F;
             return 0.0F;
         }

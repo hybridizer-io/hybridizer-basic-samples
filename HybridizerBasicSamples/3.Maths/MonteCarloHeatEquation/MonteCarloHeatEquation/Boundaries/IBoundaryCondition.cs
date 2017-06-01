@@ -10,6 +10,12 @@ namespace MonteCarloHeatEquation
     [HybridTemplateConcept]
     public interface IBoundaryCondition
     {
+        /// <summary>
+        /// must return a number between 0 and 1
+        /// </summary>
+        /// <param name="x">between 0 and 1</param>
+        /// <param name="y">between 0 and 1</param>
+        /// <returns></returns>
         [Kernel]
         float Temperature(float x, float y);
     }

@@ -34,25 +34,22 @@ namespace MonteCarloHeatEquation
         {
             int tmp = Next() & 3;
 
-            if (tmp == 0)
+            tx = fx;
+            ty = fy;
+            switch(tmp)
             {
-                tx = fx + 1.0F;
-                ty = fy;
-            }
-            else if (tmp == 1)
-            {
-                tx = fx;
-                ty = fy + 1.0F;
-            }
-            else if (tmp == 2)
-            {
-                tx = fx - 1.0F;
-                ty = fy;
-            }
-            else
-            {
-                tx = fx;
-                ty = fy - 1.0F;
+                case 0:
+                    tx = fx + 1.0F;
+                    break;
+                case 1:
+                    ty = fy + 1.0F;
+                    break;
+                case 2:
+                    tx = fx - 1.0F;
+                    break;
+                default:
+                    ty = fy - 1.0F;
+                    break;
             }
         }
     }

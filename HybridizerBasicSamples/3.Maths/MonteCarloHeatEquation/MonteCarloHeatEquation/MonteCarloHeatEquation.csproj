@@ -67,8 +67,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Boundaries\TetrisBoundaryCondition.cs" />
     <Compile Include="Problems\I2DProblem.cs" />
     <Compile Include="Boundaries\IBoundaryCondition.cs" />
+    <Compile Include="Problems\TetrisProblem.cs" />
     <Compile Include="RandomWalk\IRandomWalker.cs" />
     <Compile Include="MonteCarloHeatSolver.cs" />
     <Compile Include="Program.cs" />

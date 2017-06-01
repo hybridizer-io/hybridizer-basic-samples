@@ -1,5 +1,6 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace MonteCarloHeatEquation
@@ -31,9 +32,11 @@ namespace MonteCarloHeatEquation
         static void Main(string[] args)
         {
             const int N = 256;
-            const int iterCount = 1000;
+            const int iterCount = 100;
             
-            SquareProblem<SimpleWalker, SimpleBoundaryCondition> problem = new SquareProblem<SimpleWalker, SimpleBoundaryCondition>(N, iterCount);
+            var problem = new TetrisProblem<SimpleWalker, TetrisBoundaryCondition>(N, iterCount);
+            // example of another instanciation
+            //var problem = new SquareProblem<SimpleWalker, SimpleBoundaryCondition>(N, iterCount);
 
             cudaDeviceProp prop;
             cuda.GetDeviceProperties(out prop, 0);
@@ -46,6 +49,7 @@ namespace MonteCarloHeatEquation
 
             problem.RefreshHost();
             problem.SaveImage("square.bmp", GetColor);
+            Process.Start("square.bmp");
         }
     }
 }
