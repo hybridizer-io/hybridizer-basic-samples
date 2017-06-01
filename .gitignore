@@ -36,3 +36,6 @@ obj
 /HybridizerBasicSamples/3.Maths/ConjugateGradient/ConjugateGradient_CUDA/generated-sources
 /HybridizerBasicSamples/3.Maths/ConjugateGradient/ConjugateGradient_CUDA/x64/Release
 /HybridizerBasicSamples/Libraries/HybridizerCudaReduction/x64/Release
+/HybridizerBasicSamples/x64/Release
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation_CUDA/x64/Release
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation_CUDA/generated-sources
