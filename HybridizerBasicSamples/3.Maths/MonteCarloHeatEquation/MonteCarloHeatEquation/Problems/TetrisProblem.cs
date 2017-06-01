@@ -1,13 +1,21 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
 
 namespace MonteCarloHeatEquation
 {
+
+    /// <summary>
+    /// geometry is a T : 
+    ///    ---   
+    ///    | |  
+    /// ---   ---
+    /// |        |
+    /// |        |
+    /// ----------
+    /// </summary>
+    /// <typeparam name="TRandomWalker"></typeparam>
+    /// <typeparam name="TBoundaryCondition"></typeparam>
     [HybridRegisterTemplate(Specialize = typeof(TetrisProblem<SimpleWalker, TetrisBoundaryCondition>))]
     public class TetrisProblem<TRandomWalker, TBoundaryCondition> : I2DProblem
         where TRandomWalker : struct, IRandomWalker

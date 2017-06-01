@@ -34,9 +34,9 @@ namespace MonteCarloHeatEquation
             const int N = 256;
             const int iterCount = 100;
             
-            var problem = new TetrisProblem<SimpleWalker, TetrisBoundaryCondition>(N, iterCount);
+            //var problem = new TetrisProblem<SimpleWalker, TetrisBoundaryCondition>(N, iterCount);
             // example of another instanciation
-            //var problem = new SquareProblem<SimpleWalker, SimpleBoundaryCondition>(N, iterCount);
+            var problem = new SquareProblem<SimpleWalker, SimpleBoundaryCondition>(N, iterCount);
 
             cudaDeviceProp prop;
             cuda.GetDeviceProperties(out prop, 0);
