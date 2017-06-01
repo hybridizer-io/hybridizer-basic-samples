@@ -41,3 +41,5 @@ obj
 /HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation_CUDA/generated-sources
 /HybridizerBasicSamples/5.Vendor library integration/MatrixCublas/MatrixCublas_CUDA/generated-sources
 /HybridizerBasicSamples/5.Vendor library integration/MatrixCublas/MatrixCublas_CUDA/x64/Release
+/HybridizerBasicSamples/2.Imaging/Sobel/Sobel_CUDA/generated-sources
+/HybridizerBasicSamples/2.Imaging/Sobel/Sobel_CUDA/x64/Release
