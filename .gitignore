@@ -20,6 +20,10 @@
 /HybridizerBasicSamples/1.Simple/Sobel/Sobel
 *.pdb
 bin
+generated-sources
+generated_sources
+Debug
+Release
 obj
 /HybridizerBasicSamples/3.Maths/Newton/Newton_CUDA/generated-sources
 /HybridizerBasicSamples/3.Maths/Newton/Newton_CUDA/x64
@@ -43,3 +47,7 @@ obj
 /HybridizerBasicSamples/5.Vendor library integration/MatrixCublas/MatrixCublas_CUDA/x64/Release
 /HybridizerBasicSamples/2.Imaging/Sobel/Sobel_CUDA/generated-sources
 /HybridizerBasicSamples/2.Imaging/Sobel/Sobel_CUDA/x64/Release
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation/result.bmp
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation_CUDA/x64/Debug/MonteCar.A6D25EB3.tlog
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation_CUDA/x64/Debug/generated-sources
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation_CUDA/x64/Debug

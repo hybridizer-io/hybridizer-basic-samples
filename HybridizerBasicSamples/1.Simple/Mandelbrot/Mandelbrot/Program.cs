@@ -8,8 +8,8 @@ namespace Mandelbrot
 {
     class Program
     {
-        const int maxiter = 256;
-        const int N = 1024;
+        const int maxiter = 32;
+        const int N = 4096;
         const float fromX = -2.0f;
         const float fromY = -2.0f;
         const float size = 4.0f;
@@ -38,9 +38,9 @@ namespace Mandelbrot
         [EntryPoint("run")]
         public static void Run(int[] light, int lineFrom, int lineTo)
         {
-            for (int line = blockIdx.x + lineFrom; line < lineTo; line += gridDim.x)
+            for (int line = lineFrom + threadIdx.y + blockDim.y * blockIdx.y; line < lineTo; line += gridDim.y * blockDim.y)
             {
-                for (int j = threadIdx.x; j < N; j += blockDim.x)
+                for (int j = threadIdx.x + blockIdx.x * blockDim.x; j < N; j += blockDim.x * gridDim.x)
                 {
                     float x = fromX + line * h;
                     float y = fromY + j * h;
@@ -80,9 +80,9 @@ namespace Mandelbrot
             }
             #endregion c#
 
-            HybRunner runner = HybRunner.Cuda("Mandelbrot_CUDA.dll").SetDistrib(N, 256);
+            HybRunner runner = HybRunner.Cuda("Mandelbrot_CUDA.dll").SetDistrib(32, 32, 16, 16, 1, 0);
             wrapper = runner.Wrap(new Program());
-
+            // profile with nsight to get performance
             #region cuda
             for (int i = 0; i < redo; ++i)
             {
@@ -92,11 +92,13 @@ namespace Mandelbrot
 
             #region save to image
             Color[] colors = new Color[maxiter + 1];
-            Random rand = new Random(42);
 
             for (int k = 0; k < maxiter; ++k)
             {
-                colors[k] = Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
+                int red = (int) (127.0F * (float)k / (float)maxiter);
+                int green = (int)(200.0F * (float)k / (float)maxiter);
+                int blue = (int)(90.0F * (float)k / (float)maxiter);
+                colors[k] = Color.FromArgb(red, green, blue);
             }
             colors[maxiter] = Color.Black;
 

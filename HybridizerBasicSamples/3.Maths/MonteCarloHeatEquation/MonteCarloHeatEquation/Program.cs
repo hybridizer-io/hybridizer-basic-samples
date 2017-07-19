@@ -9,7 +9,7 @@ namespace MonteCarloHeatEquation
     {
         static void Main(string[] args)
         {
-            const int N = 256;
+            const int N = 128;
             const int iterCount = 100;
             
             var problem = new SquareProblem<SimpleWalker, SimpleBoundaryCondition>(N, iterCount);

@@ -9,7 +9,7 @@ namespace Hybridizer.Basic.Maths
 {
     class Program
     {
-        const int maxiter = 1024;
+        const int maxiter = 4096;
         const int N = 2048;
         const float fromX = -1.5f;
         const float fromY = -1.5f;
@@ -77,17 +77,14 @@ namespace Hybridizer.Basic.Maths
         public static int RootFind(float x, float y)
         {
             if(fabsf(x - 1.0f) < tol && fabsf(y) < tol)
-            //if ((x <= 1.0F + tol && x >= 1.0F - tol && y <= 0.0F + tol && y >= 0.0F - tol))
             {
                 return 1;
             }
             else if (fabsf(x + 0.5f) < tol && fabsf(y - sqrtRoot) < tol)
-            //else if ((x <= -0.5F + tol && x >= -0.5F - tol && y <= sqrtRoot + tol && y >= sqrtRoot - tol))
             {
                 return 2;
             }
             else if (fabsf(x + 0.5f) < tol && fabsf(y + sqrtRoot) < tol)
-            //else if ((x <= -0.5F + tol && x >= -0.5F - tol && y <= -sqrtRoot + tol && y >= -sqrtRoot - tol))
             {
                 return 3;
             }
@@ -133,7 +130,7 @@ namespace Hybridizer.Basic.Maths
 
         static void Main(string[] args)
         {
-            const int redo = 10;
+            const int redo = 1;
             int2[] result_net = new int2[N * N];
             int2[] result_cuda = new int2[N * N];
 
@@ -152,7 +149,7 @@ namespace Hybridizer.Basic.Maths
 
             #endregion c#
 
-            HybRunner runner = HybRunner.Cuda("Newton_CUDA.dll").SetDistrib(4, 5, 8, 128, 1, 0);
+            HybRunner runner = HybRunner.Cuda("Newton_CUDA.dll").SetDistrib(32, 32, 16, 16, 1, 0);
             wrapper = runner.Wrap(new Program());
 
             #region cuda

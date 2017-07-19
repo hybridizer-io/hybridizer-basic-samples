@@ -19,12 +19,12 @@ namespace Hybridizer.Basic.Maths
             runner = HybRunner.Cuda("ConjugateGradient_CUDA.dll").SetDistrib(prop.multiProcessorCount * 16, 128);
             wrapper = runner.Wrap(new Program());
 
-            int size = 100000000;
+            int size = 1000000; // very slow convergence with no preconditioner
             SparseMatrix A = SparseMatrix.Laplacian_1D(size);
             FloatResidentArray B = new FloatResidentArray(size);
             FloatResidentArray X = new FloatResidentArray(size);
 
-            int maxiter = 20;
+            int maxiter = size;
             float eps = 1.0e-09f;
 
             for (int i = 0; i < size; ++i)
@@ -69,6 +69,8 @@ namespace Hybridizer.Basic.Maths
                 {
                     break;
                 }
+
+                Console.Write("\riter : {0}, err : {1}", k, Math.Sqrt(rr));
 
                 float beta = rr / r;
                 wrapper.Saxpy(P, R, beta, P, N);                // P = R + beta*P
