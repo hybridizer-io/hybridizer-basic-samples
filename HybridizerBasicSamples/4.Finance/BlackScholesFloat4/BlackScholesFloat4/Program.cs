@@ -172,7 +172,7 @@ namespace Hybridizer.Basic.Finance
             }
         }
 
-        [Kernel, HybridArithmeticFunction, HybridNakedFunction]
+        [Kernel]
         static float4 CND(float4 f)
         {
             const float A1 = 0.31938153f;
