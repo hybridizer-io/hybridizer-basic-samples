@@ -27,6 +27,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{355B5210-6FF9-4DC8-BCB6-E7DA979913B1}</ProjectGuid>
     <RootNamespace>BlackScholesFloat4_CUDA</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -78,10 +79,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\4.Finance\BlackScholesFloat4\BlackScholesFloat4\bin\x64\Debug\</OutDir>
+    <OutDir>$(ProjectDir)..\BlackScholesFloat4\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\4.Finance\BlackScholesFloat4\BlackScholesFloat4\bin\x64\Release\</OutDir>
+    <OutDir>$(ProjectDir)..\BlackScholesFloat4\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <HybridizerFlavors>CUDA</HybridizerFlavors>

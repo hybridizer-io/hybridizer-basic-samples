@@ -24,7 +24,7 @@ namespace Hybridizer.Basic.Maths
             FloatResidentArray B = new FloatResidentArray(size);
             FloatResidentArray X = new FloatResidentArray(size);
 
-            int maxiter = size;
+            int maxiter = 1000;
             float eps = 1.0e-09f;
 
             for (int i = 0; i < size; ++i)
@@ -69,8 +69,6 @@ namespace Hybridizer.Basic.Maths
                 {
                     break;
                 }
-
-                Console.Write("\riter : {0}, err : {1}", k, Math.Sqrt(rr));
 
                 float beta = rr / r;
                 wrapper.Saxpy(P, R, beta, P, N);                // P = R + beta*P

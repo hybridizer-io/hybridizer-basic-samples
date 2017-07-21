@@ -135,18 +135,11 @@ namespace Hybridizer.Basic.Maths
             int2[] result_cuda = new int2[N * N];
 
             #region c#
-
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-
             for (int i = 0; i < redo; ++i)
             {
                 ComputeImage(result_net, false);
             }
-
-            watch.Stop();
-            double firstWatchResult = 1.0E-6 * ((double)(N * N) * (double)redo / (1.0E-3 * watch.ElapsedMilliseconds));
-
+            
             #endregion c#
 
             HybRunner runner = HybRunner.Cuda("Newton_CUDA.dll").SetDistrib(32, 32, 16, 16, 1, 0);
@@ -156,16 +149,8 @@ namespace Hybridizer.Basic.Maths
             
             for (int i = 0; i < redo; ++i)
             {
-                if(i == 1) // skip first call to skip cubin link phase
-                    watch.Restart();
-
                 ComputeImage(result_cuda, true);
             }
-            watch.Stop();
-
-            Console.WriteLine("C#   MPixels/s :  {0}", firstWatchResult);
-            Console.WriteLine("CUDA MPixels/s :  {0}", 1.0E-6 * ((double)(N * N) * (double)redo / (1.0E-3 * watch.ElapsedMilliseconds)));
-            Console.WriteLine("without memcpy :  {0}", 1.0E-6 * ((double)(N * N) / (1.0E-3 * runner.LastKernelDuration.ElapsedMilliseconds)));
 
             #endregion
 

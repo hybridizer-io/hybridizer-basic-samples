@@ -27,6 +27,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E3C24DAC-8378-4083-9633-78425A389589}</ProjectGuid>
     <RootNamespace>NaiveMatrix_CUDA</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -78,10 +79,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix\bin\x64\Debug\</OutDir>
+    <OutDir>$(ProjectDir)..\NaiveMatrix\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\3.Maths\NaiveMatrix\NaiveMatrix\bin\x64\Release\</OutDir>
+    <OutDir>$(ProjectDir)..\NaiveMatrix\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <HybridizerFlavors>CUDA</HybridizerFlavors>

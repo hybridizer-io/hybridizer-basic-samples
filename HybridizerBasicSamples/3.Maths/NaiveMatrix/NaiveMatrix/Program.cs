@@ -15,7 +15,7 @@ namespace Hybridizer.Basic.Maths
         {
             if (args.Length == 0)
             {
-                args = new string[] { "1024", "1024", "1024", "1024" };
+                args = new string[] { "512", "512", "512", "512" };
             }
             const int redo = 10;
 
@@ -64,15 +64,7 @@ namespace Hybridizer.Basic.Maths
                 });
             }
             #endregion
-
-            // verify the results
-
-            if (!res_net.Equals(res_cuda))
-                Console.Out.WriteLine("ERROR !");
-
-            //Write the matrix on the console
-            //res_cuda.WriteMatrix();
-
+            
             Console.Out.WriteLine("DONE");
         }
 

@@ -10,7 +10,7 @@ namespace MonteCarloHeatEquation
         static void Main(string[] args)
         {
             const int N = 128;
-            const int iterCount = 100;
+            const int iterCount = 1000;
             
             var problem = new SquareProblem<SimpleWalker, SimpleBoundaryCondition>(N, iterCount);
             // example of another instanciation

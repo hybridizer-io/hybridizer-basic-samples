@@ -27,6 +27,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD6B55F6-44DB-4849-B958-9B91A4BCC276}</ProjectGuid>
     <RootNamespace>BlackScholes_CUDA</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -78,10 +79,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\4.Finance\BlackScholes\BlackScholes\bin\x64\Debug\</OutDir>
+    <OutDir>$(ProjectDir)..\BlackScholes\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\4.Finance\BlackScholes\BlackScholes\bin\x64\Release\</OutDir>
+    <OutDir>$(ProjectDir)..\BlackScholes\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <HybridizerFlavors>CUDA</HybridizerFlavors>
