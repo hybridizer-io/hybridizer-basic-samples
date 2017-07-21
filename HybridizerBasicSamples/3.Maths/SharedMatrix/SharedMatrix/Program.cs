@@ -69,15 +69,7 @@ namespace Hybridizer.Basic.Maths
             watch.Stop();
             Console.WriteLine("C#   GFlop/s :   {0}", numberCompute * (double)1 / (watch.ElapsedMilliseconds * 1.0E-03));
             #endregion
-
-            // verify the results
-
-            if (!res_net.IsSame(res_cuda))
-                Console.Out.WriteLine("ERROR !");
-
-            //Write the matrix on the console
-            //res_cuda.WriteMatrix();
-
+            
             Console.Out.WriteLine("DONE");
         }
 
