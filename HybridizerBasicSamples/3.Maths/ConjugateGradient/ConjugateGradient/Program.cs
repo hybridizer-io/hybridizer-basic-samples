@@ -29,27 +29,19 @@ namespace Hybridizer.Basic.Maths
 
             for (int i = 0; i < size; ++i)
             {
-                B[i] = 1.0f;
-                X[i] = 0.0f;
+                B[i] = 1.0f; // right side
+                X[i] = 0.0f; // starting point
             }
 
             ConjugateGradient(X, A, B, maxiter, eps);
-
-            for(int i = 0; i < Math.Min(size, 6); ++i)
-            {
-                Console.WriteLine(X[i]);
-            }
         }
 
-        static public void ConjugateGradient(FloatResidentArray X, SparseMatrix A, FloatResidentArray B, int maxiter, float eps)
+        public static void ConjugateGradient(FloatResidentArray X, SparseMatrix A, FloatResidentArray B, int maxiter, float eps)
         {
             int N = (int) B.Count;
             FloatResidentArray R = new FloatResidentArray(N);
             FloatResidentArray P = new FloatResidentArray(N);
             FloatResidentArray AP = new FloatResidentArray(N);
-            R.RefreshDevice();
-            P.RefreshDevice();
-            AP.RefreshDevice();
             A.RefreshDevice();
             X.RefreshDevice();
             B.RefreshDevice();
@@ -60,8 +52,8 @@ namespace Hybridizer.Basic.Maths
             while(k < maxiter)
             {
                 wrapper.Multiply(AP, A, P, N);                  // AP = A*P
-                float r = ScalarProd(R, R, N);          // save <R|R>
-                float alpha = r / ScalarProd(P, AP, N); // alpha = <R|R> / <P|AP>
+                float r = ScalarProd(R, R, N);                  // save <R|R>
+                float alpha = r / ScalarProd(P, AP, N);         // alpha = <R|R> / <P|AP>
                 wrapper.Saxpy(X, X, alpha, P, N);               // X = X - alpha*P
                 wrapper.Saxpy(R, R, -alpha, AP, N);             // RR = R-alpha*AP
                 float rr = ScalarProd(R, R, N);
@@ -74,6 +66,8 @@ namespace Hybridizer.Basic.Maths
                 wrapper.Saxpy(P, R, beta, P, N);                // P = R + beta*P
                 ++k;
             }
+
+            X.RefreshHost();
         }
 
         [EntryPoint]

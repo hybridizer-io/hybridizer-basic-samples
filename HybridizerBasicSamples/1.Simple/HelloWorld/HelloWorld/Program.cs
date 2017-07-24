@@ -34,8 +34,9 @@ namespace HelloWorld
                 b[i] = rand.NextDouble();
             }
 
-            // create an instance of HybRunner object to wrap calls on GPU
-            HybRunner runner = HybRunner.Cuda("HelloWorld_CUDA.dll").SetDistrib(20,256);
+            cudaDeviceProp prop;
+            cuda.GetDeviceProperties(out prop, 0);
+            HybRunner runner = HybRunner.Cuda("HelloWorld_CUDA.dll").SetDistrib(prop.multiProcessorCount * 16, 128);
 
             // create a wrapper object to call GPU methods instead of C#
             dynamic wrapped = runner.Wrap(new Program());
