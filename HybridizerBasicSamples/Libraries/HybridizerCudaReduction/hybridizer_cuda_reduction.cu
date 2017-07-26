@@ -8,10 +8,12 @@
 double* g_reduce_double_device;
 float* g_reduce_float_device;
 
+__device__ float __fAtomicAdd(float *p, float val);
 namespace hybridizer {
-#if defined(toto) //__CUDA_ARCH__)
+#if defined(__CUDA_ARCH__)
+#include <device_functions.h>
+
 #if (__CUDA_ARCH__ < 600)
-#include <sm_30_intrinsics.h>
 	__forceinline __device__ double atomicAdd(double* address, double val)
 	{
 		unsigned long long int* address_as_ull =
@@ -25,23 +27,6 @@ namespace hybridizer {
 		} while (assumed != old);
 		return __longlong_as_double(old);
 	}
-#else
-#include <sm_60_atomic_functions.h>
-#endif
-#if (__CUDA_ARCH__ < 200) 
-	__forceinline __device__ float atomicAdd(float* address, float val)
-	{
-		int* address_as_ull = (int*)address;
-		int old = *address_as_ull, assumed;
-		do {
-			assumed = old;
-			old = atomicCAS(address_as_ull, assumed,
-				_float_as_int(val +
-					__int_as_float(assumed)));
-		} while (assumed != old);
-		return __int_as_float(old);
-	}
-#else
 #endif
 #endif
 
@@ -127,7 +112,7 @@ namespace hybridizer {
 
 		sum = blockReduceSum(sum);
 		if (threadIdx.x == 0) {
-			atomicAdd(out, sum);
+			__fAtomicAdd(out, sum);
 		}
 	}
 }
