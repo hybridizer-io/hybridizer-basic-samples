@@ -27,6 +27,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{17434B99-254D-49BC-894D-74CB1C918599}</ProjectGuid>
     <RootNamespace>Sobel_2D_CUDA</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -75,13 +76,17 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)..\Sobel_2D\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\2.Imaging\Sobel_2D\Sobel_2D\bin\x64\Debug\</OutDir>
+    <OutDir>$(ProjectDir)..\Sobel_2D\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>W:\Basic\Samples\HybridizerBasicSamples\2.Imaging\Sobel_2D\Sobel_2D\bin\x64\Release\</OutDir>
+    <OutDir>$(ProjectDir)..\Sobel_2D\bin\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)..\Sobel_2D\bin\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <HybridizerFlavors>CUDA</HybridizerFlavors>
