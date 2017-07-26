@@ -44,7 +44,7 @@ namespace Hybridizer.Basic.Imaging
             for (int i = from + threadIdx.y + blockIdx.y * blockDim.y; i < to; i += blockDim.y * gridDim.y)
             {
                 for (int j = threadIdx.x + blockIdx.x * blockDim.x; j < size; j += blockDim.x * gridDim.x)
-                {
+                {   
                     int output = 0;
                     if (i > 0 && j > 0 && i < size - 1 && j < size - 1)
                     {
