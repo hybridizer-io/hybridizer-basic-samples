@@ -28,8 +28,7 @@ namespace Hybridizer.Basic.Finance
 
             float[] callResult_cuda = new float[OPT_N];
             float[] putResult_cuda = new float[OPT_N];
-
-            Stopwatch watch = new Stopwatch();
+            
             Random rand = new Random(Guid.NewGuid().GetHashCode());
             for (int i = 0; i < OPT_N; ++i)
             {
@@ -44,8 +43,7 @@ namespace Hybridizer.Basic.Finance
 
             HybRunner runner = HybRunner.Cuda("BlackScholes_CUDA.dll").SetDistrib(20, 256);
             dynamic wrapper = runner.Wrap(new Program());
-
-            watch.Start();
+            
             for (int i = 0; i < NUM_ITERATIONS; ++i)
             {
                 wrapper.BlackScholes(callResult_cuda,
@@ -55,11 +53,7 @@ namespace Hybridizer.Basic.Finance
                              optionYears_net,
                              0, OPT_N);
             }
-            watch.Stop();
-            Console.WriteLine("nb ms cuda     : {0}", watch.ElapsedMilliseconds / NUM_ITERATIONS);
-            Console.WriteLine("without memcpy : {0}", runner.LastKernelDuration.ElapsedMilliseconds);
 
-            watch.Restart();
             for (int i = 0; i < NUM_ITERATIONS; ++i)
             {
                 Parallel.For(0, OPT_N, (opt) =>
@@ -73,8 +67,6 @@ namespace Hybridizer.Basic.Finance
                                  opt + 1);
                 });
             }
-            watch.Stop();
-            Console.WriteLine("nb ms c#       : {0}", watch.ElapsedMilliseconds / NUM_ITERATIONS);
 
             float maxCallError = 0.0F;
             float maxPutError = 0.0F;

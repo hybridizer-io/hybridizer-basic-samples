@@ -58,7 +58,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Hybridizer.Runtime.CUDAImports">
-      <HintPath>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Basic\tools\bin\x64\Hybridizer.Runtime.CUDAImports.dll</HintPath>
+      <HintPath>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Essentials\tools\bin\x64\Hybridizer.Runtime.CUDAImports.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />

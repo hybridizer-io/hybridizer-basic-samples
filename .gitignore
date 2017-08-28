@@ -20,6 +20,10 @@
 /HybridizerBasicSamples/1.Simple/Sobel/Sobel
 *.pdb
 bin
+generated-sources
+generated_sources
+Debug
+Release
 obj
 /HybridizerBasicSamples/3.Maths/Newton/Newton_CUDA/generated-sources
 /HybridizerBasicSamples/3.Maths/Newton/Newton_CUDA/x64
@@ -56,3 +60,7 @@ obj
 /HybridizerBasicSamples/Mandelbrot.psess
 /HybridizerBasicSamples/1.Simple/Mandelbrot/Report20170706-0042.diagsession
 /HybridizerBasicSamples/x64
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation/result.bmp
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation_CUDA/x64/Debug/MonteCar.A6D25EB3.tlog
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation_CUDA/x64/Debug/generated-sources
+/HybridizerBasicSamples/3.Maths/MonteCarloHeatEquation/MonteCarloHeatEquation_CUDA/x64/Debug

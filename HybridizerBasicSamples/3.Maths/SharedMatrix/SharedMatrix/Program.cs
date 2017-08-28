@@ -38,8 +38,6 @@ namespace Hybridizer.Basic.Maths
 
             double numberCompute = ((double)matrixA.Height * (double)matrixA.Width * (double)matrixB.Width) * 3.0E-9;
 
-            Stopwatch watch = new Stopwatch();
-
             matrixA.FillMatrix();
             matrixB.FillMatrix();
 
@@ -47,37 +45,17 @@ namespace Hybridizer.Basic.Maths
 
             HybRunner runner = HybRunner.Cuda("SharedMatrix_CUDA.dll").SetDistrib(4, 5, 32, 32, 1, 1024*2*8);
             dynamic wrapper = runner.Wrap(new Program());
-
-            watch.Start();
-
+            
             for (int i = 0; i < redo; ++i)
             {
                 wrapper.Multiply(res_cuda, matrixA, matrixB, matrixA.Width);
             }
-
-            watch.Stop();
-
-            Console.WriteLine("CUDA GFlop/s : {0}", numberCompute * (double)redo / (watch.ElapsedMilliseconds * 1.0E-03));
-            Console.WriteLine("without memcpy         : {0}", numberCompute / (runner.LastKernelDuration.ElapsedMilliseconds * 1.0E-03));
             #endregion
 
             #region C#
-            watch.Restart();
-            
             Reference(res_net, matrixA, matrixB);
-
-            watch.Stop();
-            Console.WriteLine("C#   GFlop/s :   {0}", numberCompute * (double)1 / (watch.ElapsedMilliseconds * 1.0E-03));
             #endregion
-
-            // verify the results
-
-            if (!res_net.IsSame(res_cuda))
-                Console.Out.WriteLine("ERROR !");
-
-            //Write the matrix on the console
-            //res_cuda.WriteMatrix();
-
+            
             Console.Out.WriteLine("DONE");
         }
 

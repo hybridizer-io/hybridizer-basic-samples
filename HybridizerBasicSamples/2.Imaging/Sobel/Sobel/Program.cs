@@ -17,21 +17,19 @@ namespace Hybridizer.Basic.Imaging
             int height = baseImage.Height, width = baseImage.Width;
             
             Bitmap resImage = new Bitmap(width, height);
-
-            byte[] outputPixelsC = new byte[width * height];
+            
             byte[] inputPixels = new byte[width * height];
             byte[] outputPixels = new byte[width * height];
 
             ReadImage(inputPixels, baseImage, width, height);
 
-            HybRunner runner = HybRunner.Cuda("Sobel_CUDA.dll").SetDistrib(20, 256);
+            HybRunner runner = HybRunner.Cuda("Sobel_CUDA.dll").SetDistrib(32, 32, 16, 16, 1, 0);
             dynamic wrapper = runner.Wrap(new Program());
 
-            wrapper.ComputeSobel(outputPixels, inputPixels, width, height);
-            
-            ComputeSobel(outputPixelsC, inputPixels, width, height);
+            wrapper.ComputeSobel(outputPixels, inputPixels, width, height, 0, height);
+           
 
-            SaveImage("lena-sobel.bmp", outputPixelsC, width, height);
+            SaveImage("lena-sobel.bmp", outputPixels, width, height);
             Process.Start("lena-sobel.bmp");
         }
 
@@ -47,38 +45,41 @@ namespace Hybridizer.Basic.Imaging
         }
         
         [EntryPoint]
-        public static void ComputeSobel(byte[] outputPixel, byte[] inputPixel, int width, int height)
+        public static void ComputeSobel(byte[] outputPixel, byte[] inputPixel, int width, int height, int from, int to)
         {
-            Parallel.For(0, width * height, (pixelId) => {
-                int i = pixelId / height;
-                int j = pixelId - i * height;
-
-                int output = 0;
-                if (i != 0 && j != 0 && i != height - 1 && j != width - 1)
+            for (int i = from + threadIdx.y + blockIdx.y * blockDim.y; i < to; i += blockDim.y * gridDim.y)
+            {
+                for (int j = threadIdx.x + blockIdx.x * blockDim.x; j < width; j += blockDim.x * gridDim.x)
                 {
-                    byte topl = inputPixel[pixelId - width - 1];
-                    byte top = inputPixel[pixelId - width];
-                    byte topr = inputPixel[pixelId - width + 1];
-                    byte l = inputPixel[pixelId - 1];
-                    byte r = inputPixel[pixelId + 1];
-                    byte botl = inputPixel[pixelId + width - 1];
-                    byte bot = inputPixel[pixelId + width];
-                    byte botr = inputPixel[pixelId + width + 1];
+                    int pixelId = i * width + j;
 
-                    output = ((int)(topl + 2 * l + botl - topr - 2 * r - botr) +
-                                    (int)(topl + 2 * top + topr - botl - 2 * bot - botr));
-                    if(output < 0)
+                    int output = 0;
+                    if (i != 0 && j != 0 && i != height - 1 && j != width - 1)
                     {
-                        output = -output;
-                    }
-                    if (output > 255)
-                    {
-                        output = 255;
-                    }
+                        byte topl = inputPixel[pixelId - width - 1];
+                        byte top = inputPixel[pixelId - width];
+                        byte topr = inputPixel[pixelId - width + 1];
+                        byte l = inputPixel[pixelId - 1];
+                        byte r = inputPixel[pixelId + 1];
+                        byte botl = inputPixel[pixelId + width - 1];
+                        byte bot = inputPixel[pixelId + width];
+                        byte botr = inputPixel[pixelId + width + 1];
 
-                    outputPixel[pixelId] = (byte) output;
+                        output = ((int)(topl + 2 * l + botl - topr - 2 * r - botr) +
+                                        (int)(topl + 2 * top + topr - botl - 2 * bot - botr));
+                        if (output < 0)
+                        {
+                            output = -output;
+                        }
+                        if (output > 255)
+                        {
+                            output = 255;
+                        }
+
+                        outputPixel[pixelId] = (byte)output;
+                    }
                 }
-            });
+            }
         }
         
         public static void SaveImage(string nameImage, byte[] outputPixel, int width, int height)
