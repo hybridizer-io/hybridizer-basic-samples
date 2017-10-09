@@ -1,4 +1,4 @@
-# hybridizer-basic-samples
+### hybridizer-basic-samples
 This repo illustrates a few samples for Hybridizer
 
 These samples may be used with any version of Hybridizer including Hybridizer Essentials.
@@ -16,3 +16,5 @@ Follow instructions on get_started.mp4 (require and validate license).
 Open HybridizerBasicSamples solution. 
 Build example of your choice and run it. 
 
+## Wiki
+Samples are explained in the [wiki](https://github.com/altimesh/hybridizer-basic-samples/wiki).
