@@ -46,12 +46,6 @@ namespace Hybridizer.Basic.Integration
             Console.Out.WriteLine("DONE");
 
         }
-
-        [IntrinsicFunction("fprintf")]
-        public static void fprintf(string s)
-        {
-            Console.WriteLine(s);
-        }
         
         public static void Multiply(cusparseHandle_t handle,
                                      cusparseOperation_t transA,
