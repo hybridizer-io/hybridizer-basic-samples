@@ -21,7 +21,7 @@ namespace Hybridizer.Basic.Imaging
             HybRunner runner = HybRunner.Cuda("Sobel_2D_CUDA.dll").SetDistrib(32, 32, 16, 16, 1, 0);
             dynamic wrapper = runner.Wrap(new Program());
 
-            wrapper.ComputeSobel(outputPixels, inputPixels, size, 0, size);
+            wrapper.ComputeSobel(outputPixels, inputPixels);
 
             SaveImage("lena-sobel.bmp", outputPixels, size);
             Process.Start("lena-sobel.bmp");
@@ -39,9 +39,10 @@ namespace Hybridizer.Basic.Imaging
         }
 
         [EntryPoint]
-        public static void ComputeSobel(byte[,] outputPixel, byte[,] inputPixel, int size, int from, int to)
+        public static void ComputeSobel(byte[,] outputPixel, byte[,] inputPixel)
         {
-            for (int i = from + threadIdx.y + blockIdx.y * blockDim.y; i < to; i += blockDim.y * gridDim.y)
+            int size = inputPixel.GetLength(0);
+            for (int i = threadIdx.y + blockIdx.y * blockDim.y; i < size; i += blockDim.y * gridDim.y)
             {
                 for (int j = threadIdx.x + blockIdx.x * blockDim.x; j < size; j += blockDim.x * gridDim.x)
                 {   
