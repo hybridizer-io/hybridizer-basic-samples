@@ -6,41 +6,41 @@ using System;
 
 namespace Hybridizer.Basic.Imaging
 {
-    unsafe class Program
+    class Program
     {
         static void Main(string[] args)
         {
             // open the input image and lock its content for read operations
             Bitmap baseImage = (Bitmap)Image.FromFile("lena512.bmp");
             PixelFormat format = baseImage.PixelFormat;
-            var locked = baseImage.LockBits(new Rectangle(0, 0, baseImage.Width, baseImage.Height), ImageLockMode.ReadOnly, format);
-            IntPtr imageData = locked.Scan0;
+            var lockedSource = baseImage.LockBits(new Rectangle(0, 0, baseImage.Width, baseImage.Height), ImageLockMode.ReadOnly, format);
+            IntPtr srcData = lockedSource.Scan0;
             int imageBytes = baseImage.Width * baseImage.Height;
-
-            HybRunner runner = HybRunner.Cuda("Sobel_Lock_CUDA.dll").SetDistrib(16, 16, 16, 16, 1, 0);
-
-            // allocate device data 
-            IntPtr d_input, d_result;
-            cuda.Malloc(out d_input, imageBytes);
-            cuda.Malloc(out d_result, imageBytes);
-            // move image content to the GPU
-            cuda.Memcpy(d_input, imageData, imageBytes, cudaMemcpyKind.cudaMemcpyHostToDevice);
 
             // create a result image with same pixel format (8 bits per pixel) and lock its content for write operations
             Bitmap resImage = new Bitmap(baseImage.Width, baseImage.Height, format);
-            BitmapData destData = resImage.LockBits(new Rectangle(0, 0, baseImage.Width, baseImage.Height), ImageLockMode.WriteOnly, format);
-            IntPtr dest = destData.Scan0;
-
-            // run the kernel
-            runner.Wrap(new Program()).ComputeSobel(d_result, d_input, baseImage.Width, baseImage.Height);
+            BitmapData lockedDest = resImage.LockBits(new Rectangle(0, 0, baseImage.Width, baseImage.Height), ImageLockMode.WriteOnly, format);
+            IntPtr destData = lockedDest.Scan0;
             
-            // fetch result back to CPU
-            cuda.Memcpy(dest, d_result, imageBytes, cudaMemcpyKind.cudaMemcpyDeviceToHost);
+            // pin images memory for cuda
+            cuda.HostRegister(srcData, imageBytes, (uint) cudaHostAllocFlags.cudaHostAllocMapped);
+            cuda.HostRegister(destData, imageBytes, (uint)cudaHostAllocFlags.cudaHostAllocMapped);
+            IntPtr d_input, d_result;
+            cuda.HostGetDevicePointer(out d_input, srcData, cudaGetDevicePointerFlags.cudaReserved);
+            cuda.HostGetDevicePointer(out d_result, destData, cudaGetDevicePointerFlags.cudaReserved);
+            
+            // run the kernel
+            HybRunner runner = HybRunner.Cuda("Sobel_Lock_CUDA.dll").SetDistrib(32, 32, 16, 16, 1, 0);
+            runner.Wrap(new Program()).ComputeSobel(d_result, d_input, baseImage.Width, baseImage.Height);
             cuda.DeviceSynchronize();
 
+            // unregister pinned memory
+            cuda.HostUnregister(destData);
+            cuda.HostUnregister(srcData);
+
             // unlock images
-            resImage.UnlockBits(destData);
-            baseImage.UnlockBits(locked);
+            resImage.UnlockBits(lockedDest);
+            baseImage.UnlockBits(lockedSource);
 
             // and save result
             resImage.Palette = baseImage.Palette;
@@ -49,7 +49,7 @@ namespace Hybridizer.Basic.Imaging
         }
 
         [EntryPoint]
-        public static void ComputeSobel(byte* outputPixel, byte* inputPixel, int width, int height)
+        public unsafe static void ComputeSobel(byte* outputPixel, byte* inputPixel, int width, int height)
         {
             for (int i = threadIdx.y + blockIdx.y * blockDim.y; i < height; i += blockDim.y * gridDim.y)
             {
