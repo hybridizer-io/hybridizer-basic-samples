@@ -43,11 +43,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>W:\hybridizer-basic-samples\HybridizerBasicSamples\3.Maths\SharedMatrix\SharedMatrix\bin\x64\Debug\</OutDir>
+    <OutDir>..\SharedMatrix\bin\x64\Debug</OutDir>
     <TargetName>SharedMatrix_CUDA</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>W:\hybridizer-basic-samples\HybridizerBasicSamples\3.Maths\SharedMatrix\SharedMatrix\bin\x64\Release\</OutDir>
+    <OutDir>..\SharedMatrix\bin\x64\Release</OutDir>
     <TargetName>SharedMatrix_CUDA</TargetName>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -55,7 +55,7 @@
     <HybridizerBuiltInFiles>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\include\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
     <HybridizerJitterServicePath>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\bin\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
     <HybridizerJitterServiceOptions>--gpu-architecture=auto;--relocatable-device-code=false;-lineinfo;--std=c++11;-DNO_EXCEPTION</HybridizerJitterServiceOptions>
-    <HybridizerDllFullPath>W:\hybridizer-basic-samples\HybridizerBasicSamples\3.Maths\SharedMatrix\SharedMatrix\SharedMatrix.vs2015.csproj</HybridizerDllFullPath>
+    <HybridizerDllFullPath>..\SharedMatrix\SharedMatrix.vs2015.csproj</HybridizerDllFullPath>
     <HybridizerBinaryPath>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\bin\Hybridizer.exe</HybridizerBinaryPath>
     <HybridizerBuildTask>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\bin\Hybridizer.VSIntegration.BuildSatelliteTask.dll</HybridizerBuildTask>
     <HybridizerBuildSatellite>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\bin\Hybridizer.VSIntegration.BuildSatellite.exe</HybridizerBuildSatellite>
@@ -72,7 +72,7 @@
     <HybridizerBuiltInFiles>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\include\hybridizer.cuda.builtins</HybridizerBuiltInFiles>
     <HybridizerJitterServicePath>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\bin\Hybridizer.PTXJitterService.8.0.exe</HybridizerJitterServicePath>
     <HybridizerJitterServiceOptions>--gpu-architecture=auto;--relocatable-device-code=false;-lineinfo;--std=c++11;-DNO_EXCEPTION</HybridizerJitterServiceOptions>
-    <HybridizerDllFullPath>W:\hybridizer-basic-samples\HybridizerBasicSamples\3.Maths\SharedMatrix\SharedMatrix\SharedMatrix.vs2015.csproj</HybridizerDllFullPath>
+    <HybridizerDllFullPath>..\SharedMatrix\SharedMatrix.vs2015.csproj</HybridizerDllFullPath>
     <HybridizerBinaryPath>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\bin\Hybridizer.exe</HybridizerBinaryPath>
     <HybridizerBuildTask>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\bin\Hybridizer.VSIntegration.BuildSatelliteTask.dll</HybridizerBuildTask>
     <HybridizerBuildSatellite>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\bin\Hybridizer.VSIntegration.BuildSatellite.exe</HybridizerBuildSatellite>
