@@ -22,8 +22,6 @@ namespace HelloWorld
 
             double[] b = new double[N];
 
-            double dataGo = (double) N * 3.0 * 8.0 * 1e-09;
-
             Random rand = new Random();
 
             //Initialize acuda et adotnet and b by some doubles randoms, acuda and adotnet have same numbers. 

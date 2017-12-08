@@ -1,12 +1,7 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Hybridizer.Basic.Utilities;
-using System.Text;
-using System.Threading.Tasks;
 using Hybridizer.Runtime.CUDAImports.cusparse;
 
 namespace Hybridizer.Basic.Integration

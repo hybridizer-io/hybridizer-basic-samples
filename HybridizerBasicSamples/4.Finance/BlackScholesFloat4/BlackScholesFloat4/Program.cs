@@ -42,7 +42,9 @@ namespace Hybridizer.Basic.Finance
                 optionYears_net[i] = rand.NextFloat4(0.25f, 10f);
             }
 
-            HybRunner runner = HybRunner.Cuda("BlackScholesFloat4_CUDA.dll").SetDistrib(20, 256);
+            cudaDeviceProp prop;
+            cuda.GetDeviceProperties(out prop, 0);
+            HybRunner runner = HybRunner.Cuda("BlackScholesFloat4_CUDA.dll").SetDistrib(8 * prop.multiProcessorCount, 256);
             dynamic wrapper = runner.Wrap(new Program());
             
             for (int i = 0; i < NUM_ITERATIONS; ++i)

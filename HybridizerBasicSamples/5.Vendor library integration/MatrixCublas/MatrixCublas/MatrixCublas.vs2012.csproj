@@ -79,16 +79,16 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\0.Utils\Utilities\Utilities.csproj">
-      <Project>{6b01ac2c-af20-4885-bba9-9d23a37a3944}</Project>
-      <Name>Utilities</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin\cublas64_80.dll">
       <Link>cublas64_80.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\0.Utils\Utilities\Utilities.vs2012.csproj">
+      <Project>{ae229eb0-5bcd-436e-8f9c-cde7e2011181}</Project>
+      <Name>Utilities.vs2012</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

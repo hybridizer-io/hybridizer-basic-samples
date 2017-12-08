@@ -1,12 +1,7 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using Hybridizer.Basic.Utilities;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Hybridizer.Basic.Integration
 {
@@ -14,7 +9,7 @@ namespace Hybridizer.Basic.Integration
     {
         static void Main(string[] args)
         {
-            const int N = 2048;
+            const int N = 1024;
 
             Console.WriteLine("Execution cublas matrix mul with sizes ({0}, {1}) x ({2}, {3})", N, N, N, N);
 
