@@ -19,7 +19,7 @@ Obviously, you need to install <a href="https://marketplace.visualstudio.com/ite
 Checkout repository, and open Visual Studio. 
 Require and validate license from Hybridizer Configuration Tool window (see get_started.mp4 for more details). 
 Open HybridizerBasicSamples solution. 
-Build example of your choice and run it. 
+Build solution and run example of your choice. 
 After an update, you might need to reload the solution. 
 
 ## Wiki
