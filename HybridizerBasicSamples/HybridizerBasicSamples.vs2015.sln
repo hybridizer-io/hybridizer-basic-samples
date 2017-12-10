@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0.Utils", "0.Utils", "{74C897E3-0223-44F9-ADAA-973710108819}"
 EndProject
@@ -131,6 +131,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConjugateGradient_CUDA.vs2015", "3.Maths\ConjugateGradient\ConjugateGradient_CUDA\ConjugateGradient_CUDA.vs2015.vcxproj", "{8534BA8F-E5DE-4C88-8EFC-61FF25D649C1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9844A49A-1CDC-4F66-8564-1D89130D2EA8} = {9844A49A-1CDC-4F66-8564-1D89130D2EA8}
+		{C1BFF4FF-96E6-4762-9EA1-67B4DF87F060} = {C1BFF4FF-96E6-4762-9EA1-67B4DF87F060}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MonteCarloHeatEquation_CUDA.vs2015", "3.Maths\MonteCarloHeatEquation\MonteCarloHeatEquation_CUDA\MonteCarloHeatEquation_CUDA.vs2015.vcxproj", "{7B0820D0-70EE-4499-99D3-7949E78E4D94}"
