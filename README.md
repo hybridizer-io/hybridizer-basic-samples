@@ -24,3 +24,8 @@ After an update, you might need to reload the solution.
 
 ## Wiki
 Samples are explained in the [wiki](https://github.com/altimesh/hybridizer-basic-samples/wiki).
+
+
+## Notes
+After building the csproj, you have to build the generated vcxproj manually or put it in your build dependencies using the configuration manager. 
+After installing an update, you may need to unload/reload the solution, or even close and restart visual studio. 
