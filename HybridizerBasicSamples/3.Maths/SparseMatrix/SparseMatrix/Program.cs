@@ -26,47 +26,18 @@ namespace Hybridizer.Basic.Maths
 
             float[] B = new float[A.rows.Length - 1];
 
-            #region CSharp
-            Stopwatch timer = new Stopwatch();
-            timer.Start();
-
-            for (int i = 0; i < redo; ++i)
-            {
-                Multiply(B, A, X, X.Length);
-            }
-            timer.Stop();
-
-            double BW = 1.0E-9 * memoryOperationsSize / (timer.ElapsedMilliseconds * 1.0E-3);
-
-            Console.WriteLine("time C# = " + timer.ElapsedMilliseconds + " ms");
-            Console.WriteLine("DONE -- BW = " + BW + " GB/S");
-            #endregion
-
             #region CUDA
-            HybRunner runner = HybRunner.Cuda("SparseMatrix_CUDA.dll").SetDistrib(20, 256);
-            dynamic wrapper = runner.Wrap(new Program());
+            cudaDeviceProp prop;
+            cuda.GetDeviceProperties(out prop, 0);
 
-            Stopwatch timer_cuda = new Stopwatch();
-            timer_cuda.Start();
+            HybRunner runner = HybRunner.Cuda("SparseMatrix_CUDA.dll").SetDistrib(8 * prop.multiProcessorCount, 256);
+            dynamic wrapper = runner.Wrap(new Program());
 
             for (int i = 0; i < redo; ++i)
             {
                 wrapper.Multiply(B, A, X, X.Length);
             }
-            timer_cuda.Stop();
-
-            double BWCUDA = 1.0E-9 * memoryOperationsSize / (timer_cuda.ElapsedMilliseconds * 1.0E-3);
-            double BWWithout = 1.0E-9 * memoryOperationsSize / (runner.LastKernelDuration.ElapsedMilliseconds * 1.0E-3);
-
-            Console.WriteLine("time CUDA      = " + timer_cuda.ElapsedMilliseconds + " ms");
-            Console.WriteLine("without memcpy = " + runner.LastKernelDuration.ElapsedMilliseconds + " ms");
-            Console.WriteLine("DONE -- BW = " + BWCUDA + " GB/S  Without memcpy = " + BWWithout + " GB/S");
             #endregion
-
-            //for (int i = 0; i < A.rows.Length - 1; ++i)
-            //{
-            //    Console.WriteLine("{0}", B[i]);
-            //}
         }
 
         private static void ReadArguments(string[] args, out string matrixFile, out string vectorFile)
