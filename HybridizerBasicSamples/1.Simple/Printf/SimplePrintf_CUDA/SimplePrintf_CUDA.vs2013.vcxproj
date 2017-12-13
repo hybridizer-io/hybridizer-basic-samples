@@ -43,11 +43,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\SimplePrintf\bin\x64\Debug</OutDir>
-    <TargetName>SimplePrint_CUDA</TargetName>
+    <TargetName>SimplePrintf_CUDA</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>..\SimplePrintf\bin\x64\Release</OutDir>
-    <TargetName>SimplePrint_CUDA</TargetName>
+    <TargetName>SimplePrintf_CUDA</TargetName>
   </PropertyGroup>
   <PropertyGroup Label="HybridizerConfig" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <HybridizerFlavors>CUDA</HybridizerFlavors>
