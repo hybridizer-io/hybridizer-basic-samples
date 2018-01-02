@@ -5,6 +5,7 @@ These samples may be used with Hybridizer Essentials. However, C# code can run w
 They illustrate features of the solution and are a good starting point for experimenting and developing software based on Hybridizer.
 
 ## WARNING
+CUDA 9.1 is NOT supported yet
 CUDA 9 and the latest update of visual studio 2017 do not work together.
 see <a href="https://devtalk.nvidia.com/default/topic/1027209/cuda-9-0-does-not-work-with-the-latest-vs-2017-update/" target="_blank">devtalk.nvidia.com</a>.
 Don't install latest update if you want CUDA with visual studio 2017. 
