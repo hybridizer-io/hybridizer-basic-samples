@@ -72,6 +72,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sobel_Lock.vs2015", "2.Imaging\Sobel_Lock\Sobel_Lock\Sobel_Lock.vs2015.csproj", "{36D0E358-0EA8-4AF4-A61B-17D95DA22BB9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConjugateGradient.vs2015", "3.Maths\ConjugateGradient\ConjugateGradient\ConjugateGradient.vs2015.csproj", "{9844A49A-1CDC-4F66-8564-1D89130D2EA8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C1BFF4FF-96E6-4762-9EA1-67B4DF87F060} = {C1BFF4FF-96E6-4762-9EA1-67B4DF87F060}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonteCarloHeatEquation.vs2015", "3.Maths\MonteCarloHeatEquation\MonteCarloHeatEquation\MonteCarloHeatEquation.vs2015.csproj", "{08B9C56D-917F-44B0-99A8-6F715625D12F}"
 EndProject
@@ -131,7 +134,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConjugateGradient_CUDA.vs2015", "3.Maths\ConjugateGradient\ConjugateGradient_CUDA\ConjugateGradient_CUDA.vs2015.vcxproj", "{8534BA8F-E5DE-4C88-8EFC-61FF25D649C1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9844A49A-1CDC-4F66-8564-1D89130D2EA8} = {9844A49A-1CDC-4F66-8564-1D89130D2EA8}
-		{C1BFF4FF-96E6-4762-9EA1-67B4DF87F060} = {C1BFF4FF-96E6-4762-9EA1-67B4DF87F060}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MonteCarloHeatEquation_CUDA.vs2015", "3.Maths\MonteCarloHeatEquation\MonteCarloHeatEquation_CUDA\MonteCarloHeatEquation_CUDA.vs2015.vcxproj", "{7B0820D0-70EE-4499-99D3-7949E78E4D94}"

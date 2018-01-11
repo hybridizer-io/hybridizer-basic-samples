@@ -68,6 +68,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sobel_Lock.vs2012", "2.Imaging\Sobel_Lock\Sobel_Lock\Sobel_Lock.vs2012.csproj", "{1D081E91-7CF4-4EED-81A2-9E706164A547}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConjugateGradient.vs2012", "3.Maths\ConjugateGradient\ConjugateGradient\ConjugateGradient.vs2012.csproj", "{200CD152-C0F9-4FD6-997B-3E01DFDE66D2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C1BFF4FF-96E6-4762-9EA1-67B4DF87F060} = {C1BFF4FF-96E6-4762-9EA1-67B4DF87F060}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonteCarloHeatEquation.vs2012", "3.Maths\MonteCarloHeatEquation\MonteCarloHeatEquation\MonteCarloHeatEquation.vs2012.csproj", "{1DD21997-E415-4A45-AE65-184E3362776D}"
 EndProject
