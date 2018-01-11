@@ -78,7 +78,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\x64\Release\hybridizer_cuda_reduction.dll">
+    <Content Include="..\..\..\x64\$(Configuration)\hybridizer_cuda_reduction.dll">
       <Link>hybridizer_cuda_reduction.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
