@@ -30,22 +30,6 @@
     <CrossVersionToolset>v140</CrossVersionToolset>
     <HybridizerInstallPath>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.15.0)</HybridizerInstallPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(VisualStudioVersion)' == '11.0'">
-    <CrossVersionToolset>v110</CrossVersionToolset>
-    <HybridizerInstallPath>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.11.0)</HybridizerInstallPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VisualStudioVersion)' == '12.0'">
-    <CrossVersionToolset>v120</CrossVersionToolset>
-    <HybridizerInstallPath>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.12.0)</HybridizerInstallPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VisualStudioVersion)' == '14.0'">
-    <CrossVersionToolset>v140</CrossVersionToolset>
-    <HybridizerInstallPath>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.14.0)</HybridizerInstallPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VisualStudioVersion)' == '15.0'">
-    <CrossVersionToolset>v140</CrossVersionToolset>
-    <HybridizerInstallPath>$(Registry:HKEY_CURRENT_USER\Software\ALTIMESH\Hybridizer@vsixInstallPath.15.0)</HybridizerInstallPath>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
