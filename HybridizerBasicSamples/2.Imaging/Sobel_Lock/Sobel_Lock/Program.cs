@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using Hybridizer.Runtime.CUDAImports;
 using System.Diagnostics;
 using System.Drawing.Imaging;
@@ -45,7 +45,7 @@ namespace Hybridizer.Basic.Imaging
             // and save result
             resImage.Palette = baseImage.Palette;
             resImage.Save("lena_sobel.bmp");
-            Process.Start("lena_sobel.bmp");
+			try { Process.Start("lena_sobel.bmp");} catch {} // catch exception for non interactives machines
         }
 
         [EntryPoint]
