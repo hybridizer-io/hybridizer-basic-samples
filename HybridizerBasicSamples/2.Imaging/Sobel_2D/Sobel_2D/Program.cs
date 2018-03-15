@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using Hybridizer.Runtime.CUDAImports;
 using System.Diagnostics;
 
@@ -24,7 +24,7 @@ namespace Hybridizer.Basic.Imaging
             wrapper.ComputeSobel(outputPixels, inputPixels);
 
             SaveImage("lena-sobel.bmp", outputPixels, size);
-            Process.Start("lena-sobel.bmp");
+			try { Process.Start("lena-sobel.bmp");} catch {} // catch exception for non interactives machines
         }
 
         public static void ReadImage(byte[,] inputPixel, Bitmap image, int size)

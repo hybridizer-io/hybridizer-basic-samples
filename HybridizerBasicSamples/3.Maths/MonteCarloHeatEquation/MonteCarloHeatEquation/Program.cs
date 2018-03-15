@@ -1,4 +1,4 @@
-﻿using Hybridizer.Runtime.CUDAImports;
+using Hybridizer.Runtime.CUDAImports;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -27,7 +27,7 @@ namespace MonteCarloHeatEquation
 
             problem.RefreshHost();
             problem.SaveImage("result.bmp", GetColor);
-            Process.Start("result.bmp");
+			try { Process.Start("result.bmp");} catch {} // catch exception for non interactives machines
         }
 
         /// <summary>

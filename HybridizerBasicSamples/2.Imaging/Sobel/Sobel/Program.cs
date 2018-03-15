@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System;
@@ -30,7 +30,7 @@ namespace Hybridizer.Basic.Imaging
            
 
             SaveImage("lena-sobel.bmp", outputPixels, width, height);
-            Process.Start("lena-sobel.bmp");
+			try { Process.Start("lena-sobel.bmp");} catch {} // catch exception for non interactives machines
         }
 
         public static void ReadImage(byte[] inputPixel, Bitmap image, int width, int height)

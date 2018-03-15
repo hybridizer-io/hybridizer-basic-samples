@@ -1,4 +1,4 @@
-﻿using Hybridizer.Runtime.CUDAImports;
+using Hybridizer.Runtime.CUDAImports;
 using System.Drawing;
 using System.Diagnostics;
 using System;
@@ -190,7 +190,7 @@ namespace Hybridizer.Basic.Maths
             image.Save("newton.png", System.Drawing.Imaging.ImageFormat.Png);
             #endregion
 
-            Process.Start("newton.png");
+			try { Process.Start("newton.png");} catch {} // catch exception for non interactives machines
         }
     }
 }
