@@ -22,8 +22,10 @@ Open HybridizerBasicSamples solution.
 Build solution and run example of your choice. 
 After an update, you might need to reload the solution. 
 
-## Wiki
+## Documentation
 Samples are explained in the [wiki](https://github.com/altimesh/hybridizer-basic-samples/wiki).
+
+You can find API documentation in our [DocFX generated documentation](http://docs.altimesh.com/api/)
 
 
 ## Notes
