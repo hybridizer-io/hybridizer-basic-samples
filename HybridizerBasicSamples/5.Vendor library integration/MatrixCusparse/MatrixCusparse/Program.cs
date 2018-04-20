@@ -6,7 +6,7 @@ using Hybridizer.Runtime.CUDAImports.cusparse;
 
 namespace Hybridizer.Basic.Integration
 {
-    unsafe class Program
+    class Program
     {
         static void Main(string[] args)
         {
@@ -22,33 +22,27 @@ namespace Hybridizer.Basic.Integration
             float beta = 0.0f;
 
             cusparseHandle_t handle;
-            CUBSPARSE_64_80.cusparseCreate(out handle);
+            CUSPARSE_64_80.cusparseCreate(out handle);
 
             cusparseOperation_t transA = cusparseOperation_t.CUSPARSE_OPERATION_NON_TRANSPOSE;
 
             cusparseMatDescr_t descrA;
-            CUBSPARSE_64_80.cusparseCreateMatDescr(out descrA);
-            CUBSPARSE_64_80.cusparseSetMatType(descrA, cusparseMatrixType_t.CUSPARSE_MATRIX_TYPE_GENERAL);
-            CUBSPARSE_64_80.cusparseSetMatIndexBase(descrA , cusparseIndexBase_t.CUSPARSE_INDEX_BASE_ZERO);
+            CUSPARSE_64_80.cusparseCreateMatDescr(out descrA);
+            CUSPARSE_64_80.cusparseSetMatType(descrA, cusparseMatrixType_t.CUSPARSE_MATRIX_TYPE_GENERAL);
+            CUSPARSE_64_80.cusparseSetMatIndexBase(descrA , cusparseIndexBase_t.CUSPARSE_INDEX_BASE_ZERO);
             
             for (int i = 0; i < redo; ++i)
             {
                Multiply(handle, transA, a.rows.Length -1, x.Length,a.data.Length,alpha, descrA, a.data,a.rows,a.indices,x,beta,b);
             }
             
-            CUBSPARSE_64_80.cusparseDestroy(handle);
+            CUSPARSE_64_80.cusparseDestroy(handle);
 
             Console.Out.WriteLine("DONE");
 
         }
-
-        [IntrinsicFunction("fprintf")]
-        public static void fprintf(string s)
-        {
-            Console.WriteLine(s);
-        }
         
-        public static unsafe void Multiply(cusparseHandle_t handle,
+        public static void Multiply(cusparseHandle_t handle,
                                      cusparseOperation_t transA,
                                      int m,
                                      int n,
@@ -67,7 +61,7 @@ namespace Hybridizer.Basic.Integration
         }
 
         [DllImport("cusparse64_80.dll", EntryPoint = "cusparseScsrmv", CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe cusparseStatus_t cusparseScsrmv(cusparseHandle_t handle,
+        public static extern cusparseStatus_t cusparseScsrmv(cusparseHandle_t handle,
                                               cusparseOperation_t transA,
                                               int m,
                                               int n,

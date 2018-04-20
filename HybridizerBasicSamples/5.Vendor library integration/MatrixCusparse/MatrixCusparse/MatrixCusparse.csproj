@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9CC9B520-CA29-410A-AE69-B1C4AFA2B98E}</ProjectGuid>
+    <ProjectGuid>{3F6E2056-0E5F-450F-8996-2961E7F0A732}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MatrixCusparse</RootNamespace>
@@ -12,41 +12,46 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <HybridizerPath Condition="'$(OS)' == 'Unix'">/opt/altimesh/hybridizer-essentials/bin/</HybridizerPath>
+    <HybridizerPath Condition="'$(OS)|$(VisualStudioVersion)' == 'Windows_NT|11.0'">$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath.11.0)\bin\</HybridizerPath>
+    <HybridizerPath Condition="'$(OS)|$(VisualStudioVersion)' == 'Windows_NT|12.0'">$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath.12.0)\bin\</HybridizerPath>
+    <HybridizerPath Condition="'$(OS)|$(VisualStudioVersion)' == 'Windows_NT|14.0'">$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath.14.0)\bin\</HybridizerPath>
+    <HybridizerPath Condition="'$(OS)|$(VisualStudioVersion)' == 'Windows_NT|15.0'">$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath.15.0)\bin\</HybridizerPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>target</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>target</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x64\Debug\</OutputPath>
+    <OutputPath>target</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>bin\x64\Release\</OutputPath>
+    <OutputPath>target</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -54,11 +59,11 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Hybridizer.Runtime.CUDAImports">
-      <HintPath>$(registry:HKEY_CURRENT_USER\SOFTWARE\ALTIMESH\Hybridizer@vsixInstallPath)\Deploy\Hybridizer.Essentials\tools\bin\x64\Hybridizer.Runtime.CUDAImports.dll</HintPath>
+      <HintPath>$(HybridizerPath)Hybridizer.Runtime.CUDAImports.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -77,8 +82,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="HV15R.mtx" />
-    <None Include="HV15R_x.mtx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(CUDA_PATH_V8_0)\bin\cusparse64_80.dll">
@@ -88,7 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\0.Utils\Utilities\Utilities.csproj">
-      <Project>{6b01ac2c-af20-4885-bba9-9d23a37a3944}</Project>
+      <Project>{ae229eb0-5bcd-436e-8f9c-cde7e2011181}</Project>
       <Name>Utilities</Name>
     </ProjectReference>
   </ItemGroup>

@@ -1,4 +1,4 @@
-﻿using Hybridizer.Runtime.CUDAImports;
+using Hybridizer.Runtime.CUDAImports;
 using System.Drawing;
 using System.Diagnostics;
 using System;
@@ -115,7 +115,7 @@ namespace Mandelbrot
             image.Save("mandelbrot.png", System.Drawing.Imaging.ImageFormat.Png);
             #endregion
 
-            Process.Start("mandelbrot.png");
+			try { Process.Start("mandelbrot.png");} catch {} // catch exception for non interactives machines
         }
     }
 }
