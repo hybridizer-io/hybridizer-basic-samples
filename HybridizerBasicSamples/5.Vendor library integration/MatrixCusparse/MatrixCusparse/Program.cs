@@ -1,12 +1,7 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Hybridizer.Basic.Utilities;
-using System.Text;
-using System.Threading.Tasks;
 using Hybridizer.Runtime.CUDAImports.cusparse;
 
 namespace Hybridizer.Basic.Integration
@@ -68,7 +63,7 @@ namespace Hybridizer.Basic.Integration
                                      float[] b
                                      )
         {
-            cusparseScsrmv(handle, transA, m, n, nnz, &alpha, descrA, csrValA, csrRowPtrA, csrColIndA, x, &beta, b);
+            cusparseScsrmv(handle, transA, m, n, nnz, ref alpha, descrA, csrValA, csrRowPtrA, csrColIndA, x, ref beta, b);
         }
 
         [DllImport("cusparse64_80.dll", EntryPoint = "cusparseScsrmv", CallingConvention = CallingConvention.Cdecl)]
@@ -77,13 +72,13 @@ namespace Hybridizer.Basic.Integration
                                               int m,
                                               int n,
                                               int nnz,
-                                              float* alpha,
+                                              ref float alpha,
                                               cusparseMatDescr_t descrA,
                                               [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(CudaMarshaler))] float[] csrValA,
                                               [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(CudaMarshaler))] int[] csrRowPtrA,
                                               [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(CudaMarshaler))] int[] csrColIndA,
                                               [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(CudaMarshaler))] float[] x,
-                                              float* beta,
+                                              ref float beta,
                                               [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(CudaMarshaler))] float[] b);
     }
 }
