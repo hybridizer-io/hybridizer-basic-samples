@@ -272,3 +272,11 @@ hybridizer.config
 /HybridizerBasicSamples_CUDA9/4.Finance/BlackScholesFloat4/BlackScholesFloat4_CUDA/hybridizer-generated-sources/hybridizer.typeids.cuda.xml
 /HybridizerBasicSamples_CUDA9/4.Finance/BlackScholesFloat4/BlackScholesFloat4_CUDA/hybridizer-generated-sources/hybridizer.wrappers.cu
 /HybridizerBasicSamples_CUDA9/HybridizerBasicSamples.VC.db
+/HybridizerBasicSamples_CUDA91/5.CUDA runtime/Textures and Surfaces/Textures and Surfaces_CUDA/hybridizer-generated-sources/hybridizer.base.config
+/HybridizerBasicSamples_CUDA91/5.CUDA runtime/Textures and Surfaces/Textures and Surfaces_CUDA/hybridizer-generated-sources/hybridizer.generated.cpp
+/HybridizerBasicSamples_CUDA91/5.CUDA runtime/Textures and Surfaces/Textures and Surfaces_CUDA/hybridizer-generated-sources/hybridizer.typeids.cuda.xml
+/HybridizerBasicSamples_CUDA91/5.CUDA runtime/Textures and Surfaces/Textures and Surfaces_CUDA/hybridizer-generated-sources/hybridizer.wrappers.cu
+/HybridizerBasicSamples_CUDA91/5.CUDA runtime/ConstantMemory/ConstantMemory_CUDA/hybridizer-generated-sources/hybridizer.base.config
+/HybridizerBasicSamples_CUDA91/5.CUDA runtime/ConstantMemory/ConstantMemory_CUDA/hybridizer-generated-sources/hybridizer.generated.cpp
+/HybridizerBasicSamples_CUDA91/5.CUDA runtime/ConstantMemory/ConstantMemory_CUDA/hybridizer-generated-sources/hybridizer.typeids.cuda.xml
+/HybridizerBasicSamples_CUDA91/5.CUDA runtime/ConstantMemory/ConstantMemory_CUDA/hybridizer-generated-sources/hybridizer.wrappers.cu
