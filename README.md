@@ -1,3 +1,5 @@
+Hybridizer Essentials is a compiler targeting CUDA-enabled GPUS from .Net. Using parallelization patterns, such as Parallel.For, or ditributing parallel work by hand, the user can benefit from the compute power of GPUS without entering the learning curve of CUDA, all within Visual Studio.
+
 ### hybridizer-basic-samples
 This repo illustrates a few samples for Hybridizer
 
