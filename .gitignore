@@ -280,3 +280,27 @@ hybridizer.config
 /HybridizerBasicSamples_CUDA91/5.CUDA runtime/ConstantMemory/ConstantMemory_CUDA/hybridizer-generated-sources/hybridizer.generated.cpp
 /HybridizerBasicSamples_CUDA91/5.CUDA runtime/ConstantMemory/ConstantMemory_CUDA/hybridizer-generated-sources/hybridizer.typeids.cuda.xml
 /HybridizerBasicSamples_CUDA91/5.CUDA runtime/ConstantMemory/ConstantMemory_CUDA/hybridizer-generated-sources/hybridizer.wrappers.cu
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/hybridizer-generated-sources/Recursion.Program.cu
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/hybridizer-generated-sources/hybridizer.all.cuda.cu
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/hybridizer-generated-sources/hybridizer.base.config
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/hybridizer-generated-sources/hybridizer.cuda.cuh
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/hybridizer-generated-sources/hybridizer.dispatch.cuda.cu
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/hybridizer-generated-sources/hybridizer.generated.cpp
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/hybridizer-generated-sources/hybridizer.includes.cuda.h
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/hybridizer-generated-sources/hybridizer.typeids.cuda.xml
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/hybridizer-generated-sources/hybridizer.wrappers.cu
+/HybridizerBasicSamples_CUDA92/1.Simple/Recursion/Recursion_CUDA/*.user
+/HybridizerBasicSamples_CUDA92/1.Simple/Reduction/Reduction_CUDA/hybridizer-generated-sources/hybridizer.base.config
+/HybridizerBasicSamples_CUDA92/1.Simple/Reduction/Reduction_CUDA/hybridizer-generated-sources/hybridizer.generated.cpp
+/HybridizerBasicSamples_CUDA92/1.Simple/Reduction/Reduction_CUDA/hybridizer-generated-sources/hybridizer.typeids.cuda.xml
+/HybridizerBasicSamples_CUDA92/1.Simple/Reduction/Reduction_CUDA/hybridizer-generated-sources/hybridizer.wrappers.cu
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/Mandelbulb.Mandelbulb.cu
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.all.cuda.cu
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.base.config
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.cuda.cuh
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.dispatch.cuda.cu
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.generated.cpp
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.includes.cuda.h
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.typeids.cuda.xml
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.wrappers.cu
+/HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/*.user
