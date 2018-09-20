@@ -92,7 +92,6 @@ namespace Hybridizer.Basic.Maths
         public static float ScalarProd(FloatResidentArray X, FloatResidentArray Y, int N)
         {
             return inner_scalar_prod((float*) X.DevicePointer, (float*) Y.DevicePointer, N);
-            //return ParallelEnumerable.Range(0, N).Sum(i => X[i] * Y[i]);
         }
 
         [DllImport("hybridizer_cuda_reduction.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "ScalarProd_float")]
