@@ -9,7 +9,7 @@ They illustrate features of the solution and are a good starting point for exper
 ## WARNING
 CUDA 9/9.1/9.2 and the latest update of visual studio do not work together (v141 toolset).
 see <a href="https://devtalk.nvidia.com/default/topic/1027209/cuda-9-0-does-not-work-with-the-latest-vs-2017-update/" target="_blank">devtalk.nvidia.com</a>.
-Install the v140 toolset before trying to compile samples with visual 2017.
+Install the v140 toolset before trying to compile samples with visual 2017, or use CUDA 10.0
 
 ## Requirements
 Before you start, you first need to check if you have the right environment. 
