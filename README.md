@@ -6,6 +6,8 @@ This repo illustrates a few samples for Hybridizer
 These samples may be used with Hybridizer Essentials. However, C# code can run with any version of Hybridizer. 
 They illustrate features of the solution and are a good starting point for experimenting and developing software based on Hybridizer.
 
+All new code is added to the repo of the latest CUDA version (currently 10.0). Older CUDA versions are still supported, but don't get the new samples. 
+
 ## WARNING
 CUDA 9/9.1/9.2 and the latest update of visual studio do not work together (v141 toolset).
 see <a href="https://devtalk.nvidia.com/default/topic/1027209/cuda-9-0-does-not-work-with-the-latest-vs-2017-update/" target="_blank">devtalk.nvidia.com</a>.
