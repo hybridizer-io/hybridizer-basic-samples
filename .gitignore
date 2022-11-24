@@ -20,6 +20,11 @@
 /HybridizerBasicSamples/1.Simple/Sobel/Sobel
 *.pdb
 bin
+*.suo
+*.exe.config
+*.mod
+target
+hybridizer-generated-sources
 generated-sources
 generated_sources
 Debug
@@ -304,3 +309,19 @@ hybridizer.config
 /HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.typeids.cuda.xml
 /HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/hybridizer-generated-sources/hybridizer.wrappers.cu
 /HybridizerBasicSamples_CUDA92/3.Maths/Mandelbulb/Mandelbulb_CUDA/*.user
+*.db
+*.lock
+*.ide
+*.db-shm
+*.db-wal
+*.user
+*.dll
+*.exe
+HybridizerBasicSamples_CUDA101/.vs/HybridizerBasicSamples/v16/.suo
+HybridizerBasicSamples_CUDA101/5.CUDA runtime/NPP_ImageSegmentation/NPP_ImageSegmentation/objects_segments.png
+HybridizerBasicSamples_CUDA101/packages/OpenTK.3.0.0/.signature.p7s
+HybridizerBasicSamples_CUDA101/packages/OpenTK.3.0.0/content/OpenTK.dll.config
+HybridizerBasicSamples_CUDA101/packages/OpenTK.3.0.0/lib/net20/OpenTK.xml
+HybridizerBasicSamples_CUDA101/packages/OpenTK.3.0.0/OpenTK.3.0.0.nupkg
+/HybridizerBasicSamples_CUDA116/.vs/HybridizerBasicSamples
+/HybridizerBasicSamples_CUDA/.vs/HybridizerBasicSamples

@@ -6,78 +6,24 @@ This repo illustrates a few samples for Hybridizer
 These samples may be used with Hybridizer Essentials. However, C# code can run with any version of Hybridizer. 
 They illustrate features of the solution and are a good starting point for experimenting and developing software based on Hybridizer.
 
-All new code is added to the repo of the latest CUDA version (currently 10.0). Older CUDA versions are still supported, but don't get the new samples. 
-
 ## WARNING
-CUDA 9/9.1/9.2 and the latest update of visual studio do not work together (v141 toolset).
-see <a href="https://devtalk.nvidia.com/default/topic/1027209/cuda-9-0-does-not-work-with-the-latest-vs-2017-update/" target="_blank">devtalk.nvidia.com</a>.
-Install the v140 toolset before trying to compile samples with visual 2017, or use CUDA 10.0
+We dropped support for 
+- CUDA &lt; 10.0
+- Visual Studio &lt; 15
 
 ## Requirements
 Before you start, you first need to check if you have the right environment. 
-You need an install of Visual Studio (2012 or later). 
-You need a CUDA-enabled GPU and CUDA (8.0 or later) installed (with the CUDA driver). 
+You need an install of Visual Studio (2015 or later). 
+You need a CUDA-enabled GPU and CUDA (10.0 or later) installed (with the CUDA driver). 
 Obviously, you need to install <a href="https://marketplace.visualstudio.com/items?itemName=altimesh.AltimeshHybridizerExtensionEssentials" target="_blank">Hybridizer Essentials</a>. 
 
 ## Run
 Checkout repository, and open Visual Studio. 
 Require and validate license from Hybridizer->License Settings Tool window. 
 Open HybridizerBasicSamples solution. 
+Choose CUDA version in "solution items" > Directory.Build.Props & App.config (11.6 by default)
 Build solution and run example of your choice. 
 After an update, you might need to reload the solution. 
-
-## Example
-```csharp
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Hybridizer.Runtime.CUDAImports;
-
-namespace HybridizerExample
-{
-    class Program
-    {
-        [EntryPoint]
-        public static void Add(float[] a, float[] b, int N)
-        {
-            Parallel.For(0, N, i => a[i] += b[i]);
-        }
-
-        static void Main(string[] args)
-        {
-            // Arrange
-            const int N = 1024 * 1024 * 32;
-            float[] a = Enumerable.Range(0, N).Select(i => (float)i).ToArray();
-            float[] b = Enumerable.Range(0, N).Select(i => 1.0F).ToArray();
-
-            // Run
-            HybRunner.Cuda().Wrap(new Program()).Add(a, b, N);
-
-            cuda.DeviceSynchronize();
-
-
-            // Assert
-            for(int i = 0; i < N; ++i)
-            {
-                if(a[i] != (float)i + 1.0F)
-                {
-                    Console.Error.WriteLine("Error at {0} : {1} != {2}", i, a[i], (float)i + 1.0F);
-                    Environment.Exit(6); // abort
-                }
-            }
-
-            Console.Out.WriteLine("OK");
-        }
-    }
-}
-```
-```
-hybridizer-cuda Program.cs -o a.exe -run
-```
-
-> OK
-
 
 ## Documentation
 Samples are explained in the [wiki](https://github.com/altimesh/hybridizer-basic-samples/wiki).
