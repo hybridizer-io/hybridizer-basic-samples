@@ -1,133 +1,172 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
+
 
 namespace NPP_ImageSegmentation
 {
-    class Program
+    public class Program
     {
-        const string inputFileName = @"large_objects.png";
-        const string segmentsFileName = @"objects_segments.png";
-
-        [DllImport("NPP_ImageSegmentation_CUDA.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int NPP_ImageSegmentationx46Programx46ColorizeLabels_ExternCWrapperStream_CUDA(
-            int gridDimX, int gridDimY, int blockDimX, int blockDimY, int blockDimZ, int shared, cudaStream_t stream,
-            IntPtr segments, IntPtr colors, IntPtr colormap, int maxLabel, int count, int width, int pitch);
-
-        [EntryPoint]
-        public static void ColorizeLabels(ushort[] segments, uchar4[] colors, uchar4[] colormap, int maxLabel, int count, int width, int pitch)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
         {
-            for (int tid = threadIdx.x + blockIdx.x * blockDim.x; tid < count; tid += blockDim.x * gridDim.x)
+            Parallel.For(0, N, i =>
             {
-                int colorsI = tid % width;
-                if (colorsI < width)
-                {
-                    int segmentsI = tid % pitch;
-                    int segmentsJ = tid / pitch;
-                    int colorsJ = tid / width;
-                    ushort label = segments[tid];
-                    if (label != 0)
-                    {
-                        colors[segmentsJ * width + segmentsI] = colormap[label];
-                    }
-                }
+                dst[i] += src[i];
+            });
+        }
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+        {
+            // explicit control of threads
+            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
+            {
+                dst[i] += src[i];
             }
         }
 
-
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            Console.WriteLine("NPP support is broken for cuda > 12");
-            return 0;
-            // init CUDA
-            IntPtr d;
-            cuda.Malloc(out d, sizeof(int));
-            cuda.Free(d);
+            // setup cuda and generated dll
+            cudaDeviceProp prop = DetectAndSelectCudaDevice();
+            dynamic wrapped = WrapCudaDll(prop);
 
-            HybRunner runner = HybRunner.Cuda();
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
-            dynamic wrapped = runner.Wrap(new Program());
-            runner.saveAssembly();
-            cudaStream_t stream;
-            cuda.StreamCreate(out stream);
-
-            NppStreamContext context = new NppStreamContext
+            // prepare data
+            const int N = 1 << 24; // 4 millions random integers
+            int[] src = new int[N];
+            int[] dotnet_dst_1 = new int[N];
+            int[] dotnet_dst_2 = new int[N];
+            int[] cuda_dst_1 = new int[N];
+            int[] cuda_dst_2 = new int[N];
+            var rand = new Random();
+            for(int i = 0; i < N; ++i)
             {
-                hStream = stream,
-                nCudaDevAttrComputeCapabilityMajor = prop.major,
-                nCudaDevAttrComputeCapabilityMinor = prop.minor,
-                nCudaDeviceId = 0,
-                nMaxThreadsPerBlock = prop.maxThreadsPerBlock,
-                nMaxThreadsPerMultiProcessor = prop.maxThreadsPerMultiProcessor,
-                nMultiProcessorCount = prop.multiProcessorCount,
-                nSharedMemPerBlock = 0
-            };
-
-            Random rand = new Random();
-
-            using (NPPImage input = NPPImage.Load(inputFileName, stream))
-            {
-                uchar4[] output = new uchar4[input.width * input.height];
-                IntPtr d_output;
-                cuda.Malloc(out d_output, input.width * input.height * 4 * sizeof(byte));
-
-                // working area 
-                IntPtr oDeviceDst32u;
-                size_t oDeviceDst32uPitch;
-                cuda.ERROR_CHECK(cuda.MallocPitch(out oDeviceDst32u, out oDeviceDst32uPitch, input.width * sizeof(int), input.height));
-                IntPtr segments;
-                size_t segmentsPitch;
-                cuda.ERROR_CHECK(cuda.MallocPitch(out segments, out segmentsPitch, input.width * sizeof(ushort), input.height));
-
-                NppiSize oSizeROI = new NppiSize { width = input.width, height = input.height };
-                int nBufferSize = 0;
-                IntPtr pScratchBufferNPP1, pScratchBufferNPP2;
-
-                // compute maximum label
-                NPPI.ERROR_CHECK(NPPI.LabelMarkersGetBufferSize_16u_C1R(oSizeROI, out nBufferSize));
-                cuda.ERROR_CHECK(cuda.Malloc(out pScratchBufferNPP1, nBufferSize));
-                int maxLabel;
-                NPPI.ERROR_CHECK(NPPI.LabelMarkers_16u_C1IR_Ctx(input.deviceData, input.pitch, oSizeROI, 165, NppiNorm.nppiNormInf, out maxLabel, pScratchBufferNPP1, context));
-
-
-                // compress labels
-                NPPI.ERROR_CHECK(NPPI.CompressMarkerLabelsGetBufferSize_16u_C1R(maxLabel, out nBufferSize));
-                cuda.ERROR_CHECK(cuda.Malloc(out pScratchBufferNPP2, nBufferSize));
-                NPPI.ERROR_CHECK(NPPI.CompressMarkerLabels_16u_C1IR_Ctx(input.deviceData, input.pitch, oSizeROI, maxLabel, out maxLabel, pScratchBufferNPP2, context));
-
-                uchar4[] colormap = new uchar4[maxLabel + 1];
-                for (int i = 0; i <= maxLabel; ++i)
-                {
-                    colormap[i] = new uchar4 { x = (byte)(rand.Next() % 256), y = (byte)(rand.Next() % 256), z = (byte)(rand.Next() % 256), w = 0 };
-                }
-
-                IntPtr d_colormap;
-                cuda.Malloc(out d_colormap, (maxLabel + 1) * 4 * sizeof(byte));
-                var handle = GCHandle.Alloc(colormap, GCHandleType.Pinned);
-                cuda.Memcpy(d_colormap, handle.AddrOfPinnedObject(), (maxLabel + 1) * 4 * sizeof(byte), cudaMemcpyKind.cudaMemcpyHostToDevice);
-                handle.Free();
-
-                NPP_ImageSegmentationx46Programx46ColorizeLabels_ExternCWrapperStream_CUDA(
-                    8 * prop.multiProcessorCount, 1, 256, 1, 1, 0, stream, // cuda configuration
-                    input.deviceData, d_output, d_colormap, maxLabel + 1, input.pitch * input.height / sizeof(ushort), input.width, input.pitch / sizeof(ushort));
-
-                handle = GCHandle.Alloc(output, GCHandleType.Pinned);
-                cuda.Memcpy(handle.AddrOfPinnedObject(), d_output, input.width * input.height * sizeof(byte) * 4, cudaMemcpyKind.cudaMemcpyDeviceToHost);
-                handle.Free();
-                NPPImage.Save(segmentsFileName, output, input.width, input.height);
-                Process.Start(segmentsFileName);
-
-                cuda.ERROR_CHECK(cuda.Free(oDeviceDst32u));
-                cuda.ERROR_CHECK(cuda.Free(segments));
-                cuda.ERROR_CHECK(cuda.Free(pScratchBufferNPP1));
-                cuda.ERROR_CHECK(cuda.Free(pScratchBufferNPP2));
+                src[i] = rand.Next();
+                dotnet_dst_1[i] = rand.Next();
+                dotnet_dst_2[i] = dotnet_dst_1[i];
+                cuda_dst_1[i] = dotnet_dst_1[i];
+                cuda_dst_2[i] = dotnet_dst_1[i];
             }
+
+            // run
+            Console.Out.WriteLine("running dotnet");
+            MyAutoEntryPoint(dotnet_dst_1, src, N);
+            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
+            Console.Out.WriteLine("running generated CUDA");
+            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
+            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
+
+            if (!CudaErrorCheck())
+            {
+                return;
+            }
+
+            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
+            {
+                return;
+            }
+
+            Console.WriteLine("OK");
+        }
+
+        /// <summary>
+        /// Selects CUDA enabled device with highest compute capability
+        /// </summary>
+        /// <returns>its cuda device properties</returns>
+        private static cudaDeviceProp DetectAndSelectCudaDevice()
+        {
+            cuda.GetDeviceCount(out int deviceCount);
+            if(deviceCount <= 0)
+            {
+                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
+                Environment.Exit(6);
+            }
+
+            int maxCC = -1;
+            int deviceId = -1;
+            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            for(int i = 0; i < deviceCount; ++i)
+            {
+                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                int cc = 10 * prop.major + prop.minor;
+                if(cc > maxCC)
+                {
+                    maxCC = cc;
+                    deviceId = i;
+                    result = prop;
+                }
+            }
+
+            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
+            cuda.SetDevice(deviceId);
+            return result;
+        }
+
+        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
+        {
+            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+            if(executing_assembly == null)
+            {
+                Console.Error.WriteLine("Cannot find executing assembly");
+                Environment.Exit(6); // abort
+            }
+
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "NPP_ImageSegmentation_CUDA.dll");
+            if(!File.Exists(cuda_dll))
+            {
+                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
+                Environment.Exit(6); // abort
+            }
+
+            // register dll and configure default execution grid
+            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
+            dynamic wrapped = runner.Wrap(new Program());
+            return wrapped;
+        }
+
+        private static bool CudaErrorCheck()
+        {
+            cudaError_t err = cuda.GetPeekAtLastError();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+            err = cuda.DeviceSynchronize();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                if (dotnet_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                }
+                if (cuda_dst_1[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
+                    return false;
+                }
+                if (cuda_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

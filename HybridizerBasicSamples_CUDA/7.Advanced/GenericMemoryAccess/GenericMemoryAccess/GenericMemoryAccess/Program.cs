@@ -1,68 +1,172 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
+using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 
-/// this sample has absolutely no mathematical meaning
-/// nor performance related features
-/// It's just to show how to rely on generics to access memory
-/// instead of virtual functions
 namespace GenericMemoryAccess
 {
-    [HybridRegisterTemplate(Specialize =typeof(MatrixOperations<Matrix>))]
-    [HybridRegisterTemplate(Specialize = typeof(MatrixOperations<Transposed>))]
-    public class MatrixOperations<TMatrix> where TMatrix : IMatrix
+    public class Program
     {
-        TMatrix _matrix;
-
-        public MatrixOperations(TMatrix matrix)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
         {
-            _matrix = matrix;
-        }
-
-        [Kernel]
-        public void IncrementSupDiag() 
-        {
-            for (int i = threadIdx.x + blockIdx.x * blockDim.x + 1; i < _matrix.size; i += blockDim.x * gridDim.x)
+            Parallel.For(0, N, i =>
             {
-                _matrix[i, i-1] += 1.0;
+                dst[i] += src[i];
+            });
+        }
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+        {
+            // explicit control of threads
+            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
+            {
+                dst[i] += src[i];
             }
         }
-    }
 
-    internal class Program
-    {
-        [EntryPoint]
-        public static void RunNormal(MatrixOperations<Matrix> m)
+        public static void Main(string[] args)
         {
-            m.IncrementSupDiag();
+            // setup cuda and generated dll
+            cudaDeviceProp prop = DetectAndSelectCudaDevice();
+            dynamic wrapped = WrapCudaDll(prop);
+
+            // prepare data
+            const int N = 1 << 24; // 4 millions random integers
+            int[] src = new int[N];
+            int[] dotnet_dst_1 = new int[N];
+            int[] dotnet_dst_2 = new int[N];
+            int[] cuda_dst_1 = new int[N];
+            int[] cuda_dst_2 = new int[N];
+            var rand = new Random();
+            for(int i = 0; i < N; ++i)
+            {
+                src[i] = rand.Next();
+                dotnet_dst_1[i] = rand.Next();
+                dotnet_dst_2[i] = dotnet_dst_1[i];
+                cuda_dst_1[i] = dotnet_dst_1[i];
+                cuda_dst_2[i] = dotnet_dst_1[i];
+            }
+
+            // run
+            Console.Out.WriteLine("running dotnet");
+            MyAutoEntryPoint(dotnet_dst_1, src, N);
+            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
+            Console.Out.WriteLine("running generated CUDA");
+            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
+            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
+
+            if (!CudaErrorCheck())
+            {
+                return;
+            }
+
+            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
+            {
+                return;
+            }
+
+            Console.WriteLine("OK");
         }
 
-        [EntryPoint]
-        public static void RunTranposed(MatrixOperations<Transposed> m)
+        /// <summary>
+        /// Selects CUDA enabled device with highest compute capability
+        /// </summary>
+        /// <returns>its cuda device properties</returns>
+        private static cudaDeviceProp DetectAndSelectCudaDevice()
         {
-            m.IncrementSupDiag();
+            cuda.GetDeviceCount(out int deviceCount);
+            if(deviceCount <= 0)
+            {
+                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
+                Environment.Exit(6);
+            }
+
+            int maxCC = -1;
+            int deviceId = -1;
+            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            for(int i = 0; i < deviceCount; ++i)
+            {
+                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                int cc = 10 * prop.major + prop.minor;
+                if(cc > maxCC)
+                {
+                    maxCC = cc;
+                    deviceId = i;
+                    result = prop;
+                }
+            }
+
+            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
+            cuda.SetDevice(deviceId);
+            return result;
         }
 
-        static void Main(string[] args)
+        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
         {
-            var m = new Matrix(4);
-            var t = new Transposed(4);
-            var opnormal = new MatrixOperations<Matrix>(m);
-            var optransposed = new MatrixOperations<Transposed>(t);
+            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+            if(executing_assembly == null)
+            {
+                Console.Error.WriteLine("Cannot find executing assembly");
+                Environment.Exit(6); // abort
+            }
 
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "GenericMemoryAccess_CUDA.dll");
+            if(!File.Exists(cuda_dll))
+            {
+                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
+                Environment.Exit(6); // abort
+            }
 
-            HybRunner runner = HybRunner.Cuda().SetDistrib(2, 2, 2, 2, 1, 0);
+            // register dll and configure default execution grid
+            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
             dynamic wrapped = runner.Wrap(new Program());
+            return wrapped;
+        }
 
-            //IntPtr d_normal = runner.Marshaller.MarshalManagedToNative(opnormal);
-            //IntPtr d_t = runner.Marshaller.MarshalManagedToNative(t);
-            wrapped.RunNormal(opnormal);
-            wrapped.RunTranposed(optransposed);
-            cuda.DeviceSynchronize();
+        private static bool CudaErrorCheck()
+        {
+            cudaError_t err = cuda.GetPeekAtLastError();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+            err = cuda.DeviceSynchronize();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
 
-            m.Print();
-            t.Print();
+            return true;
+        }
+
+        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                if (dotnet_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                }
+                if (cuda_dst_1[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
+                    return false;
+                }
+                if (cuda_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

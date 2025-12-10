@@ -1,130 +1,172 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+
 
 namespace InterfacesReduction
 {
-    interface ILocalReductor
+    public class Program
     {
-        [Kernel] // mandatory on interface
-        float neutral { get; }
-        [Kernel] // mandatory on interface
-        float func(float x, float y);
-    }
-
-    class AddLocalReductor : ILocalReductor
-    {
-        [Kernel] // mandatory on implementation
-        public float neutral { get => 0.0F;  }
-
-        [Kernel] // mandatory on implementation
-        public float func(float x, float y)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
         {
-            return x + y;
-        }
-    }
-
-    class MaxLocalReductor : ILocalReductor
-    {
-        [Kernel] // mandatory on implementation
-        public float neutral { get => float.NegativeInfinity; }
-
-        [Kernel] // mandatory on implementation
-        public float func(float x, float y)
-        {
-            return Math.Max(x, y);
-        }
-    }
-
-
-    class Program
-    {
-        [EntryPoint]
-        public static void Reduce(float[] result, float[] input, int N, ILocalReductor localReductor)
-        {
-            var cache = new SharedMemoryAllocator<float>().allocate(blockDim.x);
-            int tid = threadIdx.x + blockDim.x * blockIdx.x;
-            int cacheIndex = threadIdx.x;
-
-            float tmp = localReductor.neutral;
-            while (tid < N)
+            Parallel.For(0, N, i =>
             {
-                tmp = localReductor.func(tmp, input[tid]);
-                tid += blockDim.x * gridDim.x;
+                dst[i] += src[i];
+            });
+        }
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+        {
+            // explicit control of threads
+            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
+            {
+                dst[i] += src[i];
+            }
+        }
+
+        public static void Main(string[] args)
+        {
+            // setup cuda and generated dll
+            cudaDeviceProp prop = DetectAndSelectCudaDevice();
+            dynamic wrapped = WrapCudaDll(prop);
+
+            // prepare data
+            const int N = 1 << 24; // 4 millions random integers
+            int[] src = new int[N];
+            int[] dotnet_dst_1 = new int[N];
+            int[] dotnet_dst_2 = new int[N];
+            int[] cuda_dst_1 = new int[N];
+            int[] cuda_dst_2 = new int[N];
+            var rand = new Random();
+            for(int i = 0; i < N; ++i)
+            {
+                src[i] = rand.Next();
+                dotnet_dst_1[i] = rand.Next();
+                dotnet_dst_2[i] = dotnet_dst_1[i];
+                cuda_dst_1[i] = dotnet_dst_1[i];
+                cuda_dst_2[i] = dotnet_dst_1[i];
             }
 
-            cache[cacheIndex] = tmp;
+            // run
+            Console.Out.WriteLine("running dotnet");
+            MyAutoEntryPoint(dotnet_dst_1, src, N);
+            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
+            Console.Out.WriteLine("running generated CUDA");
+            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
+            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
 
-            CUDAIntrinsics.__syncthreads();
-
-            int i = blockDim.x / 2;
-            while (i != 0)
+            if (!CudaErrorCheck())
             {
-                if (cacheIndex < i)
+                return;
+            }
+
+            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
+            {
+                return;
+            }
+
+            Console.WriteLine("OK");
+        }
+
+        /// <summary>
+        /// Selects CUDA enabled device with highest compute capability
+        /// </summary>
+        /// <returns>its cuda device properties</returns>
+        private static cudaDeviceProp DetectAndSelectCudaDevice()
+        {
+            cuda.GetDeviceCount(out int deviceCount);
+            if(deviceCount <= 0)
+            {
+                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
+                Environment.Exit(6);
+            }
+
+            int maxCC = -1;
+            int deviceId = -1;
+            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            for(int i = 0; i < deviceCount; ++i)
+            {
+                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                int cc = 10 * prop.major + prop.minor;
+                if(cc > maxCC)
                 {
-                    cache[cacheIndex] = localReductor.func(cache[cacheIndex], cache[cacheIndex + i]);
+                    maxCC = cc;
+                    deviceId = i;
+                    result = prop;
                 }
-
-                CUDAIntrinsics.__syncthreads();
-                i >>= 1;
             }
 
-            if (cacheIndex == 0)
-            {
-                AtomicExpr.apply(ref result[0], cache[0], localReductor.func);
-            }
+            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
+            cuda.SetDevice(deviceId);
+            return result;
         }
 
-        static void Main(string[] args)
+        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
         {
-            const int N = 1024 * 1024 * 32;
-            float[] a = new float[N];
+            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+            if(executing_assembly == null)
+            {
+                Console.Error.WriteLine("Cannot find executing assembly");
+                Environment.Exit(6); // abort
+            }
 
-            // initialization
-            Random random = new Random(42);
-            Parallel.For(0, N, i => a[i] = (float)random.NextDouble());
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "InterfacesReduction_CUDA.dll");
+            if(!File.Exists(cuda_dll))
+            {
+                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
+                Environment.Exit(6); // abort
+            }
 
-            // hybridizer configuration
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
-            int gridDimX = 8 * prop.multiProcessorCount;
-            int blockDimX = 128;
-            cuda.DeviceSetCacheConfig(cudaFuncCache.cudaFuncCachePreferShared);
-            HybRunner runner = HybRunner.Cuda().SetDistrib(gridDimX, 1, blockDimX, 1, 1, blockDimX * sizeof(float));
-            float[] buffMax = new float[1];
-            float[] buffAdd = new float[1];
+            // register dll and configure default execution grid
+            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
             dynamic wrapped = runner.Wrap(new Program());
+            return wrapped;
+        }
 
-            // device reduction
-            cuda.ERROR_CHECK((cudaError_t) wrapped.Reduce(buffMax, a, N, new MaxLocalReductor()));
-            cuda.ERROR_CHECK((cudaError_t) wrapped.Reduce(buffAdd, a, N, new AddLocalReductor()));
-
-            // check results
-            float expectedMax = a.AsParallel().Aggregate((x, y) => Math.Max(x, y));
-            float expectedAdd = a.AsParallel().Aggregate((x, y) => x + y);
-            bool hasError = false;
-            if (buffMax[0] != expectedMax)
+        private static bool CudaErrorCheck()
+        {
+            cudaError_t err = cuda.GetPeekAtLastError();
+            if (err != cudaError_t.cudaSuccess)
             {
-                Console.Error.WriteLine($"MAX Error : {buffMax[0]} != {expectedMax}");
-                hasError = true;
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+            err = cuda.DeviceSynchronize();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
+                return false;
             }
 
-            // addition is not associative, so results cannot be exactly the same
-            // https://en.wikipedia.org/wiki/Associative_property#Nonassociativity_of_floating_point_calculation
-            if (Math.Abs(buffAdd[0] - expectedAdd) / expectedAdd > 1.0E-5F)
+            return true;
+        }
+
+        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
+        {
+            for (int i = 0; i < N; ++i)
             {
-                Console.Error.WriteLine($"ADD Error : {buffAdd[0]} != {expectedAdd}");
-                hasError = true;
+                if (dotnet_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                }
+                if (cuda_dst_1[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
+                    return false;
+                }
+                if (cuda_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
+                    return false;
+                }
             }
 
-            if (hasError)
-                Environment.Exit(1);
-
-            Console.Out.WriteLine("OK");
+            return true;
         }
     }
 }

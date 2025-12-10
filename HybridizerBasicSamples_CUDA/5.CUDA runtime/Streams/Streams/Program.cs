@@ -1,85 +1,172 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+
 
 namespace Streams
 {
     public class Program
     {
-        [EntryPoint]
-        public static void Add(float[] a, float[] b, int start, int stop, int iter)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
         {
-            for(int k = start + threadIdx.x + blockDim.x * blockIdx.x; k < stop; k += blockDim.x * gridDim.x)
+            Parallel.For(0, N, i =>
             {
-                for (int p = 0; p < iter; ++p)
-                {
-                    a[k] += b[k];
-                }
+                dst[i] += src[i];
+            });
+        }
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+        {
+            // explicit control of threads
+            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
+            {
+                dst[i] += src[i];
             }
         }
 
-        unsafe static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            int nStreams = 8;
-            cudaStream_t[] streams = new cudaStream_t[nStreams];
-            dynamic wrapped = HybRunner.Cuda().Wrap(new Program());
-            for (int k = 0; k < nStreams; ++k)
+            // setup cuda and generated dll
+            cudaDeviceProp prop = DetectAndSelectCudaDevice();
+            dynamic wrapped = WrapCudaDll(prop);
+
+            // prepare data
+            const int N = 1 << 24; // 4 millions random integers
+            int[] src = new int[N];
+            int[] dotnet_dst_1 = new int[N];
+            int[] dotnet_dst_2 = new int[N];
+            int[] cuda_dst_1 = new int[N];
+            int[] cuda_dst_2 = new int[N];
+            var rand = new Random();
+            for(int i = 0; i < N; ++i)
             {
-                cuda.StreamCreate(out streams[k]);
+                src[i] = rand.Next();
+                dotnet_dst_1[i] = rand.Next();
+                dotnet_dst_2[i] = dotnet_dst_1[i];
+                cuda_dst_1[i] = dotnet_dst_1[i];
+                cuda_dst_2[i] = dotnet_dst_1[i];
             }
 
-            int N = 1024 * 1024 * 32;
-            IntPtr d_a, d_b; // device pointers
-            float[] a = new float[N];
-            float[] b = new float[N];
+            // run
+            Console.Out.WriteLine("running dotnet");
+            MyAutoEntryPoint(dotnet_dst_1, src, N);
+            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
+            Console.Out.WriteLine("running generated CUDA");
+            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
+            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
 
-            cuda.Malloc(out d_a, N * sizeof(float));
-            cuda.Malloc(out d_b, N * sizeof(float));
-
-            for(int k = 0; k < N; ++k)
+            if (!CudaErrorCheck())
             {
-                a[k] = (float)k;
-                b[k] = 1.0F;
+                return;
             }
 
-            GCHandle handle_a = GCHandle.Alloc(a, GCHandleType.Pinned);
-            GCHandle handle_b = GCHandle.Alloc(b, GCHandleType.Pinned);
-            IntPtr h_a = handle_a.AddrOfPinnedObject();
-            IntPtr h_b = handle_b.AddrOfPinnedObject();
-
-            int slice = N / nStreams;
-
-            cuda.DeviceSynchronize();
-
-            cuda.Memcpy(d_a, h_a, N * sizeof(float), cudaMemcpyKind.cudaMemcpyHostToDevice);
-            cuda.Memcpy(d_b, h_b, N * sizeof(float), cudaMemcpyKind.cudaMemcpyHostToDevice);
-            
-            for (int k = 0; k < nStreams; ++k)
+            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
             {
-                int start = k * slice;
-                int stop = start + slice;
-                wrapped.SetStream(streams[k]).Add(d_a, d_b, start, stop, 100);
+                return;
             }
 
-            for (int k = 0; k < nStreams; ++k)
+            Console.WriteLine("OK");
+        }
+
+        /// <summary>
+        /// Selects CUDA enabled device with highest compute capability
+        /// </summary>
+        /// <returns>its cuda device properties</returns>
+        private static cudaDeviceProp DetectAndSelectCudaDevice()
+        {
+            cuda.GetDeviceCount(out int deviceCount);
+            if(deviceCount <= 0)
             {
-                int start = k * slice;
-                cuda.MemcpyAsync(h_a + start * sizeof(float), d_a + start * sizeof(float), slice * sizeof(float), cudaMemcpyKind.cudaMemcpyDeviceToHost, streams[k]);
+                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
+                Environment.Exit(6);
             }
 
-            for (int k = 0; k < nStreams; ++k)
+            int maxCC = -1;
+            int deviceId = -1;
+            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            for(int i = 0; i < deviceCount; ++i)
             {
-                cuda.StreamSynchronize(streams[k]);
-                cuda.StreamDestroy(streams[k]);
+                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                int cc = 10 * prop.major + prop.minor;
+                if(cc > maxCC)
+                {
+                    maxCC = cc;
+                    deviceId = i;
+                    result = prop;
+                }
             }
 
-            for(int k = 0; k < 10; ++k)
+            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
+            cuda.SetDevice(deviceId);
+            return result;
+        }
+
+        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
+        {
+            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+            if(executing_assembly == null)
             {
-                Console.WriteLine(a[k]);
+                Console.Error.WriteLine("Cannot find executing assembly");
+                Environment.Exit(6); // abort
             }
 
-            handle_a.Free();
-            handle_b.Free();
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "Streams_CUDA.dll");
+            if(!File.Exists(cuda_dll))
+            {
+                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
+                Environment.Exit(6); // abort
+            }
+
+            // register dll and configure default execution grid
+            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
+            dynamic wrapped = runner.Wrap(new Program());
+            return wrapped;
+        }
+
+        private static bool CudaErrorCheck()
+        {
+            cudaError_t err = cuda.GetPeekAtLastError();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+            err = cuda.DeviceSynchronize();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                if (dotnet_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                }
+                if (cuda_dst_1[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
+                    return false;
+                }
+                if (cuda_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

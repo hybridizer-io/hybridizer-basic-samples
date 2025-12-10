@@ -1,150 +1,172 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
-using System.Drawing;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+
 
 namespace Textures_and_Surfaces
 {
-    class Program
+    public class Program
     {
-        unsafe static void Main(string[] args)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
         {
-            HybRunner runner = HybRunner.Cuda().SetDistrib(32, 32, 16, 16, 1, 0);
-            Bitmap baseImage = (Bitmap)Image.FromFile("lena512.bmp");
-            int height = baseImage.Height, width = baseImage.Width;
-
-            byte[] inputPixels = new byte[width * height];
-            ReadImage(inputPixels, baseImage, width, height);
-            float[] imagefloat = new float[width * height];
-            for (int i = 0; i < width * height; ++i)
+            Parallel.For(0, N, i =>
             {
-                imagefloat[i] = (float)inputPixels[i];
-            }
-
-            IntPtr src = runner.Marshaller.MarshalManagedToNative(imagefloat);
-
-            //bind texture
-            cudaChannelFormatDesc channelDescTex = TextureHelpers.cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKind.cudaChannelFormatKindFloat);
-            cudaArray_t cuArrayTex = TextureHelpers.CreateCudaArray(channelDescTex, src, width, height);
-            cudaResourceDesc resDescTex = TextureHelpers.CreateCudaResourceDesc(cuArrayTex);
-
-            //create Texture descriptor
-            cudaTextureDesc texDesc = TextureHelpers.CreateCudaTextureDesc();
-
-            //create Texture object
-            cudaTextureObject_t texObj;
-            cuda.CreateTextureObject(out texObj, ref resDescTex, ref texDesc);
-
-            //bind surface
-            cudaChannelFormatDesc channelDescSurf = TextureHelpers.cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKind.cudaChannelFormatKindFloat);
-            cudaArray_t cuArraySurf;
-            cuda.MallocArray(out cuArraySurf, ref channelDescSurf, width, height, cudaMallocArrayFlags.cudaArraySurfaceLoadStore);
-
-            //create cudaResourceDesc
-            cudaResourceDesc resDescSurf = TextureHelpers.CreateCudaResourceDesc(cuArraySurf);
-
-            //create surface object
-            cudaSurfaceObject_t surfObj;
-            cuda.CreateSurfaceObject(out surfObj, ref resDescSurf);
-
-            dynamic wrapper = runner.Wrap(new Program());
-
-            // call kernek
-            wrapper.Sobel(texObj, surfObj, width, height);
-
-
-            float[] imageSobel = new float[width * height];
-            for (int i = 0; i < width * height; ++i)
+                dst[i] += src[i];
+            });
+        }
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+        {
+            // explicit control of threads
+            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
             {
-                imageSobel[i] = 128.0F;
+                dst[i] += src[i];
             }
-            GCHandle handle = GCHandle.Alloc(imageSobel, GCHandleType.Pinned);
-            IntPtr dest = handle.AddrOfPinnedObject();
-
-            cuda.MemcpyFromArray(dest, cuArraySurf, 0, 0, width * height * sizeof(float), cudaMemcpyKind.cudaMemcpyDeviceToHost);
-
-            byte[] imageSobelByte = new byte[width * height];
-            for (int i = 0; i < width * height; ++i)
-            {
-                imageSobelByte[i] = (byte)imageSobel[i];
-            }
-
-            SaveImage("lenaSobel512.bmp", imageSobelByte, width, height);
-            cuda.DestroySurfaceObject(surfObj);
-            cuda.DestroyTextureObject(texObj);
         }
 
-        [IntrinsicFunction("fabsf")]
-        public static float fabsf(float f)
+        public static void Main(string[] args)
         {
-            return Math.Abs(f);
+            // setup cuda and generated dll
+            cudaDeviceProp prop = DetectAndSelectCudaDevice();
+            dynamic wrapped = WrapCudaDll(prop);
+
+            // prepare data
+            const int N = 1 << 24; // 4 millions random integers
+            int[] src = new int[N];
+            int[] dotnet_dst_1 = new int[N];
+            int[] dotnet_dst_2 = new int[N];
+            int[] cuda_dst_1 = new int[N];
+            int[] cuda_dst_2 = new int[N];
+            var rand = new Random();
+            for(int i = 0; i < N; ++i)
+            {
+                src[i] = rand.Next();
+                dotnet_dst_1[i] = rand.Next();
+                dotnet_dst_2[i] = dotnet_dst_1[i];
+                cuda_dst_1[i] = dotnet_dst_1[i];
+                cuda_dst_2[i] = dotnet_dst_1[i];
+            }
+
+            // run
+            Console.Out.WriteLine("running dotnet");
+            MyAutoEntryPoint(dotnet_dst_1, src, N);
+            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
+            Console.Out.WriteLine("running generated CUDA");
+            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
+            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
+
+            if (!CudaErrorCheck())
+            {
+                return;
+            }
+
+            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
+            {
+                return;
+            }
+
+            Console.WriteLine("OK");
         }
 
-        public static void ReadImage(byte[] inputPixel, Bitmap image, int width, int height)
+        /// <summary>
+        /// Selects CUDA enabled device with highest compute capability
+        /// </summary>
+        /// <returns>its cuda device properties</returns>
+        private static cudaDeviceProp DetectAndSelectCudaDevice()
         {
-            for (int i = 0; i < height; ++i)
+            cuda.GetDeviceCount(out int deviceCount);
+            if(deviceCount <= 0)
             {
-                for (int j = 0; j < width; ++j)
+                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
+                Environment.Exit(6);
+            }
+
+            int maxCC = -1;
+            int deviceId = -1;
+            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            for(int i = 0; i < deviceCount; ++i)
+            {
+                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                int cc = 10 * prop.major + prop.minor;
+                if(cc > maxCC)
                 {
-                    inputPixel[i * height + j] = image.GetPixel(i, j).B;
-                }
-            }
-        }
-
-        [EntryPoint]
-        public static void Sobel(cudaTextureObject_t texObj, cudaSurfaceObject_t surfObj, int width, int height)
-        {
-            float ii, jj;
-            for (int i = threadIdx.y + blockIdx.y * blockDim.y; i < height; i += blockDim.y * gridDim.y)
-            {
-                ii = (float)i;
-                for (int j = threadIdx.x + blockIdx.x * blockDim.x; j < width; j += blockDim.x * gridDim.x)
-                {
-                    if (i != 0 && j != 0 && i != height - 1 && j != width - 1)
-                    {
-                        jj = (float)j;
-                        float tl = TextureHelpers.tex2D(texObj, jj - 1.0F, ii - 1.0F);
-                        float t = TextureHelpers.tex2D(texObj, jj - 1.0F, ii);
-                        float tr = TextureHelpers.tex2D(texObj, jj - 1.0F, ii + 1.0F);
-                        float l = TextureHelpers.tex2D(texObj, jj, ii - 1.0F);
-                        float r = TextureHelpers.tex2D(texObj, jj, ii + 1.0F);
-                        float br = TextureHelpers.tex2D(texObj, jj + 1.0F, ii + 1.0F);
-                        float bl = TextureHelpers.tex2D(texObj, jj + 1.0F, ii - 1.0F);
-                        float b = TextureHelpers.tex2D(texObj, jj + 1.0F, ii);
-
-                        float data = fabsf((tl + 2.0F * l + bl - tr - 2.0F * r - br)) +
-                                     fabsf((tl + 2.0F * t + tr - bl - 2.0F * b - br));
-
-                        if (data > 255.0F)
-                        {
-                            data = 255.0F;
-                        }
-
-                        TextureHelpers.surf2Dwrite(data, surfObj, j * sizeof(int), i);
-                    }
-                    else
-                    {
-                        TextureHelpers.surf2Dwrite(0.0F, surfObj, j * sizeof(int), i);
-                    }
-                }
-            }
-        }
-
-        public static void SaveImage(string nameImage, byte[] outputPixel, int width, int height)
-        {
-            Bitmap resImage = new Bitmap(width, height);
-            int col = 0;
-            for (int i = 0; i < height; ++i)
-            {
-                for (int j = 0; j < width; ++j)
-                {
-                    col = outputPixel[i * height + j];
-                    resImage.SetPixel(i, j, Color.FromArgb(col, col, col));
+                    maxCC = cc;
+                    deviceId = i;
+                    result = prop;
                 }
             }
 
-            //store the result image
-            resImage.Save(nameImage, System.Drawing.Imaging.ImageFormat.Bmp);
+            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
+            cuda.SetDevice(deviceId);
+            return result;
+        }
+
+        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
+        {
+            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+            if(executing_assembly == null)
+            {
+                Console.Error.WriteLine("Cannot find executing assembly");
+                Environment.Exit(6); // abort
+            }
+
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "Textures_and_Surfaces_CUDA.dll");
+            if(!File.Exists(cuda_dll))
+            {
+                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
+                Environment.Exit(6); // abort
+            }
+
+            // register dll and configure default execution grid
+            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
+            dynamic wrapped = runner.Wrap(new Program());
+            return wrapped;
+        }
+
+        private static bool CudaErrorCheck()
+        {
+            cudaError_t err = cuda.GetPeekAtLastError();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+            err = cuda.DeviceSynchronize();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                if (dotnet_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                }
+                if (cuda_dst_1[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
+                    return false;
+                }
+                if (cuda_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

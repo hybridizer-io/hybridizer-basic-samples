@@ -1,227 +1,172 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
+
 
 namespace SimpleCufft
 {
-    using Complex = float2;
-
-    class Program
+    public class Program
     {
-        const int SIGNAL_SIZE = 50;
-        const int FILTER_KERNEL_SIZE = 11;
-        static readonly Random random = new Random(42);
-
-        static void Main(string[] args)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
         {
-            Complex[] h_signal = new Complex[SIGNAL_SIZE];
-            for (int i = 0; i < SIGNAL_SIZE; ++i)
+            Parallel.For(0, N, i =>
             {
-                h_signal[i].x = (float)random.NextDouble();
-                h_signal[i].y = 0.0F;
+                dst[i] += src[i];
+            });
+        }
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+        {
+            // explicit control of threads
+            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
+            {
+                dst[i] += src[i];
+            }
+        }
+
+        public static void Main(string[] args)
+        {
+            // setup cuda and generated dll
+            cudaDeviceProp prop = DetectAndSelectCudaDevice();
+            dynamic wrapped = WrapCudaDll(prop);
+
+            // prepare data
+            const int N = 1 << 24; // 4 millions random integers
+            int[] src = new int[N];
+            int[] dotnet_dst_1 = new int[N];
+            int[] dotnet_dst_2 = new int[N];
+            int[] cuda_dst_1 = new int[N];
+            int[] cuda_dst_2 = new int[N];
+            var rand = new Random();
+            for(int i = 0; i < N; ++i)
+            {
+                src[i] = rand.Next();
+                dotnet_dst_1[i] = rand.Next();
+                dotnet_dst_2[i] = dotnet_dst_1[i];
+                cuda_dst_1[i] = dotnet_dst_1[i];
+                cuda_dst_2[i] = dotnet_dst_1[i];
             }
 
-            Complex[] h_filter_kernel = new Complex[FILTER_KERNEL_SIZE];
-            for (int i = 0; i < FILTER_KERNEL_SIZE; ++i)
+            // run
+            Console.Out.WriteLine("running dotnet");
+            MyAutoEntryPoint(dotnet_dst_1, src, N);
+            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
+            Console.Out.WriteLine("running generated CUDA");
+            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
+            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
+
+            if (!CudaErrorCheck())
             {
-                h_filter_kernel[i].x = (float)random.NextDouble();
-                h_filter_kernel[i].y = 0.0F;
+                return;
             }
 
-            Complex[] h_padded_signal, h_padded_filter_kernel;
-            int new_size = PadData(h_signal, out h_padded_signal, SIGNAL_SIZE, h_filter_kernel, out h_padded_filter_kernel, FILTER_KERNEL_SIZE);
-            int mem_size = new_size * 2 * sizeof(float);
-
-            // pin host data an copy to device
-            GCHandle signalHandle = GCHandle.Alloc(h_padded_signal, GCHandleType.Pinned);
-            GCHandle kernelHandle = GCHandle.Alloc(h_padded_filter_kernel, GCHandleType.Pinned);
-
-            IntPtr d_signal;
-            cuda.ERROR_CHECK(cuda.Malloc(out d_signal, mem_size));
-            IntPtr d_filter_kernel;
-            cuda.ERROR_CHECK(cuda.Malloc(out d_filter_kernel, mem_size));
-
-            cuda.ERROR_CHECK(cuda.Memcpy(d_signal, signalHandle.AddrOfPinnedObject(), mem_size, cudaMemcpyKind.cudaMemcpyHostToDevice));
-            cuda.ERROR_CHECK(cuda.Memcpy(d_filter_kernel, kernelHandle.AddrOfPinnedObject(), mem_size, cudaMemcpyKind.cudaMemcpyHostToDevice));
-
-
-            cufftHandle plan;
-            cufft_ERROR_CHECK(cufft.Plan1d(out plan, new_size, cufftType.CUFFT_C2C, 1));
-
-            cufftHandle plan_adv;
-            size_t workSize;
-            long new_size_long = new_size;
-            cufft_ERROR_CHECK(cufft.Create(out plan_adv));
-            cufft_ERROR_CHECK(cufft.XtMakePlanMany(plan_adv, 1, new long[1] { new_size_long }, null, 1, 1, cudaDataType_t.CUDA_C_32F, null, 1, 1, cudaDataType_t.CUDA_C_32F, 1, out workSize, cudaDataType_t.CUDA_C_32F));
-
-            cufft_ERROR_CHECK(cufft.ExecC2C(plan, d_signal, d_signal, -1));
-            cufft_ERROR_CHECK(cufft.ExecC2C(plan_adv, d_filter_kernel, d_filter_kernel, -1));
-
-            dynamic wrapped = HybRunner.Cuda().SetDistrib(32, 256).Wrap(new Program());
-            wrapped.ComplexPointwiseMulAndScale(d_signal, d_filter_kernel, new_size, 1.0F / new_size);
-
-            cuda.ERROR_CHECK(cuda.GetLastError());
-            
-            cufft_ERROR_CHECK(cufft.ExecC2C(plan, d_signal, d_signal, 1));
-
-            cuda.ERROR_CHECK(cuda.Memcpy(signalHandle.AddrOfPinnedObject(), d_signal, mem_size, cudaMemcpyKind.cudaMemcpyDeviceToHost));
-            
-            Complex[] h_convolved_signal_ref = new Complex[SIGNAL_SIZE];
-            Convolve(h_signal, SIGNAL_SIZE, h_filter_kernel, FILTER_KERNEL_SIZE, h_convolved_signal_ref);
-
-            bool bResult = CompareL2(h_convolved_signal_ref, h_padded_signal, 1.0E-5F);
-
-            cufft_ERROR_CHECK(cufft.Destroy(plan));
-            cufft_ERROR_CHECK(cufft.Destroy(plan_adv));
-            signalHandle.Free();
-            kernelHandle.Free();
-            cuda.ERROR_CHECK(cuda.Free(d_signal));
-            cuda.ERROR_CHECK(cuda.Free(d_filter_kernel));
-
-            if(bResult)
+            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
             {
-                Console.Error.WriteLine("ERROR");
+                return;
+            }
+
+            Console.WriteLine("OK");
+        }
+
+        /// <summary>
+        /// Selects CUDA enabled device with highest compute capability
+        /// </summary>
+        /// <returns>its cuda device properties</returns>
+        private static cudaDeviceProp DetectAndSelectCudaDevice()
+        {
+            cuda.GetDeviceCount(out int deviceCount);
+            if(deviceCount <= 0)
+            {
+                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
                 Environment.Exit(6);
             }
 
-            Console.Out.WriteLine("OK");
-        }
-
-        static void cufft_ERROR_CHECK(cufftResult result)
-        {
-            if (result != cufftResult.CUFFT_SUCCESS)
+            int maxCC = -1;
+            int deviceId = -1;
+            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            for(int i = 0; i < deviceCount; ++i)
             {
-                Console.Error.WriteLine(Enum.GetName(typeof(cufftResult), result));
-                Environment.Exit(6); // abort;
-            }
-        }
-
-        static int PadData(Complex[] signal, out Complex[] padded_signal, int signal_size,
-            Complex[] filter_kernel, out Complex[] padded_filter_kernel,
-            int filter_kernel_size)
-        {
-            int minRadius = filter_kernel_size / 2;
-            int maxRadius = filter_kernel_size - minRadius;
-            int new_size = signal_size + maxRadius;
-
-            // Pad signal
-            Complex[] new_signal = new Complex[new_size];
-            for (int k = 0; k < signal_size; ++k)
-            {
-                new_signal[k] = signal[k];
-            }
-            for (int k = 0; k < new_size - signal_size; ++k)
-            {
-                new_signal[k + signal_size].x = 0.0F;
-                new_signal[k + signal_size].y = 0.0F;
-            }
-
-            padded_signal = new_signal;
-
-
-            //// Pad filter
-            var new_kernel = new Complex[new_size];
-            for (int k = 0; k < maxRadius; ++k)
-            {
-                new_kernel[k] = filter_kernel[minRadius + k];
-            }
-            for (int k = 0; k < new_size - filter_kernel_size; ++k)
-            {
-                new_kernel[maxRadius + k].x = 0.0F;
-                new_kernel[maxRadius + k].y = 0.0F;
-            }
-
-            padded_filter_kernel = new_kernel;
-
-            return new_size;
-        }
-
-        static void Convolve(Complex[] signal, int signal_size,
-                Complex[] filter_kernel, int filter_kernel_size,
-                Complex[] filtered_signal)
-        {
-            int minRadius = filter_kernel_size / 2;
-            int maxRadius = filter_kernel_size - minRadius;
-
-            // Loop over output element indices
-            for (int i = 0; i < signal_size; ++i)
-            {
-                filtered_signal[i].x = filtered_signal[i].y = 0;
-
-                // Loop over convolution indices
-                for (int j = -maxRadius + 1; j <= minRadius; ++j)
+                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                int cc = 10 * prop.major + prop.minor;
+                if(cc > maxCC)
                 {
-                    int k = i + j;
-
-                    if (k >= 0 && k < signal_size)
-                    {
-                        filtered_signal[i] =
-                            filtered_signal[i] + ComplexMul(signal[k], filter_kernel[minRadius - j]);
-                    }
+                    maxCC = cc;
+                    deviceId = i;
+                    result = prop;
                 }
             }
-        }
 
-
-        [EntryPoint]
-        static void ComplexPointwiseMulAndScale(Complex[] a, Complex[] b, int size, float scale)
-        {
-            int numThreads = blockDim.x * gridDim.x;
-            int threadID = blockIdx.x * blockDim.x + threadIdx.x;
-            for (int i = threadID; i < size; i += numThreads)
-            {
-                a[i] = Scale(scale, ComplexMul(a[i], b[i]));
-            }
-        }
-
-        [Kernel] 
-        static Complex Scale(float s, Complex a)
-        {
-            Complex result = new Complex();
-            result.x = a.x * s;
-            result.y = a.y * s;
+            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
+            cuda.SetDevice(deviceId);
             return result;
         }
 
-        [Kernel]
-        static Complex ComplexMul(Complex a, Complex b)
+        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
         {
-            Complex result = new Complex();
-            result.x = a.x * b.x - a.y * b.y;
-            result.y = a.x * b.y + a.y * b.x;
-            return result;
-        }
-
-
-        static bool CompareL2(Complex[] reference, Complex[] data, float epsilon)
-        {
-            float error = 0;
-            float tmp = 0;
-
-            for (int i = 0; i < reference.Length; ++i)
+            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+            if(executing_assembly == null)
             {
-                float diffX = reference[i].x - data[i].x;
-                error += diffX * diffX;
-                float diffY = reference[i].y - data[i].y;
-                error += diffY * diffY;
-                tmp += reference[i].x * reference[i].x + reference[i].y * reference[i].y;
+                Console.Error.WriteLine("Cannot find executing assembly");
+                Environment.Exit(6); // abort
             }
 
-            float normRef = HybMath.Sqrt(tmp);
-
-            if (HybMath.Abs(tmp) < 1e-7)
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "SimpleCufft_CUDA.dll");
+            if(!File.Exists(cuda_dll))
             {
+                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
+                Environment.Exit(6); // abort
+            }
+
+            // register dll and configure default execution grid
+            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
+            dynamic wrapped = runner.Wrap(new Program());
+            return wrapped;
+        }
+
+        private static bool CudaErrorCheck()
+        {
+            cudaError_t err = cuda.GetPeekAtLastError();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+            err = cuda.DeviceSynchronize();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
                 return false;
             }
 
-            float normError = HybMath.Sqrt(error);
-            error = normError / normRef;
-            bool result = error < epsilon;
-            return result;
+            return true;
+        }
+
+        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                if (dotnet_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                }
+                if (cuda_dst_1[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
+                    return false;
+                }
+                if (cuda_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

@@ -1,138 +1,172 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using cg = Hybridizer.Runtime.CUDAImports.cooperative_groups;
+
 
 namespace CooperativeGroupsMultiBlock
 {
-    class Program
+    public class Program
     {
-        [Kernel]
-        static void reduceBlock(double[] sdata, thread_block cta)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
         {
-            uint tid = cta.thread_rank();
-            thread_block_tile_32 tile32 = cg.tile_partition_32(cta);
-
-            double beta = sdata[tid];
-            double temp;
-
-            for (uint i = tile32.size() / 2; i > 0; i >>= 1)
+            Parallel.For(0, N, i =>
             {
-                if (tile32.thread_rank() < i)
-                {
-                    temp = sdata[tid + i];
-                    beta += temp;
-                    sdata[tid] = beta;
-                }
-                
-                cg.sync(tile32);
-            }
-
-            cg.sync(cta);
-
-            if (cta.thread_rank() == 0)
-            {
-                beta = 0;
-                for (uint i = 0; i < blockDim.x; i += tile32.size())
-                {
-                    beta += sdata[i];
-                }
-                sdata[0] = beta;
-            }
-
-            cg.sync(cta);
+                dst[i] += src[i];
+            });
         }
-
-        [EntryPoint]
-        public static void reduceSinglePassMultiBlockCG(float[] g_idata, float[] g_odata, uint n)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
         {
-            // Handle to thread block group
-            thread_block block = cg.this_thread_block();
-            grid_group grid = cg.this_grid();
-
-            double[] sdata = new SharedMemoryAllocator<double>().allocate(blockDim.x);
-
-            // Stride over grid and add the values to a shared memory buffer
-            sdata[block.thread_rank()] = 0;
-
-            for (uint i = grid.thread_rank(); i < n; i += grid.size())
+            // explicit control of threads
+            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
             {
-                sdata[block.thread_rank()] += g_idata[i];
-            }
-
-            cg.sync(block);
-
-            // Reduce each block (called once per block)
-            reduceBlock(sdata, block);
-            // Write out the result to global memory
-            if (block.thread_rank() == 0)
-            {
-                g_odata[blockIdx.x] = (float)sdata[0];
-            }
-
-            cg.sync(grid);
-
-            if (grid.thread_rank() == 0)
-            {
-                for (uint blockId = 1; blockId < gridDim.x; blockId++)
-                {
-                    g_odata[0] += g_odata[blockId];
-                }
+                dst[i] += src[i];
             }
         }
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            // TODO: enable cudaOccupancyCalculator
-            int deviceCount;
-            int numThreads = 128;
-            int multiProcessorCount = 1;
-            cuda.GetDeviceCount(out deviceCount);
-            bool found = false;
-            for (int i = 0; i < deviceCount; ++i)
+            // setup cuda and generated dll
+            cudaDeviceProp prop = DetectAndSelectCudaDevice();
+            dynamic wrapped = WrapCudaDll(prop);
+
+            // prepare data
+            const int N = 1 << 24; // 4 millions random integers
+            int[] src = new int[N];
+            int[] dotnet_dst_1 = new int[N];
+            int[] dotnet_dst_2 = new int[N];
+            int[] cuda_dst_1 = new int[N];
+            int[] cuda_dst_2 = new int[N];
+            var rand = new Random();
+            for(int i = 0; i < N; ++i)
             {
-                cudaDeviceProp prop;
-                cuda.GetDeviceProperties(out prop, i);
-                if (prop.cooperativeLaunch != 0)
-                {
-                    cuda.SetDevice(i);
-                    numThreads = 128;
-                    multiProcessorCount = prop.multiProcessorCount;
-                    Console.Out.WriteLine($"running on device {i}");
-                    found = true;
-                    break;
-                }
+                src[i] = rand.Next();
+                dotnet_dst_1[i] = rand.Next();
+                dotnet_dst_2[i] = dotnet_dst_1[i];
+                cuda_dst_1[i] = dotnet_dst_1[i];
+                cuda_dst_2[i] = dotnet_dst_1[i];
             }
-            if (!found)
+
+            // run
+            Console.Out.WriteLine("running dotnet");
+            MyAutoEntryPoint(dotnet_dst_1, src, N);
+            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
+            Console.Out.WriteLine("running generated CUDA");
+            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
+            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
+
+            if (!CudaErrorCheck())
             {
-                Console.Error.WriteLine("No GPU Found supporting Cooperative Launch");
+                return;
+            }
+
+            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
+            {
+                return;
+            }
+
+            Console.WriteLine("OK");
+        }
+
+        /// <summary>
+        /// Selects CUDA enabled device with highest compute capability
+        /// </summary>
+        /// <returns>its cuda device properties</returns>
+        private static cudaDeviceProp DetectAndSelectCudaDevice()
+        {
+            cuda.GetDeviceCount(out int deviceCount);
+            if(deviceCount <= 0)
+            {
+                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
                 Environment.Exit(6);
             }
 
-
-            var runner = HybRunner.Cuda().SetGridSync(true);
-            dynamic wrapped = runner.Wrap(new Program());
-            int maxBlocksPerSM = wrapped.MaxBlocksPerSM(new Action<float[], float[], uint>(reduceSinglePassMultiBlockCG), numThreads, numThreads * sizeof(double) + 16);
-            int numBlocks = maxBlocksPerSM * multiProcessorCount;
-            wrapped.SetDistrib(numBlocks, 1, numThreads, 1, 1, numThreads * sizeof(double));
-
-            const int N = 1024 * 1024;
-
-            float[] a = new float[N];
-            float[] b = new float[numBlocks];
-
-            for (int i = 0; i < N; ++i)
+            int maxCC = -1;
+            int deviceId = -1;
+            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            for(int i = 0; i < deviceCount; ++i)
             {
-                a[i] = 1.0F;
+                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                int cc = 10 * prop.major + prop.minor;
+                if(cc > maxCC)
+                {
+                    maxCC = cc;
+                    deviceId = i;
+                    result = prop;
+                }
             }
 
-            cuda.ERROR_CHECK((cudaError_t)(int)wrapped.reduceSinglePassMultiBlockCG(a, b, N));
-            cuda.ERROR_CHECK(cuda.DeviceSynchronize());
-            Console.Out.WriteLine(b[0]);
+            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
+            cuda.SetDevice(deviceId);
+            return result;
+        }
+
+        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
+        {
+            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+            if(executing_assembly == null)
+            {
+                Console.Error.WriteLine("Cannot find executing assembly");
+                Environment.Exit(6); // abort
+            }
+
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "CooperativeGroupsMultiBlock_CUDA.dll");
+            if(!File.Exists(cuda_dll))
+            {
+                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
+                Environment.Exit(6); // abort
+            }
+
+            // register dll and configure default execution grid
+            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
+            dynamic wrapped = runner.Wrap(new Program());
+            return wrapped;
+        }
+
+        private static bool CudaErrorCheck()
+        {
+            cudaError_t err = cuda.GetPeekAtLastError();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+            err = cuda.DeviceSynchronize();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                if (dotnet_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                }
+                if (cuda_dst_1[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
+                    return false;
+                }
+                if (cuda_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
- 

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 
-namespace Sobel
+namespace Utilities
 {
     public class Program
     {
@@ -115,7 +115,7 @@ namespace Sobel
                 Environment.Exit(6); // abort
             }
 
-            string cuda_dll = Path.Combine(executing_assembly.FullName, "Sobel_CUDA.dll");
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "Utilities_CUDA.dll");
             if(!File.Exists(cuda_dll))
             {
                 Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");

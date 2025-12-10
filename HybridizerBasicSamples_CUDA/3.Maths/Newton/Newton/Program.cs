@@ -1,197 +1,172 @@
-using Hybridizer.Runtime.CUDAImports;
-using System.Drawing;
-using System.Diagnostics;
+﻿using Hybridizer.Runtime.CUDAImports;
 using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 
-namespace Hybridizer.Basic.Maths
+
+namespace Newton
 {
-    class Program
+    public class Program
     {
-        const int maxiter = 4096;
-        const int N = 2048;
-        const float fromX = -1.5f;
-        const float fromY = -1.5f;
-        const float size = 3.0f;
-        const float h = size / (float)N;
-        const float tol = 0.0000001f;
-
-        [Kernel]
-        public static void IterCount(ref int2 result, float cx, float cy)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
         {
-            int itercount = 0;
-            int root = 0;
-            float x = cx;
-            float y = cy;
-            float xx = 0.0f, xy = 0.0f, yy = 0.0f, xxy = 0.0f, xyy = 0.0f, xxx = 0.0f, yyy = 0.0f, yyyy = 0.0f, xxxx = 0.0f, xxxxx = 0.0f;
-            while (itercount < maxiter)
+            Parallel.For(0, N, i =>
             {
-                xy = x * y;
-                xx = x * x;
-                yy = y * y;
-                xyy = x * yy;
-                xxy = xx * y;
-                xxx = xx * x;
-                yyy = yy * y;
-                xxxx = xx * xx;
-                yyyy = yy * yy;
-                xxxxx = xxx * xx;
+                dst[i] += src[i];
+            });
+        }
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+        {
+            // explicit control of threads
+            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
+            {
+                dst[i] += src[i];
+            }
+        }
 
-                float invdenum = 1.0f / (3.0f * xxxx + 6.0f * xx * yy + 3.0f * yyyy);
+        public static void Main(string[] args)
+        {
+            // setup cuda and generated dll
+            cudaDeviceProp prop = DetectAndSelectCudaDevice();
+            dynamic wrapped = WrapCudaDll(prop);
 
-                float numreal = 2.0f * xxxxx + 4.0f * xxx * yy + xx + 2.0f * x * yyyy - yy;
-                float numim = 2.0f * xxxx * y + 4.0f * xx * yyy - 2.0f * x * y + 2.0f * yyy * yy;
+            // prepare data
+            const int N = 1 << 24; // 4 millions random integers
+            int[] src = new int[N];
+            int[] dotnet_dst_1 = new int[N];
+            int[] dotnet_dst_2 = new int[N];
+            int[] cuda_dst_1 = new int[N];
+            int[] cuda_dst_2 = new int[N];
+            var rand = new Random();
+            for(int i = 0; i < N; ++i)
+            {
+                src[i] = rand.Next();
+                dotnet_dst_1[i] = rand.Next();
+                dotnet_dst_2[i] = dotnet_dst_1[i];
+                cuda_dst_1[i] = dotnet_dst_1[i];
+                cuda_dst_2[i] = dotnet_dst_1[i];
+            }
 
-                x = numreal * invdenum;
-                y = numim * invdenum;
-                itercount++;
+            // run
+            Console.Out.WriteLine("running dotnet");
+            MyAutoEntryPoint(dotnet_dst_1, src, N);
+            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
+            Console.Out.WriteLine("running generated CUDA");
+            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
+            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
 
-                root = RootFind(x, y);
-                if (root > 0)
+            if (!CudaErrorCheck())
+            {
+                return;
+            }
+
+            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
+            {
+                return;
+            }
+
+            Console.WriteLine("OK");
+        }
+
+        /// <summary>
+        /// Selects CUDA enabled device with highest compute capability
+        /// </summary>
+        /// <returns>its cuda device properties</returns>
+        private static cudaDeviceProp DetectAndSelectCudaDevice()
+        {
+            cuda.GetDeviceCount(out int deviceCount);
+            if(deviceCount <= 0)
+            {
+                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
+                Environment.Exit(6);
+            }
+
+            int maxCC = -1;
+            int deviceId = -1;
+            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            for(int i = 0; i < deviceCount; ++i)
+            {
+                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                int cc = 10 * prop.major + prop.minor;
+                if(cc > maxCC)
                 {
-                    break;
+                    maxCC = cc;
+                    deviceId = i;
+                    result = prop;
                 }
             }
 
-            result.x = root;
-            result.y = itercount;
+            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
+            cuda.SetDevice(deviceId);
+            return result;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining), IntrinsicFunction("sqrtf")]
-        private static float sqrtf(float a)
+        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
         {
-            return (float)Math.Sqrt(a);
+            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+            if(executing_assembly == null)
+            {
+                Console.Error.WriteLine("Cannot find executing assembly");
+                Environment.Exit(6); // abort
+            }
+
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "Newton_CUDA.dll");
+            if(!File.Exists(cuda_dll))
+            {
+                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
+                Environment.Exit(6); // abort
+            }
+
+            // register dll and configure default execution grid
+            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
+            dynamic wrapped = runner.Wrap(new Program());
+            return wrapped;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining), IntrinsicFunction("fabsf")]
-        private static float fabsf(float a)
+        private static bool CudaErrorCheck()
         {
-            return (float)Math.Abs(a);
+            cudaError_t err = cuda.GetPeekAtLastError();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+            err = cuda.DeviceSynchronize();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+
+            return true;
         }
 
-
-        const float sqrtRoot = 0.86602540378443864676372317075294f; //(float)sqrtf(3.0f / 4.0f);
-
-        [Kernel]
-        public static int RootFind(float x, float y)
+        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
         {
-            if(fabsf(x - 1.0f) < tol && fabsf(y) < tol)
-            {
-                return 1;
-            }
-            else if (fabsf(x + 0.5f) < tol && fabsf(y - sqrtRoot) < tol)
-            {
-                return 2;
-            }
-            else if (fabsf(x + 0.5f) < tol && fabsf(y + sqrtRoot) < tol)
-            {
-                return 3;
-            }
-
-            return 0;
-        }
-
-        [EntryPoint("run")]
-        public static void Run(int2[] results, int lineFrom, int lineTo)
-        {
-            for (int i = lineFrom + threadIdx.y + blockIdx.y * blockDim.y; i < lineTo; i += blockDim.y * gridDim.y)
-            {
-                for (int j = threadIdx.x + blockIdx.x * blockDim.x; j < N; j += blockDim.x * gridDim.x)
-                 {
-                    float x = fromX + i * h;
-                    float y = fromY + j * h;
-                    IterCount(ref results[i * N + j], x, y);
-                }
-            }
-        }
-
-        private static dynamic wrapper;
-
-        public static void ComputeImage(int2[] results, bool accelerate = true)
-        {
-            if (accelerate)
-            {
-                wrapper.Run(results, 0, N);
-            }
-            else
-            {
-                Parallel.For(0, N, (line) =>
-                {
-                    Run(results, line, line + 1);
-                });
-            }
-        }
-
-        static int ComputeLight(int iter)
-        {
-            return System.Math.Min(iter*16,255);
-        }
-
-        static void Main(string[] args)
-        {
-            const int redo = 1;
-            int2[] result_net = new int2[N * N];
-            int2[] result_cuda = new int2[N * N];
-
-            #region c#
-            for (int i = 0; i < redo; ++i)
-            {
-                ComputeImage(result_net, false);
-            }
-            
-            #endregion c#
-
-            HybRunner runner = HybRunner.Cuda().SetDistrib(32, 32, 16, 16, 1, 0);
-            wrapper = runner.Wrap(new Program());
-
-            #region cuda
-            
-            for (int i = 0; i < redo; ++i)
-            {
-                ComputeImage(result_cuda, true);
-            }
-
-            #endregion
-
-            #region save to image
-
-            Bitmap image = new Bitmap(N, N);
-
             for (int i = 0; i < N; ++i)
             {
-                for (int j = 0; j < N; ++j)
+                if (dotnet_dst_2[i] != dotnet_dst_1[i])
                 {
-
-                    int index = i * N + j;
-                    int root = result_cuda[index].x;
-                    int light = ComputeLight(result_cuda[index].y);
-
-                    switch (root)
-                    {
-                        case 0:
-                            image.SetPixel(i, j, Color.Black);
-                            break;
-                        case 1:
-                            image.SetPixel(i, j, Color.FromArgb(light, 0 ,0));
-                            break;
-                        case 2:
-                            image.SetPixel(i, j, Color.FromArgb(0, 0, light));
-                            break;
-                        case 3:
-                            image.SetPixel(i, j, Color.FromArgb(0, light, 0));
-                            break;
-                        default:
-                            throw new ApplicationException();
-                    }
+                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                }
+                if (cuda_dst_1[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
+                    return false;
+                }
+                if (cuda_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
+                    return false;
                 }
             }
 
-            image.Save("newton.png", System.Drawing.Imaging.ImageFormat.Png);
-            #endregion
-
-			try { Process.Start("newton.png");} catch {} // catch exception for non interactives machines
+            return true;
         }
     }
 }
-

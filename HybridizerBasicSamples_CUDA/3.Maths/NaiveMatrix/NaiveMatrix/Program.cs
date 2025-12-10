@@ -1,90 +1,172 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
-using Hybridizer.Basic.Utilities;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-namespace Hybridizer.Basic.Maths
+
+namespace NaiveMatrix
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
         {
-            if (args.Length == 0)
+            Parallel.For(0, N, i =>
             {
-                args = new string[] { "512", "512", "512", "512" };
-            }
-            const int redo = 10;
-
-            int heightA = Convert.ToInt32(args[0]);
-            int widthA = Convert.ToInt32(args[1]);
-            int heightB = Convert.ToInt32(args[2]);
-            int widthB = Convert.ToInt32(args[3]);
-            if (widthA != heightB)
+                dst[i] += src[i];
+            });
+        }
+        
+        [EntryPoint] // marks the method to be hybridized
+        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+        {
+            // explicit control of threads
+            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
             {
-                throw new ArgumentException("invalid data -- incompatible matrices");
+                dst[i] += src[i];
             }
-
-            Console.WriteLine("Execution Naive matrix mul with sizes ({0}, {1}) x ({2}, {3})", heightA, widthA, heightB, widthB);
-
-            NaiveMatrix matrixA = new NaiveMatrix(widthA, heightA);
-            NaiveMatrix matrixB = new NaiveMatrix(widthB, heightB);
-
-            NaiveMatrix res_net = new NaiveMatrix(widthB, heightA);
-            NaiveMatrix res_cuda = new NaiveMatrix(widthB, heightA);
-
-            double numberCompute = ((double)matrixA.Height * (double)matrixA.Width * (double)matrixB.Width) * 3.0E-9;
-            
-            matrixA.FillMatrix();
-            matrixB.FillMatrix();
-
-            Random rand = new Random();
-
-            #region CUDA 
-
-            HybRunner runner = HybRunner.Cuda().SetDistrib(4, 5, 8, 32, 32, 0);
-            dynamic wrapper = runner.Wrap(new Program());
-            
-            for (int i = 0; i < redo; ++i)
-            {
-                wrapper.ComputeRowsOfProduct(res_cuda, matrixA, matrixB, 0, res_cuda.Height);
-            }
-            #endregion
-
-            #region C#
-
-            for (int i = 0; i < redo; ++i)
-            {
-                Parallel.For(0, res_net.Height, (line) =>
-                {
-                    ComputeRowsOfProduct(res_net, matrixA, matrixB, line, line + 1);
-                });
-            }
-            #endregion
-            
-            Console.Out.WriteLine("DONE");
         }
 
-        [EntryPoint]
-        public static void ComputeRowsOfProduct(NaiveMatrix resultMatrix, NaiveMatrix matrixA, NaiveMatrix matrixB, int lineFrom, int lineTo)
+        public static void Main(string[] args)
         {
-            int commonSize = matrixA.Width;
-            int bWidth = matrixB.Width;
-            for (int i = lineFrom + threadIdx.y + blockIdx.y * blockDim.y; i < lineTo; i += blockDim.y * gridDim.y)
+            // setup cuda and generated dll
+            cudaDeviceProp prop = DetectAndSelectCudaDevice();
+            dynamic wrapped = WrapCudaDll(prop);
+
+            // prepare data
+            const int N = 1 << 24; // 4 millions random integers
+            int[] src = new int[N];
+            int[] dotnet_dst_1 = new int[N];
+            int[] dotnet_dst_2 = new int[N];
+            int[] cuda_dst_1 = new int[N];
+            int[] cuda_dst_2 = new int[N];
+            var rand = new Random();
+            for(int i = 0; i < N; ++i)
             {
-                for (int j = threadIdx.x + blockIdx.x * blockDim.x; j < bWidth; j += blockDim.x * gridDim.x)
+                src[i] = rand.Next();
+                dotnet_dst_1[i] = rand.Next();
+                dotnet_dst_2[i] = dotnet_dst_1[i];
+                cuda_dst_1[i] = dotnet_dst_1[i];
+                cuda_dst_2[i] = dotnet_dst_1[i];
+            }
+
+            // run
+            Console.Out.WriteLine("running dotnet");
+            MyAutoEntryPoint(dotnet_dst_1, src, N);
+            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
+            Console.Out.WriteLine("running generated CUDA");
+            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
+            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
+
+            if (!CudaErrorCheck())
+            {
+                return;
+            }
+
+            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
+            {
+                return;
+            }
+
+            Console.WriteLine("OK");
+        }
+
+        /// <summary>
+        /// Selects CUDA enabled device with highest compute capability
+        /// </summary>
+        /// <returns>its cuda device properties</returns>
+        private static cudaDeviceProp DetectAndSelectCudaDevice()
+        {
+            cuda.GetDeviceCount(out int deviceCount);
+            if(deviceCount <= 0)
+            {
+                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
+                Environment.Exit(6);
+            }
+
+            int maxCC = -1;
+            int deviceId = -1;
+            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            for(int i = 0; i < deviceCount; ++i)
+            {
+                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                int cc = 10 * prop.major + prop.minor;
+                if(cc > maxCC)
                 {
-                    resultMatrix[i * bWidth + j] = 0.0f;
-                    
-                    for (int k = 0; k < commonSize; ++k)
-                    {
-                        resultMatrix[i * bWidth + j] += (matrixA[i * commonSize + k] * matrixB[k * bWidth + j]);
-                    }
+                    maxCC = cc;
+                    deviceId = i;
+                    result = prop;
                 }
             }
+
+            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
+            cuda.SetDevice(deviceId);
+            return result;
+        }
+
+        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
+        {
+            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
+            if(executing_assembly == null)
+            {
+                Console.Error.WriteLine("Cannot find executing assembly");
+                Environment.Exit(6); // abort
+            }
+
+            string cuda_dll = Path.Combine(executing_assembly.FullName, "NaiveMatrix_CUDA.dll");
+            if(!File.Exists(cuda_dll))
+            {
+                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
+                Environment.Exit(6); // abort
+            }
+
+            // register dll and configure default execution grid
+            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
+            dynamic wrapped = runner.Wrap(new Program());
+            return wrapped;
+        }
+
+        private static bool CudaErrorCheck()
+        {
+            cudaError_t err = cuda.GetPeekAtLastError();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+            err = cuda.DeviceSynchronize();
+            if (err != cudaError_t.cudaSuccess)
+            {
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
+        {
+            for (int i = 0; i < N; ++i)
+            {
+                if (dotnet_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                }
+                if (cuda_dst_1[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
+                    return false;
+                }
+                if (cuda_dst_2[i] != dotnet_dst_1[i])
+                {
+                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
