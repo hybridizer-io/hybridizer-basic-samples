@@ -1,172 +1,108 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
-using System;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-
+using Hybridizer.Basic;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Formats.Png;
+using Hybridizer.Basic.Utilities;
 
 namespace Sobel
 {
-    public class Program
+    class Program
     {
+        static void Main(string[] args)
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "lena512.bmp");
+            var baseImage = Image.Load<Rgba32>(path);
+            int height = baseImage.Height, width = baseImage.Width;
+            
+            var resImage = new Image<Rgba32>(width, height);
+            
+            byte[] inputPixels = new byte[width * height];
+            byte[] outputPixels = new byte[width * height];
+
+            ReadImage(inputPixels, baseImage, width, height);
+
+            HybRunner runner = SatelliteLoader.Load().SetDistrib(32, 32, 16, 16, 1, 0);
+            dynamic wrapper = runner.Wrap(new Program());
+
+            wrapper.ComputeSobel(outputPixels, inputPixels, width, height, 0, height);
+           
+
+            SaveImage("lena-sobel.bmp", outputPixels, width, height);
+        }
+
+        public static void ReadImage(byte[] inputPixel, Image<Rgba32> image, int width, int height)
+        {
+            for (int i = 0; i < height; ++i)
+            {
+                for (int j = 0; j < width; ++j)
+                {
+                    double greyPixel = image[i, j].R * 0.2126 + image[i, j].G * 0.7152 + image[i, j].B * 0.0722;
+                    inputPixel[i * height + j] = Convert.ToByte(greyPixel);
+                }
+            }
+        }
         
-        [EntryPoint] // marks the method to be hybridized
-        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
+        [EntryPoint]
+        public static void ComputeSobel(byte[] outputPixel, byte[] inputPixel, int width, int height, int from, int to)
         {
-            Parallel.For(0, N, i =>
+            for (int i = from + threadIdx.y + blockIdx.y * blockDim.y; i < to; i += blockDim.y * gridDim.y)
             {
-                dst[i] += src[i];
-            });
+                for (int j = threadIdx.x + blockIdx.x * blockDim.x; j < width; j += blockDim.x * gridDim.x)
+                {
+                    int pixelId = i * width + j;
+
+                    int output = 0;
+                    if (i != 0 && j != 0 && i != height - 1 && j != width - 1)
+                    {
+                        byte topl = inputPixel[pixelId - width - 1];
+                        byte top = inputPixel[pixelId - width];
+                        byte topr = inputPixel[pixelId - width + 1];
+                        byte l = inputPixel[pixelId - 1];
+                        byte r = inputPixel[pixelId + 1];
+                        byte botl = inputPixel[pixelId + width - 1];
+                        byte bot = inputPixel[pixelId + width];
+                        byte botr = inputPixel[pixelId + width + 1];
+
+                        int sobelx = topl + (2 * l) + botl - topr - (2 * r) - botr;
+                        int sobely = topl + 2 * top + topr - botl - 2 * bot - botr;
+
+                        int squareSobelx = sobelx * sobelx;
+                        int squareSobely = sobely * sobely;
+
+                        output = (int)Math.Sqrt(squareSobelx + squareSobely);
+
+                        if (output < 0)
+                        {
+                            output = -output;
+                        }
+                        if (output > 255)
+                        {
+                            output = 255;
+                        }
+
+                        outputPixel[pixelId] = (byte)output;
+                    }
+                }
+            }
         }
         
-        [EntryPoint] // marks the method to be hybridized
-        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+        public static void SaveImage(string nameImage, byte[] outputPixel, int width, int height)
         {
-            // explicit control of threads
-            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
+            var resImage = new Image<Rgba32>(width, height);
+            byte col = 0;
+            for (int i = 0; i < height; ++i)
             {
-                dst[i] += src[i];
-            }
-        }
-
-        public static void Main(string[] args)
-        {
-            // setup cuda and generated dll
-            cudaDeviceProp prop = DetectAndSelectCudaDevice();
-            dynamic wrapped = WrapCudaDll(prop);
-
-            // prepare data
-            const int N = 1 << 24; // 4 millions random integers
-            int[] src = new int[N];
-            int[] dotnet_dst_1 = new int[N];
-            int[] dotnet_dst_2 = new int[N];
-            int[] cuda_dst_1 = new int[N];
-            int[] cuda_dst_2 = new int[N];
-            var rand = new Random();
-            for(int i = 0; i < N; ++i)
-            {
-                src[i] = rand.Next();
-                dotnet_dst_1[i] = rand.Next();
-                dotnet_dst_2[i] = dotnet_dst_1[i];
-                cuda_dst_1[i] = dotnet_dst_1[i];
-                cuda_dst_2[i] = dotnet_dst_1[i];
-            }
-
-            // run
-            Console.Out.WriteLine("running dotnet");
-            MyAutoEntryPoint(dotnet_dst_1, src, N);
-            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
-            Console.Out.WriteLine("running generated CUDA");
-            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
-            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
-
-            if (!CudaErrorCheck())
-            {
-                return;
-            }
-
-            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
-            {
-                return;
-            }
-
-            Console.WriteLine("OK");
-        }
-
-        /// <summary>
-        /// Selects CUDA enabled device with highest compute capability
-        /// </summary>
-        /// <returns>its cuda device properties</returns>
-        private static cudaDeviceProp DetectAndSelectCudaDevice()
-        {
-            cuda.GetDeviceCount(out int deviceCount);
-            if(deviceCount <= 0)
-            {
-                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
-                Environment.Exit(6);
-            }
-
-            int maxCC = -1;
-            int deviceId = -1;
-            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
-            for(int i = 0; i < deviceCount; ++i)
-            {
-                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
-                int cc = 10 * prop.major + prop.minor;
-                if(cc > maxCC)
+                for (int j = 0; j < width; ++j)
                 {
-                    maxCC = cc;
-                    deviceId = i;
-                    result = prop;
+                    col = outputPixel[i * height + j];
+                    resImage[i, j] = Color.FromRgb(col, col, col);
                 }
             }
 
-            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
-            cuda.SetDevice(deviceId);
-            return result;
+            //store the result image.
+            resImage.Save(nameImage, new PngEncoder());
         }
-
-        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
-        {
-            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
-            if(executing_assembly == null)
-            {
-                Console.Error.WriteLine("Cannot find executing assembly");
-                Environment.Exit(6); // abort
-            }
-
-            string cuda_dll = Path.Combine(executing_assembly.FullName, "Sobel_CUDA.dll");
-            if(!File.Exists(cuda_dll))
-            {
-                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
-                Environment.Exit(6); // abort
-            }
-
-            // register dll and configure default execution grid
-            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
-            dynamic wrapped = runner.Wrap(new Program());
-            return wrapped;
-        }
-
-        private static bool CudaErrorCheck()
-        {
-            cudaError_t err = cuda.GetPeekAtLastError();
-            if (err != cudaError_t.cudaSuccess)
-            {
-                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
-                return false;
-            }
-            err = cuda.DeviceSynchronize();
-            if (err != cudaError_t.cudaSuccess)
-            {
-                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
-                return false;
-            }
-
-            return true;
-        }
-
-        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
-        {
-            for (int i = 0; i < N; ++i)
-            {
-                if (dotnet_dst_2[i] != dotnet_dst_1[i])
-                {
-                    Console.Error.WriteLine($"Dotnet Error at index {i}");
-                }
-                if (cuda_dst_1[i] != dotnet_dst_1[i])
-                {
-                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
-                    return false;
-                }
-                if (cuda_dst_2[i] != dotnet_dst_1[i])
-                {
-                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
-                    return false;
-                }
-            }
-
-            return true;
-        }
+        
     }
 }

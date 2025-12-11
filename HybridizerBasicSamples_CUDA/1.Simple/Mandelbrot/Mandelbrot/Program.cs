@@ -1,10 +1,6 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using System.Diagnostics;
-using Hybridizer.Basic;
-using System;
-using System.Threading.Tasks;
 using Hybridizer.Basic.Utilities;
 using SixLabors.ImageSharp.Formats.Png;
 
