@@ -1,0 +1,3 @@
+hybridizer.includes.cuda.h(34): catastrophic error: cannot open source file "cuda_fp16.h"
+  #include <cuda_fp16.h>
+                        ^
