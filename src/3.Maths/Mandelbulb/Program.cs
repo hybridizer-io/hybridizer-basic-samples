@@ -193,7 +193,7 @@ namespace Mandelbulb
             if (elapsedMS > 1000)
             {
                 averageKernelDuration /= frameCounter;
-                Console.Out.Write("\rKernel time : {0:N2} ms", averageKernelDuration);
+                Console.Out.Write("\rKernel time : {0:N2} ms, FPS : {1:N0}", averageKernelDuration, frameCounter);
                 elapsedMS = 0;
                 frameCounter = 0;
                 averageKernelDuration = 0;
