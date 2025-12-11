@@ -3,6 +3,56 @@ using Hybridizer.Runtime.CUDAImports;
 
 namespace GenericReduction
 {
+	[IntrinsicInclude("intrinsics.cuh")]
+	internal class Atomics
+	{
+		[IntrinsicFunction("atomicAdd")]
+		public static float Add(ref float target, float val)
+		{
+			while (true)
+			{
+				// Read current value
+				float currentValue = target;
+
+				// Compute new value
+				float newValue = currentValue + val;
+
+				// Attempt CAS
+				float original = Interlocked.CompareExchange(
+					ref target,
+					newValue,
+					currentValue);
+
+				// If CAS succeeded, original equals currentValue
+				if (original == currentValue)
+					return newValue;
+			}
+		}
+
+		[IntrinsicFunction("atomicMax")]
+		public static float Max(ref float target, float val)
+		{
+			while (true)
+			{
+				// Read current value
+				float currentValue = target;
+
+				// Compute new value
+				float newValue = currentValue + val;
+
+				// Attempt CAS
+				float original = Interlocked.CompareExchange(
+					ref target,
+					newValue,
+					currentValue);
+
+				// If CAS succeeded, original equals currentValue
+				if (original == currentValue)
+					return newValue;
+			}
+		}
+	}
+
 	[HybridTemplateConcept]
 	interface IReductor
 	{
@@ -10,6 +60,8 @@ namespace GenericReduction
 		float func(float x, float y);
 		[Kernel]
 		float neutral { get; }
+		[Kernel]
+		float atomic(ref float target, float val);		
 	}
 	
 	struct AddReductor: IReductor
@@ -22,6 +74,12 @@ namespace GenericReduction
 		{
 			return x + y;
 		}
+
+		[Kernel]
+		public float atomic(ref float target, float val)
+		{
+			return Atomics.Add(ref target, val);
+		}
 	}
 
 	struct MaxReductor : IReductor
@@ -29,11 +87,17 @@ namespace GenericReduction
 		[Kernel]
 		public float neutral { get { return float.MinValue; } }
 
-		[Kernel]
+        [Kernel]
 		public float func(float x, float y)
 		{
 			return Math.Max(x, y);
 		}
+
+		[Kernel]
+        public float atomic(ref float target, float val)
+        {
+			return Atomics.Max(ref target, val);
+        }
 	}
 
 	[HybridRegisterTemplate(Specialize = typeof(GridReductor<MaxReductor>))]
@@ -75,7 +139,7 @@ namespace GenericReduction
 
 			if (cacheIndex == 0)
 			{
-				AtomicExpr.apply(ref result[0], cache[0], reductor.func);
+				reductor.atomic(ref result[0], cache[0]);
 			}
 		}
 	}
@@ -121,7 +185,7 @@ namespace GenericReduction
 			dynamic wrapped = runner.Wrap(new EntryPoints());
 
 			// device reduction
-			//wrapped.ReduceMax(maxReductor, buffMax, a, N);
+			wrapped.ReduceMax(maxReductor, buffMax, a, N);
 			wrapped.ReduceAdd(addReductor, buffAdd, a, N);
 			cuda.ERROR_CHECK(cuda.DeviceSynchronize());
 
