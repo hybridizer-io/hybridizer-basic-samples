@@ -23,6 +23,7 @@ mandelbrot.png
 bin
 *.suo
 *.exe.config
+hybridizer.stderr
 *.mod
 target
 hybridizer-generated-sources
@@ -326,3 +327,4 @@ HybridizerBasicSamples_CUDA101/packages/OpenTK.3.0.0/lib/net20/OpenTK.xml
 HybridizerBasicSamples_CUDA101/packages/OpenTK.3.0.0/OpenTK.3.0.0.nupkg
 /HybridizerBasicSamples_CUDA116/.vs/HybridizerBasicSamples
 /HybridizerBasicSamples_CUDA/.vs/HybridizerBasicSamples
+HybridizerBasicSamples_CUDA/2.Imaging/Sobel/Sobel/lena-sobel.bmp
