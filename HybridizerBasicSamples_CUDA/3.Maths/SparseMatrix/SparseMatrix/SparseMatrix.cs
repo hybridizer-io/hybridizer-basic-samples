@@ -18,8 +18,8 @@ namespace Hybridizer.Basic.Maths
         public SparseMatrix (Dictionary<uint, float>[] from)
         {
             rows = new uint[from.Length + 1];
-            List<uint> _indices = new List<uint>();
-            List<float> _data = new List<float>();
+            List<uint> _indices = [];
+            List<float> _data = [];
 
             uint colCounter = 0;
             int i = 0;
@@ -41,10 +41,12 @@ namespace Hybridizer.Basic.Maths
 
         public static SparseMatrix Laplacian_1D(uint rowsCount)
         {
-            SparseMatrix a = new SparseMatrix();
-            a.data = new float[3 * rowsCount - 2];
-            a.indices = new uint[3 * rowsCount - 2];
-            a.rows = new uint[rowsCount + 1];
+            SparseMatrix a = new SparseMatrix
+            {
+                data = new float[3 * rowsCount - 2],
+                indices = new uint[3 * rowsCount - 2],
+                rows = new uint[rowsCount + 1]
+            };
 
             a.rows[0] = 0;
             a.data[0] = 2.0F;

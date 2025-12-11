@@ -9,7 +9,7 @@ namespace Mandelbulb
         public const int MAX_ITER = 5000;
         public const float DEPTH_OF_FIELD = 2.5F;
 
-        public float Distance(float3 pos, int iterations)
+        public static float Distance(float3 pos, int iterations)
         {
             float3 z = pos;
             var dr = 1.0F;
@@ -27,11 +27,10 @@ namespace Mandelbulb
                 float r8 = r7 * r;
                 dr = r7 * 8.0F * dr + 1.0F;
                 var zr = r8;
-                theta = theta * 8.0F;
-                phi = phi * 8.0F;
-                float costheta, sintheta, cosphi, sinphi;
-                MathFunctions.sincosf(theta, out sintheta, out costheta);
-                MathFunctions.sincosf(phi, out sinphi, out cosphi);
+                theta *= 8.0F;
+                phi *= 8.0F;
+                MathFunctions.sincosf(theta, out float sintheta, out float costheta);
+                MathFunctions.sincosf(phi, out float sinphi, out float cosphi);
                 z.x = sintheta * cosphi;
                 z.y = sinphi * sintheta;
                 z.z = costheta;
@@ -41,7 +40,7 @@ namespace Mandelbulb
             return 0.5F * MathFunctions.logf(r) * r / dr;
         }
         
-        public float shadow(float3 lightDirection, float3 rayLocation, int iterations, float mint, float maxt, float k)
+        public static float Shadow(float3 lightDirection, float3 rayLocation, int iterations, float mint, float maxt, float k)
         {
             var res = 1.0F;
             for (float t = mint; t < maxt;)
@@ -62,10 +61,10 @@ namespace Mandelbulb
         }
 
         [EntryPoint]
-        public void Render(cudaSurfaceObject_t surface, int cWidth, int cHeight, int iterations, float3 viewDirection, float3 nearFieldLocation, float3 eyeLocation, float3 lightDirection)
+        public static void Render(cudaSurfaceObject_t surface, int cWidth, int cHeight, int iterations, float3 viewDirection, float3 nearFieldLocation, float3 eyeLocation, float3 lightDirection)
         {
             int cHalfWidth = cWidth / 2;
-            float pixel = ((float) DEPTH_OF_FIELD) / (((cHeight + cWidth) / 2.0F));
+            float pixel = DEPTH_OF_FIELD / ((cHeight + cWidth) / 2.0F);
             float halfPixel = pixel / 2.0F;
             float smallStep = 0.01F;
             float bigStep = 0.02F;
@@ -103,13 +102,10 @@ namespace Mandelbulb
                             break;
                         }
 
-                        //Increase rayLocation with direction and d:
-                        rayDirection = rayDirection * d;
-                        rayLocation = rayLocation + rayDirection;
-                        //And reset ray direction:
+                        rayDirection *= d;
+                        rayLocation += rayDirection;
                         MathFunctions.normalize(ref rayDirection);
 
-                        //Move the pixel location:
                         distanceFromCamera = MathFunctions.length(nearFieldLocation - rayLocation);
 
                         if (distanceFromCamera > DEPTH_OF_FIELD)
@@ -143,9 +139,9 @@ namespace Mandelbulb
 
                         float3 normal = new float3();
                         //Calculate the normal:
-                        normal.x = (locationMinX - locationPlusX);
-                        normal.y = (locationMinY - locationPlusY);
-                        normal.z = (locationMinZ - locationPlusZ);
+                        normal.x = locationMinX - locationPlusX;
+                        normal.y = locationMinY - locationPlusY;
+                        normal.z = locationMinZ - locationPlusZ;
                         MathFunctions.normalize(ref normal);
 
                         //Calculate the ambient light:
@@ -165,12 +161,12 @@ namespace Mandelbulb
                         float s32 = s16 * s16;
                         float spec = s * s2 * s32; // s^35
 
-                        var shad = shadow(lightDirection, rayLocation, iterations, 1.0F, DEPTH_OF_FIELD, 16.0F) + 0.25F;
+                        var shad = Shadow(lightDirection, rayLocation, iterations, 1.0F, DEPTH_OF_FIELD, 16.0F) + 0.25F;
                         var brightness = (10.0F + (200.0F + spec * 45.0F) * shad * diff) / 270.0F;
 
                         var red = 10 + (380 * brightness);
                         var green = 10 + (280 * brightness);
-                        var blue = (180 * brightness);
+                        var blue = 180 * brightness;
 
                         red = MathFunctions.clamp(red, 0, 255.0F);
                         green = MathFunctions.clamp(green, 0, 255.0F);
@@ -187,7 +183,7 @@ namespace Mandelbulb
 
                         uchar4 color = new uchar4();
                         color.x = (byte)(155.0F + MathFunctions.clamp(i * 1.5F, 0.0F, 100.0F));
-                        color.y = ((byte)(205.0F + MathFunctions.clamp(i * 1.5F, 0.0F, 50.0F)));
+                        color.y = (byte)(205.0F + MathFunctions.clamp(i * 1.5F, 0.0F, 50.0F));
                         color.z = 255;
                         TextureHelpers.surf2Dwrite(color, surface, x * sizeof(int), y);
                     }

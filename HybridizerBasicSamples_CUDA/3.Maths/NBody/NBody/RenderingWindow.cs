@@ -1,8 +1,9 @@
-﻿using OpenTK;
-using System;
-using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using System.Runtime.InteropServices;
 using Hybridizer.Runtime.CUDAImports;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.Common;
+using OpenTK.Mathematics;
 
 namespace NBody
 {
@@ -23,7 +24,12 @@ namespace NBody
         private IntPtr _velocities;
 
         #region constructor
-        public RenderingWindow() : base(800, 600, OpenTK.Graphics.GraphicsMode.Default, "Hybridizer NBody simulation")
+        public RenderingWindow() : base(GameWindowSettings.Default,
+                   new NativeWindowSettings()
+                   {
+                       ClientSize = new OpenTK.Mathematics.Vector2i(800, 600),
+                       Title = "Hybridizer N body simulation",
+                   })
         {
             Console.WriteLine(sizeof(float4));
             cudaDeviceProp prop;
@@ -40,17 +46,15 @@ namespace NBody
             initializeResources();
 
             cuda.ERROR_CHECK(cuda.Malloc(out _velocities, _numBodies * sizeof(float4)));
-            float4[] hvelocities, hpositions;
 
-            BodyInitializer.Initialize(_clusterScale, _velocityScale, _numBodies, out hpositions, out hvelocities);
+            BodyInitializer.Initialize(_clusterScale, _velocityScale, _numBodies, out float4[] hpositions, out float4[] hvelocities);
 
             // initialize bodies here
             GCHandle posHandle = GCHandle.Alloc(hpositions, GCHandleType.Pinned);
             GCHandle velHandle = GCHandle.Alloc(hvelocities, GCHandleType.Pinned);
             cuda.ERROR_CHECK(cuda.Memcpy(_velocities, velHandle.AddrOfPinnedObject(), _numBodies * sizeof(float4), cudaMemcpyKind.cudaMemcpyHostToDevice));
-            IntPtr a, b;
 
-            MapResources(out a, out b);
+            MapResources(out nint a, out nint b);
             cuda.ERROR_CHECK(cuda.Memcpy(b, posHandle.AddrOfPinnedObject(), _numBodies * sizeof(float4), cudaMemcpyKind.cudaMemcpyHostToDevice));
             UnMapResources();
 
@@ -141,21 +145,11 @@ namespace NBody
         #endregion
 
         #region window management
-        protected override void OnLoad(EventArgs e)
+        protected override void OnLoad()
         {
-            base.OnLoad(e);
             VSync = VSyncMode.Off;
             GL.ClearColor(0.0F, 0.0F, 0.0F, 0.0F);
             GL.Enable(EnableCap.DepthTest);
-        }
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            GL.Viewport(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
-            var projection = Matrix4.CreatePerspectiveFieldOfView((float)Math.PI / 4.0f, (float)Width / Height, 1.0f, 64.0f);
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadMatrix(ref projection);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -205,13 +199,8 @@ namespace NBody
 
         void SwapPos()
         {
-            var buffer = _buffers[0];
-            _buffers[0] = _buffers[1];
-            _buffers[1] = buffer;
-
-            var resource = _resources[0];
-            _resources[0] = _resources[1];
-            _resources[1] = resource;
+            (_buffers[1], _buffers[0]) = (_buffers[0], _buffers[1]);
+            (_resources[1], _resources[0]) = (_resources[0], _resources[1]);
         }
 
         #region  disposable

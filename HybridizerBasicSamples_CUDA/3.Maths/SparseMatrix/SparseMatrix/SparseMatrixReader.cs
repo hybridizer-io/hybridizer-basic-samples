@@ -1,11 +1,4 @@
-﻿using Hybridizer.Basic.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 
 namespace Hybridizer.Basic.Maths
 {
@@ -27,7 +20,7 @@ namespace Hybridizer.Basic.Maths
             string line;
             Dictionary<uint, Dictionary<uint, float>> tmp = new Dictionary<uint, Dictionary<uint, float>>();
 
-            StreamReader reader = new StreamReader(path);
+            StreamReader reader = new(path);
 
             line = reader.ReadLine().ToLowerInvariant();
             MatrixType matrixType = ReadMatrixType(line);
@@ -155,13 +148,13 @@ namespace Hybridizer.Basic.Maths
 
             for (uint i = 0; i < rowCount; ++i)
             {
-                if (tmp.ContainsKey(i))
+                if (tmp.TryGetValue(i, out Dictionary<uint, float>? value))
                 {
-                    res[i] = tmp[i];
+                    res[i] = value;
                 }
                 else
                 {
-                    res[i] = new Dictionary<uint, float>();
+                    res[i] = [];
                 }
             }
 

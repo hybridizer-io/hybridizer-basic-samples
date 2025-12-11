@@ -1,6 +1,7 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
-using System;
-using System.Drawing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace MonteCarloHeatEquation
 {
@@ -107,17 +108,17 @@ namespace MonteCarloHeatEquation
         [HybridizerIgnore]
         public void SaveImage(string fileName, Func<float, Color> GetColor)
         {
-            Bitmap image = new Bitmap(_N - 1, _N - 1);
+            var image = new Image<Argb32>(_N - 1, _N - 1);
             for (int j = 0; j <= _N - 2; ++j)
             {
                 for (int i = 0; i <= _N - 2; ++i)
                 {
                     float temp = _inner[j * (_N - 1) + i];
-                    image.SetPixel(i, j, GetColor(temp));
+                    image[i, j] = GetColor(temp);
                 }
             }
 
-            image.Save(fileName);
+            image.Save(fileName, new PngEncoder());
         }
     }
 }

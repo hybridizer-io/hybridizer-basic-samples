@@ -8,7 +8,7 @@ namespace NBody
         static float PScale { get; set; }
         static float VScale { get; set; }
         static int NumBodies { get; set; }
-        static Random _random = new Random(42);
+        static Random _random = new(42);
 
         static public void Initialize(float clusterScale,
                                       float velocityScale, int numBodies,

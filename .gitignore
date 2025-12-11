@@ -19,6 +19,8 @@
 /HybridizerBasicSamples/1.Simple/Printf/SimplePrintf_CUDA/vc140.pdb
 /HybridizerBasicSamples/1.Simple/Sobel/Sobel
 mandelbrot.png
+result.png
+newton.png
 *.pdb
 bin
 *.suo

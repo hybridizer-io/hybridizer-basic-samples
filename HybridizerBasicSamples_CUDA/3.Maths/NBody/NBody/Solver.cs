@@ -1,5 +1,5 @@
-﻿using Hybridizer.Runtime.CUDAImports;
-using System;
+﻿using Hybridizer.Basic.Utilities;
+using Hybridizer.Runtime.CUDAImports;
 
 namespace NBody
 {
@@ -9,7 +9,7 @@ namespace NBody
         public static dynamic wrapped;
 
         static Solver() {
-            runner = HybRunner.Cuda();
+            runner = SatelliteLoader.Load();
             wrapped = runner.Wrap(new Solver());
         }
 
@@ -32,13 +32,13 @@ namespace NBody
             // (because they cancel out).  Thus here force == acceleration
             var velocity = velocities[index];
 
-            velocity.x = velocity.x + accel.x * deltaT;
-            velocity.y = velocity.y + accel.y * deltaT;
-            velocity.z = velocity.z + accel.z * deltaT;
+            velocity.x += accel.x * deltaT;
+            velocity.y += accel.y * deltaT;
+            velocity.z += accel.z * deltaT;
 
-            velocity.x = velocity.x * damping;
-            velocity.y = velocity.y * damping;
-            velocity.z = velocity.z * damping;
+            velocity.x *= damping;
+            velocity.y *= damping;
+            velocity.z *= damping;
 
             // new position = old position + velocity * deltaTime
             position.x = position.x + velocity.x * deltaT;
@@ -84,13 +84,22 @@ namespace NBody
         [Kernel]
         public static float3 BodyBodyInteraction(float softeningSquared, float3 ai, float4 bi, float4 bj)
         {
-            var r = new float3(); r.x = bj.x - bi.x; r.y = bj.y - bi.y; r.z = bj.z - bi.z;
+            float3 r = new()
+            {
+                x = bj.x - bi.x,
+                y = bj.y - bi.y,
+                z = bj.z - bi.z
+            }; 
             var distSqr = r.x * r.x + r.y * r.y + r.z * r.z + softeningSquared;
             var invDist = rsqrtf(distSqr);
             var invDistCube = invDist * invDist * invDist;
             var s = bj.w * invDistCube;
-            float3 res = new float3(); res.x = ai.x + r.x * s; res.y = ai.y + r.y * s; res.z = ai.z + r.z * s;
-            return res;
+            float3 res = new()
+            {
+                x = ai.x + r.x * s,
+                y = ai.y + r.y * s,
+                z = ai.z + r.z * s
+            }; return res;
         }
     }
 }

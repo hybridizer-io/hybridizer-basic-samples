@@ -1,9 +1,4 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Hybridizer.Basic.Maths
 {
@@ -48,10 +43,12 @@ namespace Hybridizer.Basic.Maths
 
         public static SparseMatrix Laplacian_1D(int rowsCount)
         {
-            SparseMatrix a = new SparseMatrix();
-            a.data = new FloatResidentArray(3 * rowsCount - 2);
-            a.indices = new IntResidentArray(3 * rowsCount - 2);
-            a.rows = new IntResidentArray(rowsCount + 1);
+            SparseMatrix a = new()
+            {
+                data = new FloatResidentArray(3 * rowsCount - 2),
+                indices = new IntResidentArray(3 * rowsCount - 2),
+                rows = new IntResidentArray(rowsCount + 1)
+            };
 
             a.rows[0] = 0;
             a.data[0] = 2.0F;

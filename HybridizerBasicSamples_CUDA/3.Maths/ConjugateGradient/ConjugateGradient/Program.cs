@@ -1,172 +1,162 @@
-﻿using Hybridizer.Runtime.CUDAImports;
-using System;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
+﻿using Hybridizer.Basic.Utilities;
+using Hybridizer.Runtime.CUDAImports;
 
-
-namespace ConjugateGradient
+namespace Hybridizer.Basic.Maths
 {
-    public class Program
+    unsafe class Program
     {
-        
-        [EntryPoint] // marks the method to be hybridized
-        public static void MyAutoEntryPoint (int[] dst, int[] src, int N)
+        static HybRunner runner;
+        static dynamic wrapper;
+
+        static void Main(string[] args)
         {
-            Parallel.For(0, N, i =>
+            // configure CUDA
+            cudaDeviceProp prop;
+            cuda.GetDeviceProperties(out prop, 0);
+            runner = SatelliteLoader.Load().SetDistrib(prop.multiProcessorCount * 16, 1, 128, 1, 1, 128 * sizeof(float));
+            wrapper = runner.Wrap(new Program());
+
+            int size = 10000; // very slow convergence (or even not at all) with no preconditioner
+            SparseMatrix A = SparseMatrix.Laplacian_1D(size);
+            FloatResidentArray B = new(size);
+            FloatResidentArray X = new(size);
+
+            int maxiter = 1000000;
+            float eps = 1.0e-08f;
+
+            for (int i = 0; i < size; ++i)
             {
-                dst[i] += src[i];
+                B[i] = 1.0f; // right side
+                X[i] = 0.0f; // starting point
+            }
+            
+            ConjugateGradient(X, A, B, maxiter, eps);
+        }
+
+        public static void ConjugateGradient(FloatResidentArray X, SparseMatrix A, FloatResidentArray B, int maxiter, float eps)
+        {
+            float[] scalBuf = [0];
+            int N = (int) B.Count;
+            FloatResidentArray R = new(N);
+            FloatResidentArray P = new(N);
+            FloatResidentArray AP = new(N);
+            A.RefreshDevice();
+            X.RefreshDevice();
+            B.RefreshDevice();
+
+            wrapper.Fmsub(R, B, A, X, N);                       // R = B - A*X
+            wrapper.Copy(P, R, N); 
+            int k = 0;
+            while(k < maxiter)
+            {
+                wrapper.Multiply(AP, A, P, N);                  // AP = A*P
+                scalBuf[0] = 0; wrapper.ScalarProd(scalBuf, R, R, N); float r = scalBuf[0];               // save <R|R>
+                scalBuf[0] = 0; wrapper.ScalarProd(scalBuf, P, AP, N); float alpha = r / scalBuf[0];       // alpha = <R|R> / <P|AP>
+                wrapper.Saxpy(X, X, alpha, P, N);               // X = X - alpha*P
+                wrapper.Saxpy(R, R, -alpha, AP, N);             // RR = R-alpha*AP
+                scalBuf[0] = 0; wrapper.ScalarProd(scalBuf, R, R, N); float rr = scalBuf[0];
+                if (k % 10 == 0)
+                    Console.WriteLine(Math.Sqrt(rr));
+                if(rr < eps*eps)
+                {
+                    break;
+                }
+
+                float beta = rr / r;
+                wrapper.Saxpy(P, R, beta, P, N);                // P = R + beta*P
+                ++k;
+            }
+
+            X.RefreshHost();
+        }
+
+        [EntryPoint]
+        private static void ScalarProd(float[] result, FloatResidentArray r1, FloatResidentArray r2, int N)
+        {
+            var cache = new SharedMemoryAllocator<float>().allocate(blockDim.x);
+            int tid = threadIdx.x + blockDim.x * blockIdx.x;
+            int cacheIndex = threadIdx.x;
+
+            float tmp = 0.0F;
+            while (tid < N)
+            {
+                tmp += r1[tid] * r2[tid];
+                tid += blockDim.x * gridDim.x;
+            }
+
+            cache[cacheIndex] = tmp;
+
+            CUDAIntrinsics.__syncthreads();
+
+            int i = blockDim.x / 2;
+            while (i != 0)
+            {
+                if (cacheIndex < i)
+                {
+                    cache[cacheIndex] += cache[cacheIndex + i];
+                }
+
+                CUDAIntrinsics.__syncthreads();
+                i >>= 1;
+            }
+
+            if (cacheIndex == 0)
+            {
+                AtomicExpr.apply(ref result[0], cache[0], (x, y) => x + y);
+            }
+        }
+
+        [EntryPoint]
+        public static void Copy(FloatResidentArray res, FloatResidentArray src, int N)
+        {
+            Parallel.For(0, N, (i) =>
+            {
+                res[i] = src[i];
             });
         }
-        
-        [EntryPoint] // marks the method to be hybridized
-        public static void MyFineGrainedEntryPoint (int[] dst, int[] src, int N)
+
+        [EntryPoint]
+        public static void Saxpy(FloatResidentArray res, FloatResidentArray x, float alpha, FloatResidentArray y, int N)
         {
-            // explicit control of threads
-            for(int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
+            Parallel.For(0, N, (i) =>
             {
-                dst[i] += src[i];
-            }
+                res[i] = x[i] + alpha * y[i];
+            });
         }
 
-        public static void Main(string[] args)
+        // res = A - m*v
+        [EntryPoint]
+        public static void Fmsub(FloatResidentArray res, FloatResidentArray A, SparseMatrix m, FloatResidentArray v, int N)
         {
-            // setup cuda and generated dll
-            cudaDeviceProp prop = DetectAndSelectCudaDevice();
-            dynamic wrapped = WrapCudaDll(prop);
-
-            // prepare data
-            const int N = 1 << 24; // 4 millions random integers
-            int[] src = new int[N];
-            int[] dotnet_dst_1 = new int[N];
-            int[] dotnet_dst_2 = new int[N];
-            int[] cuda_dst_1 = new int[N];
-            int[] cuda_dst_2 = new int[N];
-            var rand = new Random();
-            for(int i = 0; i < N; ++i)
+            Parallel.For(0, N, (i) =>
             {
-                src[i] = rand.Next();
-                dotnet_dst_1[i] = rand.Next();
-                dotnet_dst_2[i] = dotnet_dst_1[i];
-                cuda_dst_1[i] = dotnet_dst_1[i];
-                cuda_dst_2[i] = dotnet_dst_1[i];
-            }
-
-            // run
-            Console.Out.WriteLine("running dotnet");
-            MyAutoEntryPoint(dotnet_dst_1, src, N);
-            MyFineGrainedEntryPoint(dotnet_dst_2, src, N);
-            Console.Out.WriteLine("running generated CUDA");
-            wrapped.MyAutoEntryPoint(cuda_dst_1, src, N);
-            wrapped.MyFineGrainedEntryPoint(cuda_dst_2, src, N);
-
-            if (!CudaErrorCheck())
-            {
-                return;
-            }
-
-            if (!CheckResults(N, dotnet_dst_1, dotnet_dst_2, cuda_dst_1, cuda_dst_2))
-            {
-                return;
-            }
-
-            Console.WriteLine("OK");
-        }
-
-        /// <summary>
-        /// Selects CUDA enabled device with highest compute capability
-        /// </summary>
-        /// <returns>its cuda device properties</returns>
-        private static cudaDeviceProp DetectAndSelectCudaDevice()
-        {
-            cuda.GetDeviceCount(out int deviceCount);
-            if(deviceCount <= 0)
-            {
-                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
-                Environment.Exit(6);
-            }
-
-            int maxCC = -1;
-            int deviceId = -1;
-            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
-            for(int i = 0; i < deviceCount; ++i)
-            {
-                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
-                int cc = 10 * prop.major + prop.minor;
-                if(cc > maxCC)
+                int rowless = m.rows[i];
+                int rowup = m.rows[i + 1];
+                float tmp = A[i];
+                for (int j = rowless; j < rowup; ++j)
                 {
-                    maxCC = cc;
-                    deviceId = i;
-                    result = prop;
+                    tmp -= v[m.indices[j]] * m.data[j];
                 }
-            }
 
-            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
-            cuda.SetDevice(deviceId);
-            return result;
+                res[i] = tmp;
+            });
         }
 
-        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
+        [EntryPoint]
+        public static void Multiply(FloatResidentArray res, SparseMatrix m, FloatResidentArray v, int N)
         {
-            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
-            if(executing_assembly == null)
+            Parallel.For(0, N, (i) =>
             {
-                Console.Error.WriteLine("Cannot find executing assembly");
-                Environment.Exit(6); // abort
-            }
-
-            string cuda_dll = Path.Combine(executing_assembly.FullName, "ConjugateGradient_CUDA.dll");
-            if(!File.Exists(cuda_dll))
-            {
-                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
-                Environment.Exit(6); // abort
-            }
-
-            // register dll and configure default execution grid
-            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 256, 1, 1, 0);
-            dynamic wrapped = runner.Wrap(new Program());
-            return wrapped;
-        }
-
-        private static bool CudaErrorCheck()
-        {
-            cudaError_t err = cuda.GetPeekAtLastError();
-            if (err != cudaError_t.cudaSuccess)
-            {
-                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
-                return false;
-            }
-            err = cuda.DeviceSynchronize();
-            if (err != cudaError_t.cudaSuccess)
-            {
-                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
-                return false;
-            }
-
-            return true;
-        }
-
-        private static bool CheckResults(int N, int[] dotnet_dst_1, int[] dotnet_dst_2, int[] cuda_dst_1, int[] cuda_dst_2)
-        {
-            for (int i = 0; i < N; ++i)
-            {
-                if (dotnet_dst_2[i] != dotnet_dst_1[i])
+                int rowless = m.rows[i];
+                int rowup = m.rows[i + 1];
+                float tmp = 0.0F;
+                for (int j = rowless; j < rowup; ++j)
                 {
-                    Console.Error.WriteLine($"Dotnet Error at index {i}");
+                    tmp += v[m.indices[j]] * m.data[j];
                 }
-                if (cuda_dst_1[i] != dotnet_dst_1[i])
-                {
-                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyAutoEntryPoint");
-                    return false;
-                }
-                if (cuda_dst_2[i] != dotnet_dst_1[i])
-                {
-                    Console.Error.WriteLine($"CUDA Error at index {i} for method MyFineGrainedEntryPoint");
-                    return false;
-                }
-            }
 
-            return true;
+                res[i] = tmp;
+            });
         }
     }
 }

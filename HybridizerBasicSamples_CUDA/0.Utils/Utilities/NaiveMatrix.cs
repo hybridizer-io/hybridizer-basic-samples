@@ -1,53 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Hybridizer.Basic.Utilities
+﻿namespace Hybridizer.Basic.Utilities
 {
-    public class NaiveMatrix
+    public class NaiveMatrix(int width = 1024, int height = 1024)
     {
-        private float[] values;
+        private float[] values = new float[height * width];
 
-        public int Height { get; private set; }
-        public int Width { get; private set; }
-
-        public NaiveMatrix(int width = 1024, int height = 1024)
-        {
-            this.Height = height;
-            this.Width = width;
-            this.values = new float[height * width];
-        }
+        public int Height { get; private set; } = height;
+        public int Width { get; private set; } = width;
 
         public float this[int i]
         {
-            get { return this.values[i]; }
+            get { return values[i]; }
 
-            set { this.values[i] = value; }
+            set { values[i] = value; }
         }
 
         public float[] Values
         {
-            get { return this.values; }
+            get { return values; }
 
-            set { this.values = value; }
+            set { values = value; }
         }
 
         public void FillMatrix(float min = 0.0f, float max = 1.0f)
         {
             if(min >max)
             {
-                float tmp = min;
-                min = max;
-                max = tmp;
+                (max, min) = (min, max);
             }
-            Random rand = new Random();
-            for (int i = 0; i < this.Height; ++i)
+
+            Random rand = new();
+            for (int i = 0; i < Height; ++i)
             {
-                for (int j = 0; j < this.Width; ++j)
+                for (int j = 0; j < Width; ++j)
                 {
-                    this[i * this.Width + j] = rand.NextFloat(min, max);
+                    this[i * Width + j] = rand.NextFloat(min, max);
                 }
 
             }
@@ -55,11 +41,11 @@ namespace Hybridizer.Basic.Utilities
 
         public void WriteMatrix()
         {
-            for (int k = 0; k < this.Height; ++k)
+            for (int k = 0; k < Height; ++k)
             {
-                for (int j = 0; j < this.Width; ++j)
+                for (int j = 0; j < Width; ++j)
                 {
-                    Console.Write(this[k * this.Width + j].ToString() + " ");
+                    Console.Write(this[k * Width + j].ToString() + " ");
                 }
                 Console.WriteLine("");
             }
@@ -70,7 +56,7 @@ namespace Hybridizer.Basic.Utilities
             return values.GetHashCode();
         }
 
-        override public Boolean Equals(Object o)
+        override public bool Equals(object o)
         {
             if (o == this)
                 return true;
@@ -79,14 +65,14 @@ namespace Hybridizer.Basic.Utilities
                 return false;
 
             NaiveMatrix m = (NaiveMatrix)o;
-            if (this.Height != m.Height || this.Width != m.Width)
+            if (Height != m.Height || Width != m.Width)
                 return false;
 
-            for (int i = 0; i < this.Height; ++i)
+            for (int i = 0; i < Height; ++i)
             {
-                for (int j = 0; j < this.Width; ++j)
+                for (int j = 0; j < Width; ++j)
                 {
-                    if (Math.Abs(this[i * this.Width + j] - m[i * m.Width + j]) > 1.0E-3)
+                    if (Math.Abs(this[i * Width + j] - m[i * m.Width + j]) > 1.0E-3)
                         return false;
                 }
             }
