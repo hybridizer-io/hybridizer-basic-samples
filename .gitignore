@@ -18,6 +18,7 @@
 /HybridizerBasicSamples/1.Simple/Printf/SimplePrintf_CUDA/x64
 /HybridizerBasicSamples/1.Simple/Printf/SimplePrintf_CUDA/vc140.pdb
 /HybridizerBasicSamples/1.Simple/Sobel/Sobel
+mandelbrot.png
 *.pdb
 bin
 *.suo
@@ -26,7 +27,7 @@ bin
 target
 hybridizer-generated-sources
 generated-sources
-generated_sources
+generated_source
 Debug
 Release
 obj
