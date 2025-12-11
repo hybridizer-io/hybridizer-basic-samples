@@ -7,14 +7,14 @@ These samples may be used with Hybridizer Essentials. However, C# code can run w
 They illustrate features of the solution and are a good starting point for experimenting and developing software based on Hybridizer.
 
 ## WARNING
-Since takeover, we just support CUDA 13.0
-other versions, and plugins will come soon
+Since takeover, we just support CUDA 13.0.
+Other versions, and plugins will come soon
 
 ## Requirements
 Before you start, you first need to check if you have the right environment. 
 You need a CUDA-enabled GPU and CUDA 13.0 installed (with the CUDA driver). 
 You need to install Hybridizer dotnet tool: 
-`dotnet tool install -g Hybridizer --version 2.0.2-alpha 
+`dotnet tool install -g Hybridizer --version 2.0.2-alpha` or latest version if available
 
 ## Run
 Checkout repository, and open vscode or terminal

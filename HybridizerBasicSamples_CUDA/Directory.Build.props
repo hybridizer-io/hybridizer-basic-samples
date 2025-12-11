@@ -1,5 +1,0 @@
-﻿<Project>
-  <PropertyGroup>
-    <CUDAVersion>12.2</CUDAVersion>
-  </PropertyGroup>
-</Project>
