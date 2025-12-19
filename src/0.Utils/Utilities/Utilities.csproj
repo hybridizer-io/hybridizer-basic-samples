@@ -7,6 +7,6 @@
     <LangVersion>Latest</LangVersion>
   </PropertyGroup>  
   <ItemGroup>
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="2.2.5" />
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="2.4.0" />
   </ItemGroup>
 </Project>
