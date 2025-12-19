@@ -5,10 +5,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <CompileCUDA>enable</CompileCUDA>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="2.2.5" />
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="2.4.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 
@@ -18,16 +19,6 @@
 
   <Target Name="GenerateCUDA" AfterTargets="Build">
     <MakeDir Directories="generated-sources" />
-    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)Mandelbrot.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
-  </Target>
-
-  <Target Name="CompileCUDA" AfterTargets="GenerateCUDA">
-    <PropertyGroup>
-      <BaseCommandLine>nvcc -O3 -std=c++17 -lcuda --expt-relaxed-constexpr -Xcudafe --diag_suppress=144 -Xcudafe --diag_suppress=177 -Xcudafe --diag_suppress=555 -Xcudafe --diag_suppress=128 -I. generated-sources/hybridizer.generated.cpp generated-sources/hybridizer.wrappers.cu -shared -o $(OutDir)Mandelbrot_CUDA.dll -lcuda</BaseCommandLine>
-      <LoadVisualStudio>"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" X64</LoadVisualStudio>
-      <FullExecCommand>cmd /c "$(LoadVisualStudio) &amp;&amp; $(BaseCommandLine)"</FullExecCommand>
-    </PropertyGroup>
-    <Message Text="$(FullExecCommand)" Importance="High" />
-    <Exec Command="$(FullExecCommand)" StandardOutputImportance="High" StandardErrorImportance="High" />
+    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)Mandelbrot.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
   </Target>
 </Project>
