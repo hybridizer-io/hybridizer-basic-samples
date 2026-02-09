@@ -85,8 +85,7 @@ namespace MonteCarloHeatEquation
 
                     while (true)
                     {
-                        float tx, ty;
-                        walker.Walk(fx, fy, out tx, out ty);
+                        walker.Walk(fx, fy, out float tx, out float ty);
 
                         // when on border, break
                         if (IsOutside((int)tx, (int)ty))

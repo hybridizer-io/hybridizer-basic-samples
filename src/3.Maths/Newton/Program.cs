@@ -3,6 +3,7 @@ using Hybridizer.Runtime.CUDAImports;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Newton
@@ -10,15 +11,15 @@ namespace Newton
     class Program
     {
         const int maxiter = 4096;
-        const int N = 2048;
+        const int N = 4096;
         const float fromX = -1.5f;
         const float fromY = -1.5f;
         const float size = 3.0f;
-        const float h = size / (float)N;
+        const float h = size / N;
         const float tol = 0.0000001f;
 
         [Kernel]
-        public static void IterCount(ref int2 result, float cx, float cy)
+        public static int2 IterCount(float cx, float cy)
         {
             int itercount = 0;
             int root = 0;
@@ -54,18 +55,17 @@ namespace Newton
                 }
             }
 
-            result.x = root;
-            result.y = itercount;
+            return new int2 { x = root, y = itercount };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining), IntrinsicFunction("sqrtf")]
-        private static float sqrtf(float a)
+        private static float Sqrtf(float a)
         {
             return (float)Math.Sqrt(a);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining), IntrinsicFunction("fabsf")]
-        private static float fabsf(float a)
+        private static float Fabsf(float a)
         {
             return (float)Math.Abs(a);
         }
@@ -76,15 +76,15 @@ namespace Newton
         [Kernel]
         public static int RootFind(float x, float y)
         {
-            if(fabsf(x - 1.0f) < tol && fabsf(y) < tol)
+            if(Fabsf(x - 1.0f) < tol && Fabsf(y) < tol)
             {
                 return 1;
             }
-            else if (fabsf(x + 0.5f) < tol && fabsf(y - sqrtRoot) < tol)
+            else if (Fabsf(x + 0.5f) < tol && Fabsf(y - sqrtRoot) < tol)
             {
                 return 2;
             }
-            else if (fabsf(x + 0.5f) < tol && fabsf(y + sqrtRoot) < tol)
+            else if (Fabsf(x + 0.5f) < tol && Fabsf(y + sqrtRoot) < tol)
             {
                 return 3;
             }
@@ -93,33 +93,26 @@ namespace Newton
         }
 
         [EntryPoint("run")]
-        public static void Run(int2[] results, int lineFrom, int lineTo)
+        public static void Run(ResidentArrayGeneric<int2> results)
         {
-            for (int i = lineFrom + threadIdx.y + blockIdx.y * blockDim.y; i < lineTo; i += blockDim.y * gridDim.y)
-            {
-                for (int j = threadIdx.x + blockIdx.x * blockDim.x; j < N; j += blockDim.x * gridDim.x)
-                 {
-                    float x = fromX + i * h;
-                    float y = fromY + j * h;
-                    IterCount(ref results[i * N + j], x, y);
-                }
-            }
+            Parallel2D.For(0, N, 0, N, (i, j) => {
+                float x = fromX + i * h;
+                float y = fromY + j * h;
+                results[i * N + j] = IterCount(x, y);
+            });
         }
 
         private static dynamic wrapper;
 
-        public static void ComputeImage(int2[] results, bool accelerate = true)
+        public static void ComputeImage(ResidentArrayGeneric<int2> results, bool accelerate = true)
         {
             if (accelerate)
             {
-                wrapper.Run(results, 0, N);
+                wrapper.Run(results);
             }
             else
             {
-                Parallel.For(0, N, (line) =>
-                {
-                    Run(results, line, line + 1);
-                });
+                Run(results);
             }
         }
 
@@ -128,17 +121,21 @@ namespace Newton
             return (byte) Math.Min(iter*16, 255);
         }
 
-        static void Main(string[] args)
+        static void Main()
         {
-            const int redo = 1;
-            int2[] result_net = new int2[N * N];
-            int2[] result_cuda = new int2[N * N];
+            const int redo = 4;
+            ResidentArrayGeneric<int2> result_net = new(N * N);
+            ResidentArrayGeneric<int2> result_cuda = new(N * N);
 
             #region c#
+            Stopwatch stopwatch = new();
+            stopwatch.Start();
             for (int i = 0; i < redo; ++i)
             {
                 ComputeImage(result_net, false);
             }
+            stopwatch.Stop();
+            Console.WriteLine($"C# time per image : {stopwatch.ElapsedMilliseconds / redo} ms");
             
             #endregion c#
 
@@ -147,43 +144,37 @@ namespace Newton
 
             #region cuda
             
+            stopwatch.Reset();
+            stopwatch.Start();
             for (int i = 0; i < redo; ++i)
             {
                 ComputeImage(result_cuda, true);
             }
+            stopwatch.Stop();
+            Console.WriteLine($"CUDA time per image : {stopwatch.ElapsedMilliseconds / redo} ms");
 
             #endregion
 
             #region save to image
 
             var image = new Image<Argb32>(N, N);
-
+            result_cuda.RefreshHost();
             for (int i = 0; i < N; ++i)
             {
                 for (int j = 0; j < N; ++j)
                 {
-
                     int index = i * N + j;
                     int root = result_cuda[index].x;
                     byte light = ComputeLight(result_cuda[index].y);
 
-                    switch (root)
+                    image[i, j] = root switch
                     {
-                        case 0:
-                            image[i, j] = Color.Black;
-                            break;
-                        case 1:
-                            image[i, j]  = Color.FromRgb(light, 0 ,0);
-                            break;
-                        case 2:
-                            image[i, j] = Color.FromRgb(0, 0, light);
-                            break;
-                        case 3:
-                            image[i, j] = Color.FromRgb(0, light, 0);
-                            break;
-                        default:
-                            throw new ApplicationException();
-                    }
+                        0 => (Argb32)Color.Black,
+                        1 => (Argb32)Color.FromRgb(light, 0, 0),
+                        2 => (Argb32)Color.FromRgb(0, 0, light),
+                        3 => (Argb32)Color.FromRgb(0, light, 0),
+                        _ => throw new ApplicationException(),
+                    };
                 }
             }
 

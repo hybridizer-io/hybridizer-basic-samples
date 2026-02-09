@@ -6,7 +6,7 @@ namespace Hybridizer.Basic.Maths
     unsafe class Program
     {
         static HybRunner runner;
-        static dynamic wrapper;
+        required static dynamic wrapper;
 
         static void Main(string[] args)
         {
