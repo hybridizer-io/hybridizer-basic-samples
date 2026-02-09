@@ -1,4 +1,5 @@
-﻿using Hybridizer.Basic.Utilities;
+﻿using System.Diagnostics;
+using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -10,24 +11,33 @@ namespace MonteCarloHeatEquation
         static void Main(string[] args)
         {
             // adjust these numbers depending on your graphics card, this is quite compute intensive^^
-            const int N = 256;
-            const int iterCount = 1000;
-            
+            const int N = 128;
+            const int iterCount = 512;
+
             var problem = new SquareProblem<SimpleWalker, SimpleBoundaryCondition>(N, iterCount);
             // example of another instanciation
             // var problem = new TetrisProblem<SimpleWalker, TetrisBoundaryCondition>(N, iterCount);
 
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            cuda.GetDeviceProperties(out cudaDeviceProp prop, 0);
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(16 * prop.multiProcessorCount, 128);
             var solver = new MonteCarloHeatSolver(problem);
             dynamic wrapped = runner.Wrap(solver);
-            //solver.Solve();   // C# version
-            wrapped.Solve();    // generated version
+            
+            TraceExec(solver.Solve, "C#");
+            TraceExec(() => wrapped.Solve(), "CUDA");
 
             problem.RefreshHost();
             problem.SaveImage("result.png", GetColor);
+        }
+
+        private static void TraceExec(Action solve, string label)
+        {
+            Stopwatch watch = new();
+            watch.Start();
+            solve();
+            watch.Stop();
+            Console.WriteLine($"{label} time : {watch.ElapsedMilliseconds} ms");
         }
 
         /// <summary>

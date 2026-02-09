@@ -19,15 +19,11 @@ namespace MonteCarloHeatEquation
         [EntryPoint]
         public void Solve()
         {
-            int start = threadIdx.x + blockIdx.x * blockDim.x;
-            int stop = _problem.MaxIndex();
-            int step = blockDim.x * gridDim.x;
-            for (int i = start; i < stop; i += step)
+            Parallel.For(0, _problem.MaxIndex(), i =>
             {
-                int ii, jj;
-                _problem.Coordinates(i, out ii, out jj);
+                _problem.Coordinates(i, out int ii, out int jj);
                 _problem.Solve(ii, jj);
-            }
+            });
         }
     }
 }

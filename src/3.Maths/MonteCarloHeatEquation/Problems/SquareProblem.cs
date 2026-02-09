@@ -22,7 +22,7 @@ namespace MonteCarloHeatEquation
         {
             _N = N;
             _h = 1.0F / (float)_N;
-            _invIter = 1.0F / (float)iter;
+            _invIter = 1.0F / iter;
             _inner = new FloatResidentArray((N-1) * (N-1));
             _iter = iter;
         }
@@ -49,11 +49,11 @@ namespace MonteCarloHeatEquation
         [Kernel]
         public void Solve(float x, float y)
         {
-            TRandomWalker walker = default(TRandomWalker);
-            TBoundaryCondition boundaryCondition = default(TBoundaryCondition);
+            TRandomWalker walker = default;
+            TBoundaryCondition boundaryCondition = default;
             walker.Init();
             float temperature = 0.0F;
-            float size = (float)_N;
+            float size = _N;
             for (int iter = 0; iter < _iter; ++iter)
             {
                 float fx = x;
@@ -61,11 +61,10 @@ namespace MonteCarloHeatEquation
                 
                 while (true)
                 {
-                    float tx, ty;
-                    walker.Walk(fx, fy, out tx, out ty);
+                    walker.Walk(fx, fy, out float tx, out float ty);
 
                     // when on border, break
-                    if(tx == 0.0F || ty == size || tx == size || ty == 0.0F)
+                    if (tx == 0.0F || ty == size || tx == size || ty == 0.0F)
                     {
                         temperature += boundaryCondition.Temperature((float)tx * _h, (float)ty * _h);
                         break;
