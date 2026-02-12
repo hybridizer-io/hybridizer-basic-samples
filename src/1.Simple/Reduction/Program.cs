@@ -1,12 +1,13 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using Hybridizer.Basic.Utilities;
+using System.Runtime.InteropServices;
 
 namespace Reduction
 {
     class Program
     {
         [EntryPoint]
-        public static void ReduceAdd(int N, int[] a, int[] result)
+        public static void ReduceAdd(int N, [In] int[] a, [Out] int[] result)
         {
             var cache = new SharedMemoryAllocator<int>().allocate(blockDim.x);
             int tid = threadIdx.x + blockDim.x * blockIdx.x;

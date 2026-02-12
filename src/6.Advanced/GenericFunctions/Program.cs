@@ -34,7 +34,7 @@ namespace GenericFunctions
         [EntryPoint]
         public static void Add(Vector<float> v, float a)
         {
-            Parallel.For(0, v.Length, i => Invoke<float>(v, i, a, (x, y) => x + y));
+            Parallel.For(0, v.Length, i => Invoke(v, i, a, (x, y) => x + y));
         }
     }
 

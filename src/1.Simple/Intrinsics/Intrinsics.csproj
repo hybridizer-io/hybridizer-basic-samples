@@ -8,10 +8,11 @@
     <CompileCUDA>enable</CompileCUDA>
     <CUDA_PATH Condition="'$(OS)' == 'Windows_NT'">C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v$(CUDAVersion)</CUDA_PATH>
     <CUDA_PATH Condition="'$(OS)' != 'Windows_NT'">/usr/local/cuda-$(CUDAVersion)/</CUDA_PATH>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.0.0" />
+    <ProjectReference Include="..\..\..\..\hybridizer-software-suite\Hybridizer\Runtime\CUDAImports\src\Hybridizer.Runtime.CUDAImports.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,9 +21,6 @@
 
   <Target Name="GenerateCUDA" AfterTargets="Build">
     <MakeDir Directories="generated-sources" />
-    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)Intrinsics.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --additional-jit-headers &quot;cuda_fp16.h=$(CUDA_PATH)/include;cuda_fp16.hpp=$(CUDA_PATH)/include&quot; --display-license-details" 
-          StandardOutputImportance="High" 
-          StandardErrorImportance="High" 
-          IgnoreExitCode="false" />
+    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)Intrinsics.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --additional-jit-headers &quot;cuda_fp16.h=$(CUDA_PATH)/include;cuda_fp16.hpp=$(CUDA_PATH)/include&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
   </Target>
 </Project>

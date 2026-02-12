@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <CompileCUDA>enable</CompileCUDA>
+    <DefineConstants>$(DefineConstants);DEBUG_MEMCPY</DefineConstants>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\hybridizer-software-suite\Hybridizer\Runtime\CUDAImports\src\Hybridizer.Runtime.CUDAImports.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+    <LoadVisualStudio></LoadVisualStudio>
+  </PropertyGroup>
+
+  <Target Name="DetectVisualStudio" BeforeTargets="GenerateCUDA" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup Condition="'$(VsInstallRoot)' != ''">
+      <VcVarsAllBat>$(VsInstallRoot)\VC\Auxiliary\Build\vcvarsall.bat</VcVarsAllBat>
+      <VsDetectionSource>Visual Studio IDE ($(VsInstallRoot))</VsDetectionSource>
+    </PropertyGroup>
+
+    <Exec Condition="'$(VcVarsAllBat)' == ''" Command="&quot;%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe&quot; -latest -version [17.0, -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath" ConsoleToMSBuild="true" StandardOutputImportance="Low" StandardErrorImportance="Low" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="VsWhereInstallPath" />
+    </Exec>
+
+    <PropertyGroup Condition="'$(VcVarsAllBat)' == '' And '$(VsWhereInstallPath)' != ''">
+      <VcVarsAllBat>$(VsWhereInstallPath)\VC\Auxiliary\Build\vcvarsall.bat</VcVarsAllBat>
+      <VsDetectionSource>vswhere ($(VsWhereInstallPath))</VsDetectionSource>
+    </PropertyGroup>
+
+    <Error Condition="'$(VcVarsAllBat)' == ''" Text="Visual Studio 2022 or later with C++ tools is required. Please install Visual Studio 2022+ with the 'Desktop development with C++' workload." />
+
+    <PropertyGroup>
+      <LoadVisualStudio>"$(VcVarsAllBat)" X64</LoadVisualStudio>
+    </PropertyGroup>
+
+    <Message Text="Visual Studio detected: $(VsDetectionSource)" Importance="High" />
+  </Target>
+
+  <Target Name="GenerateCUDA" AfterTargets="Build">
+    <MakeDir Directories="generated-sources" />
+    <PropertyGroup>
+      <BaseCommandLine>nvcc --version</BaseCommandLine>
+      <FullExecCommand Condition="'$(OS)' == 'Windows_NT'">cmd /c "$(LoadVisualStudio) &amp;&amp; $(BaseCommandLine)"</FullExecCommand>
+      <FullExecCommand Condition="'$(OS)' != 'Windows_NT'">$(BaseCommandLine)</FullExecCommand>
+    </PropertyGroup>
+    <Exec Command="$(FullExecCommand)" ConsoleToMSBuild="true" IgnoreExitCode="false">
+      <Output TaskParameter="ConsoleOutput" PropertyName="NvccVersionOutput" />
+    </Exec>
+
+    <PropertyGroup>
+      <CudaVersion>$([System.Text.RegularExpressions.Regex]::Match('$(NvccVersionOutput)', 'release\s+([0-9]+\.[0-9]+)').Groups[1].Value)</CudaVersion>
+    </PropertyGroup>
+
+    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)InOut.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --jit-cuda-version $(CudaVersion) --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
+  </Target>
+</Project>

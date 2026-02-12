@@ -1,6 +1,7 @@
 ﻿using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
 using System;
+using System.Runtime.InteropServices;
 
 namespace SimpleMetadataDecorator
 {
@@ -34,16 +35,15 @@ namespace SimpleMetadataDecorator
 	class Program
 	{
 		[EntryPoint]
-		public static void Run(int N, Element[] a, double[] b, string propertyFilter)
+		public static void Run(int N, Element[] a, [In] double[] b, string propertyFilter)
 		{
 			for (int k = threadIdx.x + blockDim.x * blockIdx.x; k < N; k += blockDim.x * gridDim.x)
 			{
-				IDecorator decoration;
-				if (a[k].Decoration.TryGetValue(propertyFilter, out decoration) && decoration is A)
-				{
-					a[k].Data += b[k];
-				}
-			}
+                if (a[k].Decoration.TryGetValue(propertyFilter, out IDecorator decoration) && decoration is A)
+                {
+                    a[k].Data += b[k];
+                }
+            }
 		}
 
 		static void Main(string[] args)

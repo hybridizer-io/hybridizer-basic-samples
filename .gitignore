@@ -330,3 +330,8 @@ HybridizerBasicSamples_CUDA101/packages/OpenTK.3.0.0/OpenTK.3.0.0.nupkg
 /HybridizerBasicSamples_CUDA116/.vs/HybridizerBasicSamples
 /HybridizerBasicSamples_CUDA/.vs/HybridizerBasicSamples
 HybridizerBasicSamples_CUDA/2.Imaging/Sobel/Sobel/lena-sobel.bmp
+**/cudasettings.json
+**/FileCOntentIndex/
+v17/
+v18/
+.vs

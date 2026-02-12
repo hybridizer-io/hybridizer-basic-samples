@@ -8,7 +8,7 @@ namespace Streams
     public class Program
     {
         [EntryPoint]
-        public static void Add(float[] a, float[] b, int start, int stop, int iter)
+        public static void Add(float[] a, [In] float[] b, int start, int stop, int iter)
         {
             for(int k = start + threadIdx.x + blockDim.x * blockIdx.x; k < stop; k += blockDim.x * gridDim.x)
             {

@@ -3,6 +3,7 @@ using Hybridizer.Runtime.CUDAImports;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace InterfacesReduction
     class Program
     {
         [EntryPoint]
-        public static void Reduce(float[] result, float[] input, int N, ILocalReductor localReductor)
+        public static void Reduce([Out] float[] result, [In] float[] input, int N, ILocalReductor localReductor)
         {
             var cache = new SharedMemoryAllocator<float>().allocate(blockDim.x);
             int tid = threadIdx.x + blockDim.x * blockIdx.x;
