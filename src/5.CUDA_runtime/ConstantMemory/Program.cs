@@ -1,4 +1,5 @@
-﻿using Hybridizer.Basic.Utilities;
+﻿using System.Runtime.InteropServices;
+using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
 
 namespace ConstantMemory
@@ -9,7 +10,7 @@ namespace ConstantMemory
         public static float[] data = [-2.0F, -1.0F, 0.0F, 1.0F, 2.0F];
 
         [EntryPoint]
-        public static void Run(float[] output, float[] input, int N) 
+        public static void Run([Out] float[] output, [In] float[] input, int N) 
         {
             for(int k = 2 + threadIdx.x + blockDim.x * blockIdx.x; k < N - 2; k += blockDim.x * gridDim.x)
             {

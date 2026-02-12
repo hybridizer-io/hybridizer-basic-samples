@@ -3,6 +3,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Hybridizer.Basic.Utilities;
 using SixLabors.ImageSharp.Formats.Png;
+using System.Runtime.InteropServices;
 
 namespace Mandelbrot
 {
@@ -36,7 +37,7 @@ namespace Mandelbrot
         }
 
         [EntryPoint("run")]
-        public static void Run(int[] light, int lineFrom, int lineTo)
+        public static void Run([Out] int[] light, int lineFrom, int lineTo)
         {
             for (int line = lineFrom + threadIdx.y + blockDim.y * blockIdx.y; line < lineTo; line += gridDim.y * blockDim.y)
             {

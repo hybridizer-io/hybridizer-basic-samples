@@ -5,13 +5,14 @@ using System.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Builtin
 {
     class Program
     {
         [EntryPoint]
-        public static void Run(int N, int[] a, int[] result)
+        public static void Run(int N, [In] int[] a, int[] result)
         {
             Parallel.For(0, N, i => 
             {

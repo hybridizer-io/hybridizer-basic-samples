@@ -1,6 +1,7 @@
 ﻿using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Hybridizer.Basic.Finance
 {
@@ -115,11 +116,11 @@ namespace Hybridizer.Basic.Finance
 
         [EntryPoint]
         public static void BlackScholes(
-            float[] callResult,
-            float[] putResult,
-            float[] stockPrice,
-            float[] optionStrike,
-            float[] optionYears,
+            [Out] float[] callResult,
+            [Out] float[] putResult,
+            [In] float[] stockPrice,
+            [In] float[] optionStrike,
+            [In] float[] optionYears,
             int lineFrom,
             int lineTo
             )

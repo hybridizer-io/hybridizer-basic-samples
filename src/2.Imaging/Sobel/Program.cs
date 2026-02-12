@@ -4,6 +4,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Formats.Png;
 using Hybridizer.Basic.Utilities;
+using System.Runtime.InteropServices;
 
 namespace Sobel
 {
@@ -44,7 +45,7 @@ namespace Sobel
         }
         
         [EntryPoint]
-        public static void ComputeSobel(byte[] outputPixel, byte[] inputPixel, int width, int height, int from, int to)
+        public static void ComputeSobel([Out] byte[] outputPixel, [In] byte[] inputPixel, int width, int height, int from, int to)
         {
             for (int i = from + threadIdx.y + blockIdx.y * blockDim.y; i < to; i += blockDim.y * gridDim.y)
             {

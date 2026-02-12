@@ -1,5 +1,6 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using Hybridizer.Basic.Utilities;
+using System.Runtime.InteropServices;
 
 namespace Hybridizer.Basic.Maths
 {
@@ -55,7 +56,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        public static void Multiply(float[] res, SparseMatrix m, float[] v, int N)
+        public static void Multiply([Out] float[] res, [In] SparseMatrix m, [In] float[] v, int N)
         {
             Parallel.For(0, N, (i) =>
             {

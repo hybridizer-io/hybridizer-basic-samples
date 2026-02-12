@@ -2,13 +2,14 @@
 using Hybridizer.Basic;
 using System;
 using Hybridizer.Basic.Utilities;
+using System.Runtime.InteropServices;
 
 namespace SimplePrintf
 {
     class Program
     {
         [EntryPoint]
-        public static void Run(int N, int[] a)
+        public static void Run(int N, [In] int[] a)
         {
             for (int i = threadIdx.x + blockDim.x * blockIdx.x; i < N; i += blockDim.x * gridDim.x)
             {
@@ -18,7 +19,7 @@ namespace SimplePrintf
 
         static void Main(string[] args)
         {
-            int[] a = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
+            int[] a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 
             // create an instance of HybRunner object to wrap calls on GPU
             HybRunner runner = SatelliteLoader.Load().SetDistrib(4,4);

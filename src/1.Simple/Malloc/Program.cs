@@ -29,7 +29,7 @@ namespace Malloc
         }
         
         [EntryPoint]
-        public static void test(double[] dest, double[] src, int N)
+        public static void test([Out] double[] dest, [In] double[] src, int N)
         {
             double[] stencil =
             [
@@ -54,14 +54,14 @@ namespace Malloc
             const int N = 1024*1024*32;
             double[] src = new double[N];
             double[] dst = new double[N];
-            Random rand = new Random();
+            Random rand = new();
             for(int i = 0; i < N; ++i)
             {
                 src[i] = rand.NextDouble();
                 dst[i] = src[i];
             }
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            
+            cuda.GetDeviceProperties(out cudaDeviceProp prop, 0);
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(prop.multiProcessorCount, 512);
             dynamic wrapper = runner.Wrap(new Program());

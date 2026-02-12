@@ -3,6 +3,7 @@ using Hybridizer.Runtime.CUDAImports;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace LambdaReduction
 	class Program
 	{
 		[Kernel]
-		public static void InnerReduce(float[] result, float[] input, int N, float neutral, Func<float, float, float> reductor)
+		public static void InnerReduce([Out] float[] result, [In] float[] input, int N, float neutral, Func<float, float, float> reductor)
 		{
 			var cache = new SharedMemoryAllocator<float>().allocate(blockDim.x);
 			int tid = threadIdx.x + blockDim.x * blockIdx.x;

@@ -15,13 +15,89 @@
       Encoding="UTF-8" />
   </Target>
 
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+    <LoadVisualStudio></LoadVisualStudio>
+  </PropertyGroup>
+
+  <Target Name="DetectVisualStudio" BeforeTargets="CompileCUDA" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup Condition="'$(VsInstallRoot)' != ''">
+      <VcVarsAllBat>$(VsInstallRoot)\VC\Auxiliary\Build\vcvarsall.bat</VcVarsAllBat>
+      <VsDetectionSource>Visual Studio IDE ($(VsInstallRoot))</VsDetectionSource>
+    </PropertyGroup>
+
+    <Exec Condition="'$(VcVarsAllBat)' == ''"
+          Command="&quot;%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe&quot; -latest -version [17.0, -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="Low"
+          StandardErrorImportance="Low"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="VsWhereInstallPath" />
+    </Exec>
+
+    <PropertyGroup Condition="'$(VcVarsAllBat)' == '' And '$(VsWhereInstallPath)' != ''">
+      <VcVarsAllBat>$(VsWhereInstallPath)\VC\Auxiliary\Build\vcvarsall.bat</VcVarsAllBat>
+      <VsDetectionSource>vswhere ($(VsWhereInstallPath))</VsDetectionSource>
+    </PropertyGroup>
+
+    <Error Condition="'$(VcVarsAllBat)' == ''"
+           Text="Visual Studio 2022 or later with C++ tools is required. Please install Visual Studio 2022+ with the 'Desktop development with C++' workload." />
+
+    <PropertyGroup>
+      <LoadVisualStudio>&quot;$(VcVarsAllBat)&quot; X64</LoadVisualStudio>
+    </PropertyGroup>
+
+    <Message Text="Visual Studio detected: $(VsDetectionSource)" Importance="High" />
+  </Target>
+
+  <Target Name="DetectGPUArch" BeforeTargets="CompileCUDA" AfterTargets="DetectVisualStudio"
+          Condition="'$(CompileCUDA)' == 'enable'">
+
+    <!-- Linux: query all GPUs, sort descending by compute capability, take highest -->
+    <Exec Condition="'$(OS)' != 'Windows_NT'"
+          Command="nvidia-smi --query-gpu=compute_cap --format=csv,noheader | sort -t. -k1,1nr -k2,2nr | head -1"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="Low"
+          StandardErrorImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GpuCapRaw" />
+    </Exec>
+
+    <!-- Windows: query all GPUs through VS dev command prompt (nvidia-smi may not be in PATH otherwise) -->
+    <Exec Condition="'$(OS)' == 'Windows_NT'"
+          Command="cmd /c &quot;$(LoadVisualStudio) >nul 2>&amp;1 &amp;&amp; nvidia-smi --query-gpu=compute_cap --format=csv,noheader&quot;"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="Low"
+          StandardErrorImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GpuCapRaw" />
+    </Exec>
+
+    <!-- Windows: sort captured compute capabilities and pick the highest -->
+    <!-- ConsoleToMSBuild joins multi-GPU lines with ";", so split and sort by version -->
+    <Exec Condition="'$(OS)' == 'Windows_NT' And '$(_GpuCapRaw)' != ''"
+          Command="powershell -NoProfile -Command &quot;'$(_GpuCapRaw)'.Split(';') | Where-Object { $_ -match '\d+\.\d+' } | Sort-Object { [version]$_ } -Descending | Select-Object -First 1&quot;"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="Low"
+          StandardErrorImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GpuCapRaw" />
+    </Exec>
+
+    <!-- Parse "8.6" -> "86", "12.0" -> "120" -->
+    <PropertyGroup>
+      <_GpuComputeCap>$([System.Text.RegularExpressions.Regex]::Match('$(_GpuCapRaw)', '(\d+)\.(\d+)').Groups[1].Value)$([System.Text.RegularExpressions.Regex]::Match('$(_GpuCapRaw)', '(\d+)\.(\d+)').Groups[2].Value)</_GpuComputeCap>
+      <GenCodeArg>-gencode arch=compute_$(_GpuComputeCap),code=sm_$(_GpuComputeCap)</GenCodeArg>
+    </PropertyGroup>
+
+    <Error Condition="'$(_GpuComputeCap)' == ''"
+           Text="Failed to detect GPU compute capability. Ensure an NVIDIA GPU is installed and nvidia-smi is available." />
+
+    <Message Text="Detected GPU compute capability: $(_GpuComputeCap) -> $(GenCodeArg)" Importance="High" />
+  </Target>
+
   <Target Name="CompileCUDA" AfterTargets="GenerateCUDA" Condition="'$(CompileCUDA)' == 'enable'">
     <PropertyGroup>
       <NVCCPath Condition="'$(OS)' == 'Windows_NT'">"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v$(CUDAVersion)\bin\nvcc"</NVCCPath>
       <NVCCPath Condition="'$(OS)' != 'Windows_NT'">/usr/local/cuda-$(CUDAVersion)/bin/nvcc</NVCCPath>
-      <BaseCommandLine Condition="'$(OS)' != 'Windows_NT'">$(NVCCPath) -O3 -std=c++17 -lcuda --expt-relaxed-constexpr -Xcompiler -fPIC -Xcudafe --diag_suppress=144 -Xcudafe --diag_suppress=177 -Xcudafe --diag_suppress=555 -Xcudafe --diag_suppress=128 -I. generated-sources/hybridizer.generated.cpp generated-sources/hybridizer.wrappers.cu -shared -o $(OutDir)Builtin_CUDA.dll -lcuda</BaseCommandLine>
-      <BaseCommandLine Condition="'$(OS)' == 'Windows_NT'">$(NVCCPath) -O3 -std=c++17 -lcuda --expt-relaxed-constexpr -Xcudafe --diag_suppress=144 -Xcudafe --diag_suppress=177 -Xcudafe --diag_suppress=555 -Xcudafe --diag_suppress=128 -I. generated-sources/hybridizer.generated.cpp generated-sources/hybridizer.wrappers.cu -shared -o $(OutDir)Builtin_CUDA.dll -lcuda</BaseCommandLine>
-      <LoadVisualStudio>"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" X64</LoadVisualStudio>
+      <BaseCommandLine Condition="'$(OS)' != 'Windows_NT'">$(NVCCPath) -O3 $(GenCodeArg) -std=c++17 -lcuda --expt-relaxed-constexpr -Xcompiler -fPIC -Xcudafe --diag_suppress=144 -Xcudafe --diag_suppress=177 -Xcudafe --diag_suppress=555 -Xcudafe --diag_suppress=128 -I. generated-sources/hybridizer.generated.cpp generated-sources/hybridizer.wrappers.cu -shared -o $(OutDir)$(MSBuildProjectName)_CUDA.dll -lcuda</BaseCommandLine>
+      <BaseCommandLine Condition="'$(OS)' == 'Windows_NT'">$(NVCCPath) -O3 $(GenCodeArg) -std=c++17 -lcuda --expt-relaxed-constexpr -Xcudafe --diag_suppress=144 -Xcudafe --diag_suppress=177 -Xcudafe --diag_suppress=555 -Xcudafe --diag_suppress=128 -I. generated-sources/hybridizer.generated.cpp generated-sources/hybridizer.wrappers.cu -shared -o $(OutDir)$(MSBuildProjectName)_CUDA.dll -lcuda</BaseCommandLine>
       <FullExecCommand Condition="'$(OS)' == 'Windows_NT'">cmd /c "$(LoadVisualStudio) &amp;&amp; $(BaseCommandLine)"</FullExecCommand>
       <FullExecCommand Condition="'$(OS)' != 'Windows_NT'">$(BaseCommandLine)</FullExecCommand>
     </PropertyGroup>

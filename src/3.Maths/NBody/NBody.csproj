@@ -7,10 +7,11 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CompileCUDA>enable</CompileCUDA>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.0.0" />
+    <ProjectReference Include="..\..\..\..\hybridizer-software-suite\Hybridizer\Runtime\CUDAImports\src\Hybridizer.Runtime.CUDAImports.csproj" />
     <PackageReference Include="OpenTK.Graphics" Version="4.9.4" />
     <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />
     <PackageReference Include="OpenTK.Windowing.Desktop" Version="4.9.4" />

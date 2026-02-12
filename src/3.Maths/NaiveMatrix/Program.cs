@@ -1,5 +1,6 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using Hybridizer.Basic.Utilities;
+using System.Runtime.InteropServices;
 
 namespace Hybridizer.Basic.Maths
 {
@@ -63,7 +64,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        public static void ComputeRowsOfProduct(NaiveMatrix resultMatrix, NaiveMatrix matrixA, NaiveMatrix matrixB, int lineFrom, int lineTo)
+        public static void ComputeRowsOfProduct([Out] NaiveMatrix resultMatrix, [In] NaiveMatrix matrixA, [In] NaiveMatrix matrixB, int lineFrom, int lineTo)
         {
             int commonSize = matrixA.Width;
             int bWidth = matrixB.Width;
