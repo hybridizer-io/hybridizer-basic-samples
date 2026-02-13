@@ -26,11 +26,11 @@ namespace SimpleMetadataDecorator
 	interface IDecorator
 	{
 		[Kernel]
-		int prop();
+		int Prop();
 	}
 
-	public class A : IDecorator {[Kernel] public int prop() { return 1; } }
-	public class B : IDecorator {[Kernel] public int prop() { return 2; } }
+	public class A : IDecorator {[Kernel] public int Prop() { return 1; } }
+	public class B : IDecorator {[Kernel] public int Prop() { return 2; } }
 
 	class Program
 	{
@@ -48,17 +48,16 @@ namespace SimpleMetadataDecorator
 
 		static void Main(string[] args)
 		{
-			cudaDeviceProp prop;
-			cuda.GetDeviceProperties(out prop, 0);
-			int N = prop.multiProcessorCount * 256;
+            cuda.GetDeviceProperties(out cudaDeviceProp prop, 0);
+            int N = prop.multiProcessorCount * 256;
 			var a = new Element[N];
 			var a_verif = new Element[N];
 			double[] b = new double[N];
 			Random random = new Random(42);
 			for (int i = 0; i < N; ++i)
 			{
-				a[i] = new Element((double)i);
-				a_verif[i] = new Element((double)i);
+				a[i] = new Element(i);
+				a_verif[i] = new Element(i);
 				b[i] = 1.0;
 				double rand = random.NextDouble();
 				if (rand < 0.33)
