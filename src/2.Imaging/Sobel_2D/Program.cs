@@ -4,6 +4,7 @@ using Hybridizer.Basic.Utilities;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
+using System.Runtime.InteropServices;
 
 namespace Hybridizer.Basic.Imaging
 {
@@ -44,7 +45,7 @@ namespace Hybridizer.Basic.Imaging
         }
 
         [EntryPoint]
-        public static void ComputeSobel(byte[,] outputPixel, byte[,] inputPixel)
+        public static void ComputeSobel([Out] byte[,] outputPixel, [In] byte[,] inputPixel)
         {
             int size = inputPixel.GetLength(0);
             for (int i = threadIdx.y + blockIdx.y * blockDim.y; i < size; i += blockDim.y * gridDim.y)

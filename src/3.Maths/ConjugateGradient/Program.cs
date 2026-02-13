@@ -1,4 +1,5 @@
-﻿using Hybridizer.Basic.Utilities;
+﻿using System.Runtime.InteropServices;
+using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
 
 namespace Hybridizer.Basic.Maths
@@ -6,7 +7,7 @@ namespace Hybridizer.Basic.Maths
     unsafe class Program
     {
         static HybRunner runner;
-        required static dynamic wrapper;
+        static dynamic wrapper;
 
         static void Main(string[] args)
         {
@@ -71,7 +72,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        private static void ScalarProd(float[] result, FloatResidentArray r1, FloatResidentArray r2, int N)
+        private static void ScalarProd([Out] float[] result, FloatResidentArray r1, FloatResidentArray r2, int N)
         {
             var cache = new SharedMemoryAllocator<float>().allocate(blockDim.x);
             int tid = threadIdx.x + blockDim.x * blockIdx.x;

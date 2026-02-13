@@ -1,5 +1,6 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using Hybridizer.Basic.Utilities;
+using System.Runtime.InteropServices;
 
 namespace SharedMatrix
 {
@@ -74,7 +75,7 @@ namespace SharedMatrix
         }
         
         [EntryPoint]
-        public static void Multiply(NaiveMatrix result, NaiveMatrix A, NaiveMatrix B, int size)
+        public static void Multiply([Out] NaiveMatrix result, [In] NaiveMatrix A, [In] NaiveMatrix B, int size)
         {
             SharedMemoryAllocator<float> allocator = new SharedMemoryAllocator<float>();
             

@@ -3,13 +3,14 @@ using Hybridizer.Basic.Utilities;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace HelloWorld
 {
     class Program
     {
-        [EntryPoint("run")]
-        public static void Run(int N, double[] a, double[] b)
+        [EntryPoint]
+        public static void Run(int N, double[] a, [In] double[] b)
         {
             Parallel.For(0, N, i => { a[i] += b[i]; });
         }
@@ -23,7 +24,7 @@ namespace HelloWorld
 
             double[] b = new double[N];
 
-            Random rand = new Random();
+            Random rand = new();
 
             //Initialize acuda et adotnet and b by some doubles randoms, acuda and adotnet have same numbers. 
             for(int i = 0; i < N; ++i)
@@ -33,8 +34,7 @@ namespace HelloWorld
                 b[i] = rand.NextDouble();
             }
 
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            cuda.GetDeviceProperties(out cudaDeviceProp prop, 0);
             HybRunner runner = SatelliteLoader.Load().SetDistrib(prop.multiProcessorCount * 16, 128);
 
             // create a wrapper object to call GPU methods instead of C#
@@ -42,6 +42,7 @@ namespace HelloWorld
             
             // run the method on GPU
             wrapped.Run(N, acuda, b);
+            cuda.ERROR_CHECK(cuda.DeviceSynchronize());
             
             // run .Net method
             Run(N, adotnet, b);
@@ -49,8 +50,10 @@ namespace HelloWorld
             // verify the results
             for (int k = 0; k < N; ++k)
             {
-                if (acuda[k] != adotnet[k])
+                if (acuda[k] != adotnet[k]) {
                     Console.Out.WriteLine("ERROR !");
+                    return;
+                }
             }
             Console.Out.WriteLine("DONE");
         }

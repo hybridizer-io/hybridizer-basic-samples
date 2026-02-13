@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <CompileCUDA>enable</CompileCUDA>
+    <DefineConstants>$(DefineConstants);DEBUG_MEMCPY</DefineConstants>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\0.Utils\Utilities\Utilities.csproj" />
+  </ItemGroup>
+
+  <Target Name="GenerateCUDA" AfterTargets="Build">
+    <MakeDir Directories="generated-sources" />
+    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)InOut.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
+  </Target>
+</Project>
