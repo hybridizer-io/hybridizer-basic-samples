@@ -4,6 +4,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using Hybridizer.Basic.Utilities;
 using SixLabors.ImageSharp.Formats.Png;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Mandelbrot
 {
@@ -14,7 +15,7 @@ namespace Mandelbrot
         const float fromX = -2.0f;
         const float fromY = -2.0f;
         const float size = 4.0f;
-        const float h = size / (float)N;
+        const float h = size / N;
 
         [Kernel]
         public static int IterCount(float cx, float cy)
@@ -36,8 +37,8 @@ namespace Mandelbrot
             return result;
         }
 
-        [EntryPoint("run")]
-        public static void Run([Out] int[] light, int lineFrom, int lineTo)
+        [EntryPoint]
+        public static void Run(IntResidentArray light, int lineFrom, int lineTo)
         {
             for (int line = lineFrom + threadIdx.y + blockDim.y * blockIdx.y; line < lineTo; line += gridDim.y * blockDim.y)
             {
@@ -52,7 +53,7 @@ namespace Mandelbrot
 
         private static dynamic wrapper;
 
-        public static void ComputeImage(int[] light, bool accelerate = true)
+        public static void ComputeImage(IntResidentArray light, bool accelerate = true)
         {
             if (accelerate)
             {
@@ -67,28 +68,37 @@ namespace Mandelbrot
             }
         }
 
-        static void Main(string[] args)
+        static void Main()
         {
             const int redo = 20;
 
-            int[] light_net = new int[N * N];
-            int[] light_cuda = new int[N * N];
+            IntResidentArray light_net = new(N*N);
+            IntResidentArray light_cuda = new(N*N);
 
             #region c#
+            Stopwatch w = new();
+            w.Start();
             for (int i = 0; i < redo; ++i)
             {
                 ComputeImage(light_net, false);
             }
+            w.Stop();
+            Console.WriteLine($"elapsed time per image (C#) : {w.ElapsedMilliseconds/redo} ms");
             #endregion c#
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(32, 32, 16, 16, 1, 0);
             wrapper = runner.Wrap(new Program());
             // profile with nsight to get performance
+            w.Reset();
+            w.Start();
             #region cuda
             for (int i = 0; i < redo; ++i)
             {
                 ComputeImage(light_cuda, true);
+                light_cuda.RefreshHost(); // included for fair comparison
             }
+            w.Stop();
+            Console.WriteLine($"elapsed time per image (CUDA) : {w.ElapsedMilliseconds/redo} ms");
             #endregion
 
             #region save to image
@@ -96,9 +106,9 @@ namespace Mandelbrot
 
             for (int k = 0; k < maxiter; ++k)
             {
-                byte red = (byte) (127.0F * (float)k / (float)maxiter);
-                byte green = (byte)(200.0F * (float)k / (float)maxiter);
-                byte blue = (byte)(90.0F * (float)k / (float)maxiter);
+                byte red = (byte)  (127.0F * k / maxiter);
+                byte green = (byte)(200.0F * k / maxiter);
+                byte blue = (byte) (90.0F * k / maxiter);
                 colors[k] = Color.FromRgb(red, green, blue);
             }
             colors[maxiter] = Color.Black;
