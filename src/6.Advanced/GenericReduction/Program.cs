@@ -1,4 +1,5 @@
-﻿using Hybridizer.Basic.Utilities;
+﻿using System.Runtime.InteropServices;
+using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
 
 namespace GenericReduction
@@ -148,13 +149,13 @@ namespace GenericReduction
 	class EntryPoints
 	{
 		[EntryPoint]
-		public static void ReduceAdd(GridReductor<AddReductor> reductor, float[] result, float[] input, int N)
+		public static void ReduceAdd(GridReductor<AddReductor> reductor, [Out] float[] result, [In] float[] input, int N)
 		{
 			reductor.Reduce(result, input, N);
 		}
 
 		[EntryPoint]
-		public static void ReduceMax(GridReductor<MaxReductor> reductor, float[] result, float[] input, int N)
+		public static void ReduceMax(GridReductor<MaxReductor> reductor, [Out] float[] result, [In] float[] input, int N)
 		{
 			reductor.Reduce(result, input, N);
 		}

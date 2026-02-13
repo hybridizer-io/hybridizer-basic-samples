@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Hybridizer.Basic.Utilities;
+using System.Runtime.InteropServices;
 
 namespace Recursion
 {
@@ -24,7 +25,7 @@ namespace Recursion
         }
 
         [EntryPoint]
-        public static void Run(int N, int[] a, int[] b)
+        public static void Run(int N, [Out] int[] a, [In] int[] b)
         {
             // calling a recursive function from a Parallel.For is not yet supported
             // work distribution must be explicit

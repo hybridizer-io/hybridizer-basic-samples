@@ -5,8 +5,9 @@
     <Nullable>enable</Nullable>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>Latest</LangVersion>
+    <Platforms>x64</Platforms>
   </PropertyGroup>  
   <ItemGroup>
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.0.0" />
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.1.0" />
   </ItemGroup>
 </Project>
