@@ -24,7 +24,7 @@ namespace MonteCarloHeatEquation
             var solver = new MonteCarloHeatSolver(problem);
             dynamic wrapped = runner.Wrap(solver);
             
-            TraceExec(solver.Solve, "C#");
+            //TraceExec(solver.Solve, "C#");
             TraceExec(() => wrapped.Solve(), "CUDA");
 
             problem.RefreshHost();
