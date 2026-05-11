@@ -1,11 +1,36 @@
 <Project>
+  <!-- Auto-detect the installed CUDA toolkit version from `nvcc -V`.
+       Runs before any sample's GenerateCUDA target so $(CUDAVersion) is set
+       wherever it is referenced (jit-cuda-version, cuda.settings.json,
+       additional-jit-headers paths). User can still override CUDAVersion
+       via MSBuild property if a specific toolkit must be pinned. -->
+  <Target Name="DetectCudaVersion" BeforeTargets="GenerateCUDA" Condition="'$(CUDAVersion)' == ''">
+    <PropertyGroup>
+      <_NvccProbe Condition="'$(OS)' == 'Windows_NT'">"$(CUDA_PATH)\bin\nvcc" --version</_NvccProbe>
+      <_NvccProbe Condition="'$(OS)' != 'Windows_NT'">/usr/local/cuda/bin/nvcc --version</_NvccProbe>
+    </PropertyGroup>
+    <Exec Command="$(_NvccProbe)"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="false"
+          StandardOutputImportance="Low"
+          StandardErrorImportance="High">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_NvccVersionOutput" />
+    </Exec>
+    <PropertyGroup>
+      <CUDAVersion>$([System.Text.RegularExpressions.Regex]::Match('$(_NvccVersionOutput)', 'release\s+([0-9]+\.[0-9]+)').Groups[1].Value)</CUDAVersion>
+    </PropertyGroup>
+    <Error Condition="'$(CUDAVersion)' == ''"
+           Text="Failed to detect CUDA version from `nvcc --version`. Install a CUDA toolkit, ensure nvcc is on PATH (or CUDA_PATH is set on Windows), or override CUDAVersion explicitly." />
+    <Message Text="Detected CUDA toolkit: $(CUDAVersion)" Importance="High" />
+  </Target>
+
   <Target Name="Hybridizer_GenerateCudaSettings"
-          AfterTargets="Build"
+          AfterTargets="GenerateCUDA"
           Condition="'$(OutputType)' == 'Exe'">
 
     <PropertyGroup>
       <_CudaSettingsFile>$(TargetDir)cuda.settings.json</_CudaSettingsFile>
-      <_CudaSettingsJson>{ "CudaVersion": "$(CudaVersion)" }</_CudaSettingsJson>
+      <_CudaSettingsJson>{ "CudaVersion": "$(CUDAVersion)" }</_CudaSettingsJson>
     </PropertyGroup>
 
     <WriteLinesToFile
@@ -94,10 +119,10 @@
 
   <Target Name="CompileCUDA" AfterTargets="GenerateCUDA" Condition="'$(CompileCUDA)' == 'enable'">
     <PropertyGroup>
-      <NVCCPath Condition="'$(OS)' == 'Windows_NT'">"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v$(CUDAVersion)\bin\nvcc"</NVCCPath>
-      <NVCCPath Condition="'$(OS)' != 'Windows_NT'">/usr/local/cuda-$(CUDAVersion)/bin/nvcc</NVCCPath>
+      <NVCCPath Condition="'$(OS)' == 'Windows_NT'">"$(CUDA_PATH)\bin\nvcc"</NVCCPath>
+      <NVCCPath Condition="'$(OS)' != 'Windows_NT'">/usr/local/cuda/bin/nvcc</NVCCPath>
       <BaseCommandLine Condition="'$(OS)' != 'Windows_NT'">$(NVCCPath) -O3 $(GenCodeArg) -std=c++17 -lcuda --expt-relaxed-constexpr -Xcompiler -fPIC -Xcudafe --diag_suppress=144 -Xcudafe --diag_suppress=177 -Xcudafe --diag_suppress=555 -Xcudafe --diag_suppress=128 -I. generated-sources/hybridizer.generated.cpp generated-sources/hybridizer.wrappers.cu -shared -o $(OutDir)$(MSBuildProjectName)_CUDA.dll -lcuda</BaseCommandLine>
-      <BaseCommandLine Condition="'$(OS)' == 'Windows_NT'">$(NVCCPath) -O3 $(GenCodeArg) -std=c++17 -lcuda --expt-relaxed-constexpr -Xcudafe --diag_suppress=144 -Xcudafe --diag_suppress=177 -Xcudafe --diag_suppress=555 -Xcudafe --diag_suppress=128 -I. generated-sources/hybridizer.generated.cpp generated-sources/hybridizer.wrappers.cu -shared -o $(OutDir)$(MSBuildProjectName)_CUDA.dll -lcuda</BaseCommandLine>
+      <BaseCommandLine Condition="'$(OS)' == 'Windows_NT'">$(NVCCPath) -O3 $(GenCodeArg) -std=c++17 -lcuda --expt-relaxed-constexpr -Xcompiler /Zc:preprocessor -Xcudafe --diag_suppress=144 -Xcudafe --diag_suppress=177 -Xcudafe --diag_suppress=555 -Xcudafe --diag_suppress=128 -I. generated-sources/hybridizer.generated.cpp generated-sources/hybridizer.wrappers.cu -shared -o $(OutDir)$(MSBuildProjectName)_CUDA.dll -lcuda</BaseCommandLine>
       <FullExecCommand Condition="'$(OS)' == 'Windows_NT'">cmd /c "$(LoadVisualStudio) &amp;&amp; $(BaseCommandLine)"</FullExecCommand>
       <FullExecCommand Condition="'$(OS)' != 'Windows_NT'">$(BaseCommandLine)</FullExecCommand>
     </PropertyGroup>

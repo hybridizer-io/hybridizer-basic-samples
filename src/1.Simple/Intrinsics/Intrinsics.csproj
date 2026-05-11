@@ -6,13 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <CompileCUDA>enable</CompileCUDA>
-    <CUDA_PATH Condition="'$(OS)' == 'Windows_NT'">C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v$(CUDAVersion)</CUDA_PATH>
-    <CUDA_PATH Condition="'$(OS)' != 'Windows_NT'">/usr/local/cuda-$(CUDAVersion)/</CUDA_PATH>
+    <!-- On Windows, $(CUDA_PATH) is provided by the CUDA installer env var.
+         On Linux, /usr/local/cuda is the canonical symlink. -->
+    <CUDA_PATH Condition="'$(OS)' != 'Windows_NT' And '$(CUDA_PATH)' == ''">/usr/local/cuda</CUDA_PATH>
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.1.0" />
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.4.0" />
   </ItemGroup>
 
   <ItemGroup>
