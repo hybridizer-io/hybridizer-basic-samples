@@ -1,5 +1,6 @@
 <Project>
-   <PropertyGroup>
-      <CUDAVersion>13.1</CUDAVersion>
-   </PropertyGroup>
+   <!-- CUDAVersion is auto-detected by the DetectCudaVersion target in
+        Directory.Build.targets (parses the output of `nvcc -V`). Override
+        here, on the MSBuild command line, or via env var only when you need
+        to pin a specific toolkit on a host that has several installed. -->
 </Project>
