@@ -23,6 +23,7 @@ result.png
 newton.png
 *.pdb
 bin
+*.gguf
 *.suo
 *.exe.config
 hybridizer.stderr
@@ -335,3 +336,4 @@ HybridizerBasicSamples_CUDA/2.Imaging/Sobel/Sobel/lena-sobel.bmp
 v17/
 v18/
 .vs
+**/profile
