@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <RootNamespace>LlamaCsharp</RootNamespace>
+    <AssemblyName>llama-csharp</AssemblyName>
+    <DefaultItemExcludes>$(DefaultItemExcludes);LlamaCsharp.Tests/**</DefaultItemExcludes>
+    <CompileCUDA>enable</CompileCUDA>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.4.0" />
+  </ItemGroup>
+
+  <!-- Extra TU for the static-built nvcc DLL (see Directory.Build.targets
+       CompileCUDA target). host_wrappers.cu just #includes intrinsics.cuh
+       so its extern "C" cudaStream_*/cudaGraph_* wrappers end up in
+       LlamaCsharp_CUDA.dll where Utils/GraphInvoke.cs resolves them. -->
+  <ItemGroup>
+    <CudaExtraSources Include="host_wrappers.cu" />
+  </ItemGroup>
+
+  <Target Name="GenerateCUDA" AfterTargets="Build">
+    <MakeDir Directories="generated-sources" />
+    <Copy SourceFiles="intrinsics.cuh" DestinationFolder="generated-sources" />
+    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)$(TargetName).dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;-I$(CUDA_PATH)/include;-I$(CudaCcclIncludeDir);--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --additional-jit-headers &quot;intrinsics.cuh=generated-sources&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
+  </Target>
+
+</Project>
