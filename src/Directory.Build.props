@@ -3,4 +3,18 @@
         Directory.Build.targets (parses the output of `nvcc -V`). Override
         here, on the MSBuild command line, or via env var only when you need
         to pin a specific toolkit on a host that has several installed. -->
+
+  <PropertyGroup>
+    <!-- On Windows, $(CUDA_PATH) is provided by the CUDA installer env var.
+         On Linux, /usr/local/cuda is the canonical symlink. -->
+    <CUDA_PATH Condition="'$(OS)' != 'Windows_NT' And '$(CUDA_PATH)' == ''">/usr/local/cuda</CUDA_PATH>
+
+    <!-- CCCL (cub, cuda, thrust, nv) moved under include/cccl in CUDA 13.
+         nvcc auto-adds an -isystem on the cccl subdir, but NVRTC (used by
+         hybridizer for JIT compilation) does not, so any sample whose
+         intrinsics.cuh pulls in cub or cuda libcu++ headers needs this on
+         the JIT include path. Falls back to include on CUDA 12 and earlier. -->
+    <CudaCcclIncludeDir Condition="Exists('$(CUDA_PATH)/include/cccl')">$(CUDA_PATH)/include/cccl</CudaCcclIncludeDir>
+    <CudaCcclIncludeDir Condition="'$(CudaCcclIncludeDir)' == ''">$(CUDA_PATH)/include</CudaCcclIncludeDir>
+  </PropertyGroup>
 </Project>
