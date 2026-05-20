@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unlike the other samples (which use the free `hybridizer` CLI in BASIC
+    JIT mode), WmmaGemm needs the licensed Hybridizer.Application running
+    in standalone mode: the kernels reach for PTX inline-asm wrappers in
+    `hybridizer::ldmatrix::*` and `hybridizer::mma::*`, which live in
+    Transcoder.Cuda/hybridizer.cuda.cuh and are baked into the standalone
+    build via #include. NVRTC at JIT-time would not see these symbols.
+
+    The user must have the Hybridizer suite checked out and built (so the
+    Hybridizer.Application binary + Transcoder.Cuda/hybridizer.cuda.cuh
+    are available). Override HybridizerSuiteRoot if it lives elsewhere
+    than the default below.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>WmmaGemm</RootNamespace>
+    <AssemblyName>WmmaGemm</AssemblyName>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <CompileCUDA>enable</CompileCUDA>
+    <Platforms>x64</Platforms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 3.5.0 ships the wmma bindings used here. The new pipeline/ldmatrix/mma
+         bindings will appear in the next release; until then we keep local
+         copies (Pipeline.cs, Ldmatrix.cs, Mma.cs) in this directory. -->
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.5.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <HybridizerSuiteRoot Condition="'$(HybridizerSuiteRoot)' == '' And '$(OS)' == 'Windows_NT'">D:\hybridizer-software-suite</HybridizerSuiteRoot>
+    <HybridizerSuiteRoot Condition="'$(HybridizerSuiteRoot)' == ''">/mnt/d/hybridizer-software-suite</HybridizerSuiteRoot>
+    <HybridizerApplication Condition="'$(HybridizerApplication)' == ''">$(HybridizerSuiteRoot)/target/Hybridizer.Application.dll</HybridizerApplication>
+    <HybridizerRuntimeIncludeDir Condition="'$(HybridizerRuntimeIncludeDir)' == ''">$(HybridizerSuiteRoot)/Transcoder.Cuda</HybridizerRuntimeIncludeDir>
+  </PropertyGroup>
+
+  <Target Name="GenerateCUDA" AfterTargets="Build">
+    <MakeDir Directories="generated-cuda" />
+    <Exec Command="dotnet &quot;$(HybridizerApplication)&quot; --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)$(TargetName).dll&quot; --generate-line-info --use-function-pointers --working-directory generated-cuda --flavors CUDA --builtins hybridizer.cuda.builtins"
+          StandardOutputImportance="High"
+          StandardErrorImportance="High"
+          IgnoreExitCode="false" />
+  </Target>
+
+</Project>
