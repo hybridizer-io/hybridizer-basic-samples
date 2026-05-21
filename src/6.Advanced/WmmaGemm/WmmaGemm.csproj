@@ -12,6 +12,19 @@
     Hybridizer.Application binary + Transcoder.Cuda/hybridizer.cuda.cuh
     are available). Override HybridizerSuiteRoot if it lives elsewhere
     than the default below.
+
+    Aspirational BASIC-mode migration (for when Hybridizer Essentials
+    catches up): replace the GenerateCUDA Exec below with a call to the
+    free `hybridizer` CLI that passes the additional-jit-headers flag
+    pointing wmma_helpers.cuh into the NVRTC virtual FS, drop this
+    directory's Directory.Build.targets shadow (the parent BASIC-mode
+    targets take over), copy wmma_helpers.cuh into generated-sources/
+    before the Exec (so NVRTC resolves the relative path), and inline
+    the suite-side hybridizer::ldmatrix / hybridizer::mma helpers into
+    wmma_helpers.cuh — the shipped CLI bundles an older
+    hybridizer.cuda.cuh without them. Currently blocked on Essentials
+    7.5.1 not transpiling some kernel patterns this sample uses
+    (wmma frag local-var init and multi-loop kernels); standalone works.
   -->
 
   <PropertyGroup>
@@ -31,6 +44,13 @@
          bindings will appear in the next release; until then we keep local
          copies (Pipeline.cs, Ldmatrix.cs, Mma.cs) in this directory. -->
     <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared HybRunner.Cuda loader. Matches the dependency the rest of
+         basic-samples uses (GenericReduction etc.) instead of carrying a
+         duplicate copy in this directory. -->
+    <ProjectReference Include="..\..\0.Utils\Utilities\Utilities.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
 using Wmma = Hybridizer.Runtime.CUDAImports.wmma;
 using Pipeline = Hybridizer.Runtime.CUDAImports.pipeline;
@@ -14,7 +15,12 @@ namespace WmmaGemm;
 // pointers so the WMMA kernel can be fed device addresses we allocate
 // ourselves (cuda.Malloc + cuda.Memcpy) — Hybridizer's array marshaller
 // re-copies on every call and dominates the kernel timing otherwise.
-[IntrinsicIncludeCUDA("wmma_helpers.cuh")]
+//
+// IntrinsicInclude (not IntrinsicIncludeCUDA) so the BASIC-mode `hybridizer`
+// CLI also forwards the include to NVRTC's JIT compile. Matches the
+// convention in src/7.AI/tiny-llama which threads intrinsics.cuh through
+// the same JIT pipeline.
+[IntrinsicInclude("wmma_helpers.cuh")]
 internal static class WmmaArr
 {
     [IntrinsicFunction("matmul::wmma_load_a_16x16x16_half_row")]
