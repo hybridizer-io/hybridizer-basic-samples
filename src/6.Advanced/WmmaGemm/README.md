@@ -76,5 +76,4 @@ HYB_PROFILE=1 dotnet bin/x64/Release/net8.0/WmmaGemm.dll 4096
 | `wmma_helpers.cuh` | Project-local C++ glue — folds the `(array, offset)` shape Hybridizer hands kernel authors into the raw-pointer shape the upstream PTX wrappers take. |
 | `Pipeline.cs`, `Ldmatrix.cs`, `Mma.cs` | Local copies of the new CUDAImports bindings, kept here until the next CUDAImports release picks them up. |
 | `Cublas.cs` | Minimal P/Invoke to `cublasGemmEx` for the reference comparison. |
-| `SatelliteLoader.cs` | Standard `HybRunner.Cuda` loader. |
-| `WmmaGemm.csproj` + `Directory.Build.targets` | Standalone-mode build wiring (nvcc invocation distinct from the BASIC-mode siblings). |
+| `WmmaGemm.csproj` + `Directory.Build.targets` | Standalone-mode build wiring (nvcc invocation distinct from the BASIC-mode siblings). The shared `HybRunner.Cuda` loader is reused from `src/0.Utils/Utilities/SatelliteLoader.cs` via a `<ProjectReference>`. |
