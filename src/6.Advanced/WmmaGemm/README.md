@@ -40,14 +40,12 @@ cp.async). The bindings it uses are all upstream-ready primitives.
 - .NET 8.0 SDK
 - NVIDIA GPU, sm_70+ for wmma, sm_75+ for ldmatrix, sm_80+ for cp.async + mma.sync
 - CUDA Toolkit (12.x or 13.x; tested on 13.0/13.2)
-- The licensed **Hybridizer suite** checked out somewhere — by default the
-  build looks for it under `D:\hybridizer-software-suite` (Windows) or
-  `/mnt/d/hybridizer-software-suite` (Linux/WSL); override with
-  `-p:HybridizerSuiteRoot=...` if it lives elsewhere.
-
-Unlike the other samples here (which use the free `hybridizer` CLI's BASIC
-JIT mode), WmmaGemm runs `Hybridizer.Application` in standalone mode so the
-kernel's inline-asm helpers (in `hybridizer.cuda.cuh`) are visible to nvcc.
+- The free `hybridizer` CLI (Essentials 7.6.0+, installed as a dotnet
+  global tool). 7.6.0 is the first BASIC release that ships the
+  `hybridizer::ldmatrix::*` and `hybridizer::mma::*` PTX wrappers in
+  its bundled `hybridizer.cuda.cuh`, and the first that transpiles
+  this sample's wmma-fragment local-var pattern and big-tile kernels
+  cleanly.
 
 ## Build
 
@@ -76,4 +74,4 @@ HYB_PROFILE=1 dotnet bin/x64/Release/net8.0/WmmaGemm.dll 4096
 | `wmma_helpers.cuh` | Project-local C++ glue — folds the `(array, offset)` shape Hybridizer hands kernel authors into the raw-pointer shape the upstream PTX wrappers take. |
 | `Pipeline.cs`, `Ldmatrix.cs`, `Mma.cs` | Local copies of the new CUDAImports bindings, kept here until the next CUDAImports release picks them up. |
 | `Cublas.cs` | Minimal P/Invoke to `cublasGemmEx` for the reference comparison. |
-| `WmmaGemm.csproj` + `Directory.Build.targets` | Standalone-mode build wiring (nvcc invocation distinct from the BASIC-mode siblings). The shared `HybRunner.Cuda` loader is reused from `src/0.Utils/Utilities/SatelliteLoader.cs` via a `<ProjectReference>`. |
+| `WmmaGemm.csproj` | BASIC-mode build: copies `wmma_helpers.cuh` into `generated-sources/` and invokes the `hybridizer` CLI with `--additional-jit-headers "wmma_helpers.cuh=generated-sources"` so NVRTC's virtual FS resolves the include. The shared `HybRunner.Cuda` loader is reused from `src/0.Utils/Utilities/SatelliteLoader.cs` via a `<ProjectReference>`. |
