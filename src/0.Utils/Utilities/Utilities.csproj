@@ -8,6 +8,6 @@
     <Platforms>x64</Platforms>
   </PropertyGroup>  
   <ItemGroup>
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.4.0" />
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.6.0" />
   </ItemGroup>
 </Project>

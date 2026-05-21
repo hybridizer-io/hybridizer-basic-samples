@@ -28,10 +28,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- 3.5.0 ships the wmma bindings used here. The new pipeline/ldmatrix/mma
-         bindings will appear in the next release; until then we keep local
-         copies (Pipeline.cs, Ldmatrix.cs, Mma.cs) in this directory. -->
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.5.0" />
+    <!-- 3.6.0 is the first release shipping the pipeline / ldmatrix / mma
+         bindings this sample needs (wmma was already in 3.5.0). The local
+         Pipeline.cs / Ldmatrix.cs / Mma.cs copies that this sample carried
+         pre-3.6.0 have been removed — the package supplies the same types
+         under the same Hybridizer.Runtime.CUDAImports.{pipeline,ldmatrix,mma}
+         namespaces, so the C# call sites in Program.cs need no change. -->
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.6.0" />
   </ItemGroup>
 
   <ItemGroup>
