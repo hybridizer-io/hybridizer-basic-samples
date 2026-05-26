@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.6.0" />
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.7.0" />
   </ItemGroup>
 
   <ItemGroup>

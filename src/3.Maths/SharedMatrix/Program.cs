@@ -75,7 +75,7 @@ namespace SharedMatrix
         }
         
         [EntryPoint]
-        public static void Multiply([Out] NaiveMatrix result, [In] NaiveMatrix A, [In] NaiveMatrix B, int size)
+        public static void Multiply([In, Out] NaiveMatrix result, [In] NaiveMatrix A, [In] NaiveMatrix B, int size)
         {
             SharedMemoryAllocator<float> allocator = new SharedMemoryAllocator<float>();
             

@@ -24,10 +24,10 @@ namespace WmmaGemm;
 internal static class WmmaArr
 {
     [IntrinsicFunction("matmul::wmma_load_a_16x16x16_half_row")]
-    public static void LoadA(ref Wmma.frag_a_16x16x16_half_row f, IntPtr mptr, int off, uint ldm) { }
+    public static void LoadA([HandleByRef] ref Wmma.frag_a_16x16x16_half_row f, IntPtr mptr, int off, uint ldm) { }
 
     [IntrinsicFunction("matmul::wmma_load_b_16x16x16_half_row")]
-    public static void LoadB(ref Wmma.frag_b_16x16x16_half_row f, IntPtr mptr, int off, uint ldm) { }
+    public static void LoadB([HandleByRef] ref Wmma.frag_b_16x16x16_half_row f, IntPtr mptr, int off, uint ldm) { }
 
     [IntrinsicFunction("matmul::wmma_store_c_16x16x16_float")]
     public static void StoreC(IntPtr mptr, int off, Wmma.frag_acc_16x16x16_float f, uint ldm, Wmma.wmma_layout layout) { }
@@ -36,10 +36,10 @@ internal static class WmmaArr
     // decays to `half*` on device — distinct from the IntPtr/void* path used
     // for global memory above.
     [IntrinsicFunction("matmul::wmma_load_a_shmem_16x16x16_half_row")]
-    public static void LoadAShmem(ref Wmma.frag_a_16x16x16_half_row f, half[] mptr, int off, uint ldm) { }
+    public static void LoadAShmem([HandleByRef] ref Wmma.frag_a_16x16x16_half_row f, half[] mptr, int off, uint ldm) { }
 
     [IntrinsicFunction("matmul::wmma_load_b_shmem_16x16x16_half_row")]
-    public static void LoadBShmem(ref Wmma.frag_b_16x16x16_half_row f, half[] mptr, int off, uint ldm) { }
+    public static void LoadBShmem([HandleByRef] ref Wmma.frag_b_16x16x16_half_row f, half[] mptr, int off, uint ldm) { }
 
     [IntrinsicFunction("matmul::global_load_half")]
     public static half GlobalLoadHalf(IntPtr base_, int off) => default;
@@ -54,10 +54,10 @@ internal static class WmmaArr
     // PTX-MMA loaders: warp-collective, write to raw uint32 register storage.
     // r0..r3 are the layout `mma.sync.m16n8k16` expects per its PTX spec.
     [IntrinsicFunction("matmul::ptx_load_a_m16k16")]
-    public static void LoadAm16k16(out uint r0, out uint r1, out uint r2, out uint r3, half[] sBase, int rowBase, int colBase, int ldm) { r0 = r1 = r2 = r3 = 0; }
+    public static void LoadAm16k16([HandleByRef] out uint r0, [HandleByRef] out uint r1, [HandleByRef] out uint r2, [HandleByRef] out uint r3, half[] sBase, int rowBase, int colBase, int ldm) { r0 = r1 = r2 = r3 = 0; }
 
     [IntrinsicFunction("matmul::ptx_load_b_k16n16")]
-    public static void LoadBk16n16(out uint r0, out uint r1, out uint r2, out uint r3, half[] sBase, int rowBase, int colBase, int ldm) { r0 = r1 = r2 = r3 = 0; }
+    public static void LoadBk16n16([HandleByRef] out uint r0, [HandleByRef] out uint r1, [HandleByRef] out uint r2, [HandleByRef] out uint r3, half[] sBase, int rowBase, int colBase, int ldm) { r0 = r1 = r2 = r3 = 0; }
 
     [IntrinsicFunction("matmul::ptx_store_c_m16n8")]
     public static void StoreCm16n8(IntPtr cBase, int rowBase, int colBase, int n, float c0, float c1, float c2, float c3) { }

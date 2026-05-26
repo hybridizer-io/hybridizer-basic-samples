@@ -34,7 +34,7 @@
          pre-3.6.0 have been removed — the package supplies the same types
          under the same Hybridizer.Runtime.CUDAImports.{pipeline,ldmatrix,mma}
          namespaces, so the C# call sites in Program.cs need no change. -->
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.6.0" />
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.7.0" />
   </ItemGroup>
 
   <ItemGroup>
