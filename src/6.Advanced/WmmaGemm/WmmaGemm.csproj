@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    BASIC-mode sample: the free `hybridizer` CLI (Essentials 7.6.0+,
+    installed as a dotnet global tool) transcodes the [EntryPoint]
+    methods to CUDA and NVRTC JIT-compiles them at runtime. The PTX
+    helpers the kernels reach for (hybridizer::ldmatrix::*,
+    hybridizer::mma::*) are embedded in the suite-side
+    hybridizer.cuda.cuh that the CLI bundles, so the sample only has
+    to feed its own project-local wmma_helpers.cuh to NVRTC via the
+    additional-jit-headers flag.
+
+    Patterned after src/7.AI/tiny-llama which threads intrinsics.cuh
+    through the same JIT pipeline (copies into generated-sources/ so
+    the relative path resolves at JIT time regardless of cwd).
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>WmmaGemm</RootNamespace>
+    <AssemblyName>WmmaGemm</AssemblyName>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <CompileCUDA>enable</CompileCUDA>
+    <Platforms>x64</Platforms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 3.5.0 ships the wmma bindings used here. The new pipeline/ldmatrix/mma
+         bindings will appear in the next release; until then we keep local
+         copies (Pipeline.cs, Ldmatrix.cs, Mma.cs) in this directory. -->
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared HybRunner.Cuda loader. Matches the dependency the rest of
+         basic-samples uses (GenericReduction etc.) instead of carrying a
+         duplicate copy in this directory. -->
+    <ProjectReference Include="..\..\0.Utils\Utilities\Utilities.csproj" />
+  </ItemGroup>
+
+  <Target Name="GenerateCUDA" AfterTargets="Build">
+    <MakeDir Directories="generated-sources" />
+    <Copy SourceFiles="wmma_helpers.cuh" DestinationFolder="generated-sources" />
+    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)$(TargetName).dll&quot; --additional-jit-headers &quot;wmma_helpers.cuh=generated-sources&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot; --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;-I$(CUDA_PATH)/include;-I$(CudaCcclIncludeDir);--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
+  </Target>
+
+</Project>
