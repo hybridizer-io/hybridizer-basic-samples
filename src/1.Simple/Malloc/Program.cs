@@ -31,18 +31,9 @@ namespace Malloc
         [EntryPoint]
         public static void test([Out] double[] dest, [In] double[] src, int N)
         {
-            double[] stencil =
-            [
-                -4.0,
-                -3.0,
-                -2.0,
-                -1.0,
-                0.0,
-                1.0,
-                2.0,
-                3.0,
-                4.0,
-            ];
+            double[] stencil = new double[9];
+            for(int i = 0; i < 9; ++i) { stencil[i] = i - 4.0; }
+
             for (int k = 4 + threadIdx.x + blockIdx.x * blockDim.x; k < N - 4; k += blockDim.x * gridDim.x)
             {
                 dest[k] = apply(stencil, src, k);
