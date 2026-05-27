@@ -21,6 +21,10 @@
 mandelbrot.png
 result.png
 newton.png
+lena-sobel.bmp
+strategy_heatmap.png
+# machine-local package feed override
+/nuget.config
 *.pdb
 bin
 *.gguf
