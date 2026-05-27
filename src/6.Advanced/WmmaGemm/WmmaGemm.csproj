@@ -31,7 +31,7 @@
     <!-- 3.5.0 ships the wmma bindings used here. The new pipeline/ldmatrix/mma
          bindings will appear in the next release; until then we keep local
          copies (Pipeline.cs, Ldmatrix.cs, Mma.cs) in this directory. -->
-    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.5.0" />
+    <PackageReference Include="Hybridizer.Runtime.CUDAImports" Version="3.7.1" />
   </ItemGroup>
 
   <ItemGroup>
