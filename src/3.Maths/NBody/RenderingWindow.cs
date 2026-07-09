@@ -150,6 +150,16 @@ namespace NBody
             VSync = VSyncMode.Off;
             GL.ClearColor(0.0F, 0.0F, 0.0F, 0.0F);
             GL.Enable(EnableCap.DepthTest);
+
+            GL.MatrixMode(MatrixMode.Projection);
+            var projection = Matrix4.CreatePerspectiveFieldOfView(
+                MathHelper.PiOver4,           // 45° de champ de vision
+                Size.X / (float)Size.Y,       // ratio largeur/hauteur de la fenêtre
+                0.1f,                          // near plane
+                1000f);                        // far plane
+            GL.LoadMatrix(ref projection);
+
+            GL.MatrixMode(MatrixMode.Modelview);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -169,6 +179,8 @@ namespace NBody
             var modelview = Matrix4.LookAt(Vector3.Zero, Vector3.UnitZ, Vector3.UnitY);
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadMatrix(ref modelview);
+
+            GL.PointSize(2.0f);
 
             GL.Color3(1.0f, 223.0f / 255.0f, 0.0f); // #FFDF00
             GL.EnableClientState(ArrayCap.VertexArray);
@@ -201,6 +213,11 @@ namespace NBody
         {
             (_buffers[1], _buffers[0]) = (_buffers[0], _buffers[1]);
             (_resources[1], _resources[0]) = (_resources[0], _resources[1]);
+        }
+        protected override void OnResize(ResizeEventArgs e)
+        {
+            base.OnResize(e);
+            GL.Viewport(0, 0, Size.X, Size.Y);
         }
 
         #region  disposable

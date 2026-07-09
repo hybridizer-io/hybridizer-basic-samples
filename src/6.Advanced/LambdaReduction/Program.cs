@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace LambdaReduction
 {
@@ -80,15 +81,32 @@ namespace LambdaReduction
 			float[] buffAdd = new float[1];
 			dynamic wrapped = runner.Wrap(new Program());
 
-			// device reduction
-			wrapped.ReduceMax(buffMax, a, N);
-			wrapped.ReduceAdd(buffAdd, a, N);
-			cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+            // device reduction
+            Stopwatch swMax = new Stopwatch();
+            swMax.Start();
+            wrapped.ReduceMax(buffMax, a, N);
+            cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+            swMax.Stop();
 
-			// check results
-			float expectedMax = a.AsParallel().Aggregate((x, y) => Math.Max(x, y));
-			float expectedAdd = a.AsParallel().Aggregate((x, y) => x+y);
-			bool hasError = false;
+            Stopwatch swAdd = new Stopwatch();
+            swAdd.Start();
+            wrapped.ReduceAdd(buffAdd, a, N);
+            cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+            swAdd.Stop();
+
+            // check results
+            Stopwatch swCpu = new Stopwatch();
+            swCpu.Start();
+            float expectedMax = a.AsParallel().Aggregate((x, y) => Math.Max(x, y));
+            float expectedAdd = a.AsParallel().Aggregate((x, y) => x + y);
+            swCpu.Stop();
+
+            Console.WriteLine("=== Results ===");
+            Console.WriteLine("MAX : GPU = {0,-12:F6}  CPU = {1,-12:F6}  GPU time = {2} ms", buffMax[0], expectedMax, swMax.ElapsedMilliseconds);
+            Console.WriteLine("SUM : GPU = {0,-12:F6}  CPU = {1,-12:F6}  GPU time = {2} ms", buffAdd[0], expectedAdd, swAdd.ElapsedMilliseconds);
+            Console.WriteLine("\nCPU time(both reductions) : {0} ms", swCpu.ElapsedMilliseconds);
+
+            bool hasError = false;
 			if(buffMax[0] != expectedMax)
 			{
 				Console.Error.WriteLine($"MAX Error : {buffMax[0]} != {expectedMax}");
@@ -106,7 +124,7 @@ namespace LambdaReduction
 			if (hasError)
 				Environment.Exit(1);
 
-			Console.Out.WriteLine("OK");
+			Console.Out.WriteLine("\nDone");
 		}
 	}
 }

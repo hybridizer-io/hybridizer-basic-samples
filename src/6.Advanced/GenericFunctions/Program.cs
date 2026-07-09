@@ -1,5 +1,6 @@
 ﻿using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
+using System.Diagnostics;
 
 /// <summary>
 /// experimental feature -- no extensive testing
@@ -44,17 +45,34 @@ namespace GenericFunctions
         {
             const int N = 1024*1024*32;
             float[] a = new float[N];
+            float[] aCPU = new float[N];
             var vect = new Vector<float>(a);
+
+            Stopwatch swGpu = new Stopwatch();
+            swGpu.Start();
             SatelliteLoader.Load().Wrap(new Operations()).Add(vect, 1.0F);
             cuda.DeviceSynchronize();
-            
+            swGpu.Stop();
+            Console.WriteLine("GPU time : {0} ms", swGpu.ElapsedMilliseconds);
+
+            Stopwatch swCpu = new Stopwatch();
+            swCpu.Start();
+            Parallel.For(0, N, i => aCPU[i] = 0.0F + 1.0F);
+            swCpu.Stop();
+            Console.WriteLine("CPU time : {0} ms", swCpu.ElapsedMilliseconds);
+
+            int errorCount = 0;
             for (int i = 0; i < N; ++i)
             {
                 if (a[i] != 1.0F)
                 {
-                    Console.Error.WriteLine($"ERROR at {i} : got {a[i]} instead of 1.0F");
-                    Environment.Exit(6); // abort
+                    errorCount++;   
                 }
+            }
+            if (errorCount > 0)
+            {
+                Console.Error.WriteLine("{0} error(s) out of {1:N0} values ({2:P4})", errorCount, N, errorCount / (double)N);
+                Environment.Exit(6); // abort
             }
 
             Console.Out.WriteLine("OK");

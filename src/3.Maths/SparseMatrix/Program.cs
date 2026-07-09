@@ -1,6 +1,7 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using Hybridizer.Basic.Utilities;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Hybridizer.Basic.Maths
 {
@@ -8,6 +9,10 @@ namespace Hybridizer.Basic.Maths
     {
         static void Main(string[] args)
         {
+            TestLaplacianSmall();
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
 
             SparseMatrix A = SparseMatrix.Laplacian_1D(10000000);
 
@@ -19,6 +24,9 @@ namespace Hybridizer.Basic.Maths
 
             float[] B = new float[A.rows.Length - 1];
 
+
+            sw.Stop();
+            Console.WriteLine("Computing time  : {0} ms\n", sw.ElapsedMilliseconds);
             #region CUDA
             cudaDeviceProp prop;
             cuda.GetDeviceProperties(out prop, 0);
@@ -32,7 +40,47 @@ namespace Hybridizer.Basic.Maths
             }
             #endregion
         }
+        private static void TestLaplacianSmall()
+        {
+            uint n = 10;
 
+
+
+
+            Console.WriteLine("=== TEST 1D Laplacian  (n = {0}) ===", n);
+
+            SparseMatrix A_test = SparseMatrix.Laplacian_1D(n);
+            PrintSparseMatrix(A_test);
+            Console.WriteLine("=== END OF TEST ===\n");
+        }
+        private static void PrintSparseMatrix(SparseMatrix A)
+        {
+            Console.WriteLine("Calculated Matrix : ");
+            int rowCount = A.rows.Length - 1;
+            for (int i = 0; i < rowCount; ++i)
+            {
+                for (int j = 0; j < rowCount; ++j)
+                {
+                    Console.Write("{0} ", GetValue(A, i, j));
+                }
+                Console.WriteLine("|");
+            }
+        }
+        private static float GetValue(SparseMatrix A, int row, int col)
+        {
+            uint start = A.rows[row];
+            uint end = A.rows[row + 1];
+
+            for (uint k = start; k < end; ++k)
+            {
+                if (A.indices[k] == col)
+                {
+                    return A.data[k];
+                }
+            }
+
+            return 0.0F;
+        }
         private static void ReadArguments(string[] args, out string matrixFile, out string? vectorFile)
         {
             if (args.Length < 1)
