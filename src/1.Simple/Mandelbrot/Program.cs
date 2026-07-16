@@ -72,8 +72,8 @@ namespace Mandelbrot
         {
             const int redo = 20;
 
-            IntResidentArray light_net = new(N*N);
-            IntResidentArray light_cuda = new(N*N);
+            IntResidentArray light_net = new(N * N);
+            IntResidentArray light_cuda = new(N * N);
 
             #region c#
             Stopwatch w = new();
@@ -83,7 +83,8 @@ namespace Mandelbrot
                 ComputeImage(light_net, false);
             }
             w.Stop();
-            Console.WriteLine($"elapsed time per image (C#) : {w.ElapsedMilliseconds/redo} ms");
+            long elapsedCSharp = w.ElapsedMilliseconds;
+            Console.WriteLine($"elapsed time per image (C#) : {elapsedCSharp / redo} ms");
             #endregion c#
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(32, 32, 16, 16, 1, 0);
@@ -98,7 +99,24 @@ namespace Mandelbrot
                 light_cuda.RefreshHost(); // included for fair comparison
             }
             w.Stop();
-            Console.WriteLine($"elapsed time per image (CUDA) : {w.ElapsedMilliseconds/redo} ms");
+            long elapsedCuda = w.ElapsedMilliseconds;
+            Console.WriteLine($"elapsed time per image (CUDA) : {elapsedCuda / redo} ms");
+            #endregion
+
+            #region speedup
+            double speedup = (double)elapsedCSharp / elapsedCuda;
+            Console.WriteLine($"Speedup : {speedup:F2}x");
+            #endregion
+
+            #region verification
+            int mismatches = 0;
+            for (int i = 0; i < N * N; ++i)
+            {
+                if (light_net[i] != light_cuda[i]) mismatches++;
+            }
+            Console.WriteLine(mismatches == 0
+                ? "CPU/GPU results match : OK"
+                : $"CPU/GPU results differ on {mismatches} pixels !");
             #endregion
 
             #region save to image
@@ -106,9 +124,9 @@ namespace Mandelbrot
 
             for (int k = 0; k < maxiter; ++k)
             {
-                byte red = (byte)  (127.0F * k / maxiter);
+                byte red = (byte)(127.0F * k / maxiter);
                 byte green = (byte)(200.0F * k / maxiter);
-                byte blue = (byte) (90.0F * k / maxiter);
+                byte blue = (byte)(90.0F * k / maxiter);
                 colors[k] = Color.FromRgb(red, green, blue);
             }
             colors[maxiter] = Color.Black;
@@ -124,6 +142,7 @@ namespace Mandelbrot
             }
 
             image.Save("mandelbrot.png", new PngEncoder());
+            Console.WriteLine("Image saved to mandelbrot.png");
             #endregion
         }
     }
