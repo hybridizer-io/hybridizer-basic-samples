@@ -42,21 +42,32 @@ namespace Malloc
 
         static void Main(string[] args)
         {
-            const int N = 1024*1024*32;
+            const int N = 1024 * 1024 * 32;
             double[] src = new double[N];
             double[] dst = new double[N];
             Random rand = new();
-            for(int i = 0; i < N; ++i)
+            for (int i = 0; i < N; ++i)
             {
                 src[i] = rand.NextDouble();
                 dst[i] = src[i];
             }
-            
+
             cuda.GetDeviceProperties(out cudaDeviceProp prop, 0);
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(prop.multiProcessorCount, 512);
             dynamic wrapper = runner.Wrap(new Program());
+
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             wrapper.test(dst, src, N);
+            cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+            sw.Stop();
+
+            Console.WriteLine($"GPU time for {N:N0} elements : {sw.ElapsedMilliseconds} ms");
+
+            Console.WriteLine("Result Sample (from i = 4 to 13) :");
+            for (int i = 4; i < 14; ++i)
+                Console.Write($"{dst[i]:F4}, ");
+            Console.WriteLine();
         }
     }
 }

@@ -46,7 +46,6 @@ namespace HelloWorld
             
             // run .Net method
             Run(N, adotnet, b);
-
             // verify the results
             for (int k = 0; k < N; ++k)
             {
