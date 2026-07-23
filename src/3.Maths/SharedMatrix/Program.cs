@@ -1,6 +1,7 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
 using Hybridizer.Basic.Utilities;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace SharedMatrix
 {
@@ -40,17 +41,35 @@ namespace SharedMatrix
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(4, 5, 32, 32, 1, 1024*2*8);
             dynamic wrapper = runner.Wrap(new Program());
-            
+
+            Console.WriteLine();
+
+            Stopwatch sg = new Stopwatch();
+            sg.Start();
             for (int i = 0; i < redo; ++i)
             {
                 wrapper.Multiply(res_cuda, matrixA, matrixB, matrixA.Width);
             }
-            #endregion
+            Console.Write("GPU Computation, done 10 times : {0} ms", sg.ElapsedMilliseconds);
+            Console.WriteLine();
+            double avg = sg.ElapsedMilliseconds / 10;
 
-            #region C#
-            Reference(res_net, matrixA, matrixB);
+            Console.WriteLine("Average GPU time : " +avg);
+            Console.WriteLine();
+
             #endregion
             
+            #region C#
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            Reference(res_net, matrixA, matrixB);
+            Console.WriteLine("CPU Computation : {0} ms", sw.ElapsedMilliseconds);
+            #endregion
+
+            double ratio = sw.ElapsedMilliseconds / avg;
+            Console.WriteLine();
+            Console.WriteLine("The average GPU time is " +ratio+" times faster than the CPU time");
+            Console.WriteLine();
             Console.Out.WriteLine("DONE");
         }
 

@@ -2,6 +2,7 @@
 using Hybridizer.Basic.Utilities;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Hybridizer.Basic.Finance
 {
@@ -16,6 +17,8 @@ namespace Hybridizer.Basic.Finance
 
         static void Main(string[] args)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             float4[] callResult_net = new float4[OPT_N/4];
             float4[] putResult_net = new float4[OPT_N/4];
             float4[] stockPrice_net = new float4[OPT_N/4];
@@ -64,7 +67,8 @@ namespace Hybridizer.Basic.Finance
             });
 
             WriteCalculationError(callResult_net, callResult_cuda, putResult_net, putResult_cuda);
-
+            Console.WriteLine();
+            Console.WriteLine("Total time for this program : {0} ms", sw.ElapsedMilliseconds);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining), IntrinsicFunction("fabsf")]

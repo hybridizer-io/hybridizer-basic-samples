@@ -53,10 +53,23 @@ namespace Intrinsics
             const int N = 1024 * 1024 * 32;
             half2[] input = new half2[N];
 
+
+            half2 before = input[0];
+
             HybRunner runner = SatelliteLoader.Load();
             dynamic wrapped = runner.Wrap(new Program());
+
+            // Chronomètre (point 2)
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             wrapped.Compute(input, N);
             cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+            sw.Stop();
+
+            // Vérification du résultat (point 1)
+            Console.WriteLine($"Value Before : {before}");
+            Console.WriteLine($"Value After exp12 : {input[0]}");
+            Console.WriteLine($"GPU Time for {N:N0} elements : {sw.ElapsedMilliseconds} ms");
+
         }
     }
 }

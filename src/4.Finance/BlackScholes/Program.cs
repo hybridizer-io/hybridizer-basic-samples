@@ -2,6 +2,7 @@
 using Hybridizer.Runtime.CUDAImports;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace Hybridizer.Basic.Finance
 {
@@ -16,6 +17,8 @@ namespace Hybridizer.Basic.Finance
 
         static void Main(string[] args)
         {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             float[] callResult_net = new float[OPT_N];
             float[] putResult_net = new float[OPT_N];
             float[] stockPrice_net = new float[OPT_N];
@@ -88,6 +91,9 @@ namespace Hybridizer.Basic.Finance
 
             Console.WriteLine("CALL ERRORS : Linf : {0:G17}, L2 : {1:G17}, L1: {2:G17}", maxCallError, callL2Error, callL1Error);
             Console.WriteLine("PUT ERRORS  : Linf : {0:G17}, L2 : {1:G17}, L1: {2:G17}", maxPutError, putL2Error, putL1Error);
+            sw.Stop();
+            Console.WriteLine();
+            Console.WriteLine("Total time for this program : {0} ms", sw.ElapsedMilliseconds);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining), IntrinsicFunction("fabsf")]

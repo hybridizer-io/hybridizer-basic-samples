@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
 
@@ -30,29 +31,24 @@ namespace GenericReduction
 			}
 		}
 
-		[IntrinsicFunction("atomicMax")]
-		public static float Max(ref float target, float val)
-		{
-			while (true)
-			{
-				// Read current value
-				float currentValue = target;
+        [IntrinsicFunction("atomicMax")]
+        public static float Max(ref float target, float val)
+        {
+            while (true)
+            {
+                float currentValue = target;
+                float newValue = Math.Max(currentValue, val);   // <-- correction ici
 
-				// Compute new value
-				float newValue = currentValue + val;
+                float original = Interlocked.CompareExchange(
+                    ref target,
+                    newValue,
+                    currentValue);
 
-				// Attempt CAS
-				float original = Interlocked.CompareExchange(
-					ref target,
-					newValue,
-					currentValue);
-
-				// If CAS succeeded, original equals currentValue
-				if (original == currentValue)
-					return newValue;
-			}
-		}
-	}
+                if (original == currentValue)
+                    return newValue;
+            }
+        }
+    }
 
 	[HybridTemplateConcept]
 	interface IReductor
@@ -62,10 +58,10 @@ namespace GenericReduction
 		[Kernel]
 		float neutral { get; }
 		[Kernel]
-		float atomic(ref float target, float val);		
+		float atomic(ref float target, float val);
 	}
-	
-	struct AddReductor: IReductor
+
+	struct AddReductor : IReductor
 	{
 		[Kernel]
 		public float neutral { get { return 0.0F; } }
@@ -88,17 +84,17 @@ namespace GenericReduction
 		[Kernel]
 		public float neutral { get { return float.MinValue; } }
 
-        [Kernel]
+		[Kernel]
 		public float func(float x, float y)
 		{
 			return Math.Max(x, y);
 		}
 
 		[Kernel]
-        public float atomic(ref float target, float val)
-        {
+		public float atomic(ref float target, float val)
+		{
 			return Atomics.Max(ref target, val);
-        }
+		}
 	}
 
 	[HybridRegisterTemplate(Specialize = typeof(GridReductor<MaxReductor>))]
@@ -176,8 +172,8 @@ namespace GenericReduction
 			cudaDeviceProp prop;
 			cuda.GetDeviceProperties(out prop, 0);
 			int gridDimX = 16 * prop.multiProcessorCount;
-            int blockDimX = 256;
-            cuda.DeviceSetCacheConfig(cudaFuncCache.cudaFuncCachePreferShared);
+			int blockDimX = 256;
+			cuda.DeviceSetCacheConfig(cudaFuncCache.cudaFuncCachePreferShared);
 			HybRunner runner = SatelliteLoader.Load().SetDistrib(gridDimX, 1, blockDimX, 1, 1, blockDimX * sizeof(float));
 			float[] buffMax = new float[1];
 			float[] buffAdd = new float[1];
@@ -185,14 +181,36 @@ namespace GenericReduction
 			var addReductor = new GridReductor<AddReductor>();
 			dynamic wrapped = runner.Wrap(new EntryPoints());
 
-			// device reduction
+			Console.WriteLine("Number of elements : {0:N0} ({1:F2} Mo)", N, N * sizeof(float) / 1024.0 / 1024.0);
+			Console.WriteLine("Grid : {0} blocs x {1} threads\n", gridDimX, blockDimX);
+
+			// device reduction (Max)
+			Stopwatch swMax = new Stopwatch();
+			swMax.Start();
 			wrapped.ReduceMax(maxReductor, buffMax, a, N);
+			cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+			swMax.Stop();
+
+			// device reduction (Add)
+			Stopwatch swAdd = new Stopwatch();
+			swAdd.Start();
 			wrapped.ReduceAdd(addReductor, buffAdd, a, N);
 			cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+			swAdd.Stop();
 
 			// check results
+			Stopwatch swCpu = new Stopwatch();
+			swCpu.Start();
 			float expectedMax = a.AsParallel().Aggregate(Math.Max);
 			float expectedAdd = a.AsParallel().Aggregate((x, y) => x + y);
+			swCpu.Stop();
+
+
+			Console.WriteLine("=== Results ===");
+			Console.WriteLine("MAX : GPU = {0,-12:F6}  CPU = {1,-12:F6}  GPU time = {2} ms", buffMax[0], expectedMax, swMax.ElapsedMilliseconds);
+			Console.WriteLine("SUM : GPU = {0,-12:F6}  CPU = {1,-12:F6}  GPU time = {2} ms", buffAdd[0], expectedAdd, swAdd.ElapsedMilliseconds);
+			Console.WriteLine("\nCPU time(both reductions) : {0} ms", swCpu.ElapsedMilliseconds);
+
 			bool hasError = false;
 			if (buffMax[0] != expectedMax)
 			{
@@ -200,8 +218,6 @@ namespace GenericReduction
 				hasError = true;
 			}
 
-			// addition is not associative, so results cannot be exactly the same
-			// https://en.wikipedia.org/wiki/Associative_property#Nonassociativity_of_floating_point_calculation
 			if (Math.Abs(buffAdd[0] - expectedAdd) / expectedAdd > 1.0E-5F)
 			{
 				Console.Error.WriteLine($"ADD Error : {buffAdd[0]} != {expectedAdd}");
@@ -211,7 +227,7 @@ namespace GenericReduction
 			if (hasError)
 				Environment.Exit(1);
 
-			Console.Out.WriteLine("OK");
+			Console.Out.WriteLine("\nDone");
 		}
 	}
 }

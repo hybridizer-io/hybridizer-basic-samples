@@ -2,6 +2,7 @@
 using Hybridizer.Runtime.CUDAImports;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -21,7 +22,7 @@ namespace InterfacesReduction
     class AddLocalReductor : ILocalReductor
     {
         [Kernel] // mandatory on implementation
-        public float neutral { get => 0.0F;  }
+        public float neutral { get => 0.0F; }
 
         [Kernel] // mandatory on implementation
         public float func(float x, float y)
@@ -101,13 +102,33 @@ namespace InterfacesReduction
             float[] buffAdd = new float[1];
             dynamic wrapped = runner.Wrap(new Program());
 
-            // device reduction
-            cuda.ERROR_CHECK((cudaError_t) wrapped.Reduce(buffMax, a, N, new MaxLocalReductor()));
-            cuda.ERROR_CHECK((cudaError_t) wrapped.Reduce(buffAdd, a, N, new AddLocalReductor()));
+            Console.WriteLine("Number of elements : {0:N0} ({1:F2} Mo)", N, N * sizeof(float) / 1024.0 / 1024.0);
+            Console.WriteLine("Grid : {0} blocs x {1} threads\n", gridDimX, blockDimX);
+
+            // device reduction (Max)
+            Stopwatch swMax = new Stopwatch();
+            swMax.Start();
+            cuda.ERROR_CHECK((cudaError_t)wrapped.Reduce(buffMax, a, N, new MaxLocalReductor()));
+            swMax.Stop();
+
+            // device reduction (Add)
+            Stopwatch swAdd = new Stopwatch();
+            swAdd.Start();
+            cuda.ERROR_CHECK((cudaError_t)wrapped.Reduce(buffAdd, a, N, new AddLocalReductor()));
+            swAdd.Stop();
 
             // check results
+            Stopwatch swCpu = new Stopwatch();
+            swCpu.Start();
             float expectedMax = a.AsParallel().Aggregate((x, y) => Math.Max(x, y));
             float expectedAdd = a.AsParallel().Aggregate((x, y) => x + y);
+            swCpu.Stop();
+
+            Console.WriteLine("=== Results ===");
+            Console.WriteLine("MAX : GPU = {0,-12:F6}  CPU = {1,-12:F6}  GPU time = {2} ms", buffMax[0], expectedMax, swMax.ElapsedMilliseconds);
+            Console.WriteLine("SUM : GPU = {0,-12:F6}  CPU = {1,-12:F6}  GPU time = {2} ms", buffAdd[0], expectedAdd, swAdd.ElapsedMilliseconds);
+            Console.WriteLine("\nCPU time(both reductions) : {0} ms", swCpu.ElapsedMilliseconds);
+
             bool hasError = false;
             if (buffMax[0] != expectedMax)
             {
@@ -126,7 +147,7 @@ namespace InterfacesReduction
             if (hasError)
                 Environment.Exit(1);
 
-            Console.Out.WriteLine("OK");
+            Console.Out.WriteLine("\nDone");
         }
     }
 }

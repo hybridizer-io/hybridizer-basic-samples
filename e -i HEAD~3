@@ -1,0 +1,338 @@
+[33m5236c12[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mModifications-Milan[m[33m, [m[1;31morigin/Modifications-Milan[m[33m)[m Added README and upgraded Mandelbrot
+[33md6fa2f3[m Amélioration ou Ajout des README
+[33m99127d1[m[33m ([m[1;32mstatus[m[33m)[m Première Vague Changements Codes
+[33mb39d705[m Rajotut de StopWatch et Mise en Page
+[33m5b07fa1[m[33m ([m[1;32mmaster[m[33m)[m Merge pull request #115 from hybridizer-io/fix/malloc-avoid-initializearray
+[33m8db5964[m chore: gitignore sample outputs and local nuget.config
+[33mf5069ae[m fix(Malloc): initialize stencil per-element to avoid RuntimeHelpers.InitializeArray
+[33mfe7da95[m Feat: wmma gemm sample
+[33m704749b[m chore: reference Hybridizer.Runtime.CUDAImports 3.7.1 across all samples
+[33m3d7038d[m feat(WmmaGemm): switch to BASIC-mode hybridizer CLI (Essentials 7.6.0)
+[33m87865d6[m refactor(WmmaGemm): drop duplicate SatelliteLoader, document BASIC-mode wiring
+[33m3cb5d92[m feat(6.Advanced/WmmaGemm): half-precision GEMM sample with tensor cores
+[33m3e1d1f0[m Merge pull request #113 from hybridizer-io/feat/tiny-llama
+[33mde88cfa[m tiny-llama
+[33m1952689[m update readme
+[33m4195583[m[33m ([m[1;33mtag: [m[1;33mv3.4.0[m[33m)[m Update to cudaimports latest and autodetect nvcc/nvrtc
+[33m5326c15[m feat: add StrategyBacktest finance sample and MonteCarloHeatEquation visualization utilities
+[33mdd6f9d7[m fix: faster mandelbrot
+[33md6ff2db[m feat: in-out-attributes
+[33m01d9576[m remove CI as we need a CUDA driver to build solution
+[33m36be162[m build in CI
+[33m535f082[m feat: in-out attributes usage
+[33mfaca63f[m feat: In-Out Attribute usage
+[33m0a0e75c[m reference cudaimports 3.0
+[33m6fa7a25[m feat: migrate to new version of hybridizer
+[33m2b278e2[m fix generic reduction
+[33mfddf8a6[m feat: add FPS indicator
+[33mdcd501b[m[33m ([m[1;33mtag: [m[1;33mv3.0.0[m[33m)[m cleanup folrder tree
+[33m673a6fc[m migrate last samples
+[33mb74d134[m migrate 4.Finance
+[33mebe1cfd[m migrate 3.Maths samples
+[33m981c739[m migrate imaging samples
+[33m0680e99[m migrate simple directory to new hybridizer
+[33m3b262a9[m update license
+[33m1f153c5[m delete base.config
+[33m4877680[m update readme
+[33mb06f225[m delete jupyter my ass
+[33m2fd55a8[m move to new version : initial cleanup
+[33m7b7e5fb[m add a sample for generic memory access (no special meaning, just feature demonstration)
+[33mcac7bf8[m support for cuda12.2 except NPP_ImageSegmentation which needs further investigation
+[33m52e3908[m[33m ([m[1;33mtag: [m[1;33mv2.0.1[m[33m, [m[1;33mtag: [m[1;33mv2.0[m[33m)[m Merge pull request #104 from altimesh/december-update
+[33me47184e[m update medatada
+[33m3904ae9[m finish unification of VS solutions and CUDA versions into - one solution - two config builds
+[33m8d69084[m everything runs smoothly
+[33mabbd0ac[m all projects compile and generates CUDA which compiles
+[33m62be07d[m samples close to OK w/ cuda 11.6
+[33m889d4f6[m samples cuda 11.6 close to OK
+[33m8267a11[m[33m ([m[1;33mtag: [m[1;33m1.2.10616[m[33m)[m fix jitter version no more float3/float4 constructors -- replaced by make_floatn
+[33m8e56162[m maxlabel is inclusice
+[33m0cbe2d7[m[33m ([m[1;33mtag: [m[1;33m1.2.10607[m[33m)[m Merge pull request #87 from altimesh/september_update
+[33m7ebe84b[m add NPP sample
+[33m2b0b123[m[33m ([m[1;33mtag: [m[1;33m1.2.10484[m[33m)[m cuda 10.1 and visual 2019
+[33mbe9007f[m[33m ([m[1;33mtag: [m[1;33m1.2.10341[m[33m)[m Merge pull request #77 from altimesh/february-update
+[33m42b99c6[m fix generic functions sample
+[33mbb0fd2b[m remove dependency to native library for ConjugateGradient implement scalar prod in c#
+[33me3efa70[m fix reference to cudaimports
+[33m43e43ea[m add generic function sample
+[33m846b29f[m remove dead comments + add a todo
+[33mc6fbe66[m add virtual function sample
+[33mbe487dd[m fix cooperative groups sample
+[33m3c56134[m add a cooperative group (multi block) sample
+[33m3d36f0c[m update malloc sample (new double[] instead of malloc)
+[33maff612e[m Merge pull request #72 from altimesh/january_update
+[33m4e96d89[m fix #71 (jitter version)
+[33mcbdf8c9[m Update README.md
+[33mc336bef[m[33m ([m[1;33mtag: [m[1;33m1.2.10271[m[33m)[m Merge pull request #70 from altimesh/january_update
+[33me5d007f[m add one exp to intrinsic sample
+[33me58d188[m delete old files from cuda 10 samples (makefiles, run.sh and native reduction) which are now useless
+[33mc9c7367[m improve intrinsics sample (half2)
+[33m7707beb[m improve printf sample
+[33mf673ead[m add simple cufft example
+[33m8ec691d[m fix shared memory amount in generic/lambda reduction
+[33mc2b9c97[m cuda 8 does not support c++14 -- rollback to c++11 remove generated files
+[33m13f63d1[m move c++ projects from c++11 to c++14
+[33m47f2536[m[33m ([m[1;33mtag: [m[1;33m1.2.10227[m[33m)[m Merge pull request #67 from altimesh/december_update
+[33m7e73ced[m Fix samples CUDA 10.0
+[33m9addea9[m atomic expressions in generic and lambda reduction
+[33mbf6b2f8[m[33m ([m[1;33mtag: [m[1;33m1.2.10129[m[33m)[m Merge pull request #65 from altimesh/november_update
+[33ma46f38e[m Merge branch 'november_update' of https://github.com/altimesh/hybridizer-basic-samples into november_update
+[33ma8a1d13[m add simpledecorator sample
+[33md829b36[m add sample jupyter hybridizer zero-copy
+[33ma3d6b18[m Update README.md
+[33m910afb5[m fix sobel compute
+[33m7621986[m add generic reduction sample add lambda reduction sample
+[33m4295377[m[33m ([m[1;33mtag: [m[1;33m1.2.10108[m[33m)[m - add winform sample (mandelbrot renderer) - delete some generated files
+[33m50bdf8b[m[33m ([m[1;33mtag: [m[1;33m1.2.10021[m[33m)[m rename basicsamples to basicsamples_cuda8 add cuda10 samples
+[33m8f531a0[m Merge branch 'master' of https://github.com/altimesh/hybridizer-basic-samples
+[33m4b2313e[m fix mandelbrot renderer (winform sample) + add info button
+[33m606e35c[m Merge pull request #62 from altimesh/fduguet-avx512-labs
+[33m83ed8b3[m Adding test mechanics
+[33m7a97fe1[m Adding test mechanics
+[33m14f5446[m faster blackscholes sample
+[33mf542c52[m hint path for CUDAImports on linux
+[33mba9e142[m removing unused comment
+[33m1031ca1[m removing unused comment
+[33md13c33f[m fix name of naive-add.cs
+[33ma6646c3[m[33m ([m[1;33mtag: [m[1;33m1.1.9833[m[33m)[m Merge pull request #59 from altimesh/september_update
+[33m1e43543[m fix cudaruntimeversion in CUDA9.2 samples
+[33mcc70b32[m fix project dependencies
+[33mf33f08e[m reflect package changes (lib path) + fix postbuild event in cuda projects
+[33m8b8c9c2[m remove unused option (/arch:AVX512)
+[33m80d60d9[m update compiler flags for optimization in AVX*
+[33mf13ddbd[m disable flavors at compile time
+[33m8f8d406[m add winform sample (AVX* + CUDA) : Mandelbrot
+[33mafaabc3[m Create Jupyter/Labs-AVX512/README.md
+[33m3743933[m Revert "rename Labs to Labs-CUDA"
+[33mf93926b[m rename Labs to Labs-CUDA
+[33mc34907f[m Fix path in jupyter notebook
+[33md1a99e5[m modify path
+[33meb17907[m add jupyter notebook for Texture and Surface memory
+[33m132dc99[m[33m ([m[1;33mtag: [m[1;33m1.1.9554[m[33m)[m Merge pull request #54 from altimesh/july_update
+[33me4c1564[m fix FPS display (typo)
+[33m6029608[m fix reference path for vb project
+[33m7c438a6[m Merge branch 'july_update' of https://github.com/altimesh/hybridizer-basic-samples into july_update
+[33mfee6756[m add kernel duration and FPS counter in mandelbulb
+[33m6f38599[m fix typo
+[33m03fe150[m add Conjugate Gradient method with ResidentArray to Labs
+[33m377e6b9[m Merge branch 'july_update' of https://github.com/altimesh/hybridizer-basic-samples into july_update
+[33m01d930b[m resolve path on median Filter notebook
+[33mfa7eef8[m jupyter must be run in a visual studio command prompt
+[33m5724f95[m better readme for jupyter notebooks
+[33mb99cebe[m fix hybridizer path in mandelbulb example
+[33m3a76450[m MANDELBULB : cleanup code -- animate
+[33m91b97f0[m mandelbulg opengl (quick and dirty)
+[33m3394e07[m fix interlocked builtin file
+[33m3a6452c[m reference CUDAImports directly, as it's now in the GAC
+[33mec0de96[m Mandelbulb : display image once done
+[33m60434fa[m add mandelbulb sample (simple version no OPENGL)
+[33m3d9ebfa[m add reduction sample with shared memory and atomics
+[33m1f05ee2[m Merge branch 'july_update' of https://github.com/altimesh/hybridizer-basic-samples into july_update
+[33m52e3a27[m simple recursion sample
+[33mccf71d5[m add two dimensional array notebook
+[33mc81b79d[m improve constant memory notebook
+[33m741df0f[m notebook for Constant memory completed
+[33m53d769b[m Add the beginning of the Constant memory notebook
+[33m96892c2[m fix out of bound
+[33mcedf9b1[m fix typo
+[33maba3dc3[m add Parallel.For and fix typo
+[33m88af8cb[m add median filter lab
+[33m625e5b4[m fix typo
+[33m6ef7571[m add missing file
+[33m9e69911[m Add Stream jupyter notebook
+[33m9f5446e[m Update README.md
+[33m11c9949[m[33m ([m[1;33mtag: [m[1;33m1.1.9368[m[33m)[m Merge pull request #52 from altimesh/june_update
+[33m9834c26[m remove AnyCPU config from 9.2 solution
+[33mc91a607[m delete large checkpoint file
+[33m13aaf32[m remove typo
+[33m8874322[m Merge branch 'master' into june_update
+[33m0b5ef24[m downgrade toolset to v140 as visual Studio broke cuda support once again
+[33m66effe0[m remove CUDA_GL_Interop.cs as it's integrated in CUDAImports as of latest version
+[33mfac71ac[m clean 02-lab
+[33mcb21f56[m clean Hello-world 2
+[33me2afbfd[m cleanup Hello World lab
+[33m3a16128[m add vector-add lab
+[33m28dff92[m HYB-1123 Adding hello world
+[33m7029f30[m fix readme and remove deprecated material
+[33m6116a11[m remove dead code
+[33m3c2adda[m Merge branch 'june_update' of https://github.com/altimesh/hybridizer-basic-samples into june_update
+[33m316ae4d[m add NBody simulation for opengl interop
+[33maad7dc7[m Change hybrunner.Cuda("dllName") to hybrunner.Cuda()
+[33m7edbd88[m fix vb sample
+[33m8f2b254[m add vb sample
+[33m89bd942[m better stream management (from wrapped object instead of runner, allowing to have only one runner per flavor)
+[33m2ec0ddf[m[33m ([m[1;33mtag: [m[1;33m1.1.9352[m[33m)[m Update Streams_CUDA.vcxproj
+[33m79893a2[m Update README.md
+[33m44382d4[m[33m ([m[1;33mtag: [m[1;33m1.1.9225[m[33m)[m Update README.md
+[33mec9622c[m Merge pull request #50 from altimesh/april_update
+[33m87328b3[m fix toolsets since cuda 9.2 and v141 are compatible fix build dependencies
+[33m515fe65[m cuda 9.2 support
+[33m7839acc[m add builtin sample (atomicadd)
+[33mcd31e1a[m Update ISSUE_TEMPLATE.md
+[33m62c812a[m Changing pointer arithmetic to ref to avoid usage of unsafe.
+[33m29f698f[m changing pointer to ref parameters for cusparse.
+[33m222b8e4[m more files in gitignore
+[33m07cecdc[m Update README.md
+[33md6a1464[m remove initial cd in some Makefile
+[33m3c30b00[m Merge branch 'april_update' of https://github.com/altimesh/hybridizer-basic-samples into april_update
+[33m046aeda[m Test commit with removing of cd in some Makefile
+[33mef61e39[m Update Makefile
+[33m6cd4743[m add constant memory sample move lena to share location
+[33m4d213c3[m texture and surface sample
+[33m8836352[m stream example
+[33m71b65d2[m[33m ([m[1;33mtag: [m[1;33m1.1.5931.8943[m[33m)[m Merge pull request #40 from altimesh/march_update
+[33maa270e9[m update makefile to explicitely reference the right version of nvcc
+[33m8977a2d[m remove sobel2D from linux samples add try/catch on process start for non interactive (no X11) linux machines
+[33m6fccf46[m fix cuda version for cuda8
+[33m573535c[m fix jitter path for cuda 9.0
+[33m943029b[m fix project dependency
+[33m9be4d4d[m add missing builtins in config files
+[33m219a0ee[m replace spaces by tabs in makefiles
+[33mf6b359c[m Merge branch 'march_update' of https://github.com/altimesh/hybridizer-basic-samples into march_update
+[33m17ef166[m update projects for linux support add makefiles and run scripts
+[33m0587260[m Update README.md
+[33ma53d145[m remove visual studio version specific projects -- reduce repository size and ease bugfixes and future developments
+[33m941213d[m[33m ([m[1;33mtag: [m[1;33m1.1.5787.8707[m[33m)[m missing file
+[33m6d1db13[m fix #37 (missing vcxproj) Added README to mixed precision sample (as it doesn't compile on pre Jetson TX1 Gpus. Fixed imports (props instead of targets) to fix warnings
+[33ma79b2af[m[33m ([m[1;33mtag: [m[1;33m1.1.5727.8609[m[33m)[m Merge pull request #35 from altimesh/jan18update
+[33m606c714[m fix CUDA 9.1 vs2017 project dependencies removed half2 example, as it doesn't compile on kepler.
+[33m3fe5b96[m added a check to issue-template (installing vc++)
+[33mc3d5e41[m fix vs2015 build removed fp16 sample in cuda 8
+[33m5840cca[m add missing files for CUDA 8
+[33m7b6ea2f[m moved all vs2017 projects to v140 added Intrinsics sample in visual 2017 examples
+[33mcb77afa[m add simple example of intrinsic includes (using half2 type)
+[33m477920d[m update all vcxproj to match new vsix version
+[33m63e9a53[m[33m ([m[1;33mtag: [m[1;33m1.1.5685.8524[m[33m)[m Merge pull request #33 from altimesh/cuda91
+[33m4a197d8[m fix project dependencies
+[33mb3daf59[m cuda 9.1 support + minor bug fixes
+[33m1a4d803[m Update README.md
+[33mcd6c816[m Update README.md
+[33md73179a[m Update ISSUE_TEMPLATE.md
+[33m27313f4[m[33m ([m[1;33mtag: [m[1;33mv1.1.5656.8398[m[33m)[m fix some output dll paths
+[33ma033db1[m add project dependency
+[33mf32f4c1[m Merge pull request #30 from altimesh/cuda9andvisualstudiosupport
+[33m00ee0e1[m add notes to readme -- warnings for update/build
+[33mb37745a[m fix projects - remove cublas and cusparse from cuda9 samples - fixed projects references - cleanup solution configurations
+[33m89cc5ac[m make all path relatives
+[33m22b31ef[m other intial changes
+[33mf07c9fd[m initial changes
+[33m6a15b0e[m Merge pull request #28 from altimesh/add-code-of-conduct-1
+[33mc0e6332[m Create CODE_OF_CONDUCT.md
+[33m56bb9e8[m Create CONTRIBUTING.md
+[33me6e6392[m Create ISSUE_TEMPLATE.md
+[33m5d9c194[m delete generated files
+[33m6dcd65d[m Revert wrong part of commit "add sobel_lock to demonstrate unsafe and direct calls to cuda runtime"
+[33m4db6c02[m add missing /unsafe to Sobel_Lock.csproj
+[33mff2ef2e[m use pinned memory instead of manual device allocation/memcpies
+[33m8056b4e[m add sobel_lock to demonstrate unsafe and direct calls to cuda runtime
+[33m9157a82[m Merge branch 'master' of https://github.com/altimesh/hybridizer-basic-samples
+[33m065f751[m use getlength on 2D arrays (sobel 2D) remove useless solution configurations
+[33m9594406[m remove x86 and AnyCPU solution configurations
+[33m3a87426[m Update LICENSE
+[33m15161bf[m Update LICENSE
+[33mbaecd88[m Create LICENSE
+[33m72f256a[m add link to visual studio gallery in readme.md
+[33m5c46bcd[m remove useless intrinsic function
+[33mf0be218[m remove unsafe from cusparse sample
+[33md1c7dc4[m Adding link to wiki
+[33m4ba2c9a[m Naming changes in Hybridizer
+[33m5054505[m Merge branch 'master' of https://github.com/altimesh/hybridizer-basic-samples.git
+[33me636b5f[m ignoring x64 directory
+[33m604d923[m ignoring perf sessions
+[33m973ac08[m Changed product name to Essentials
+[33me83fa98[m fix import path (essentials instead of basic)
+[33m56cec05[m rename basic to essentials
+[33mda36545[m malloc/free sample
+[33m729a8da[m fix out dir of sobel_2D
+[33mfae8513[m sobel 2D
+[33m137d3d3[m basic samples -- minor upgrade and bugfixes
+[33me6c5553[m essentials wiki -- float4 images
+[33mb0ac370[m add mandelbrot image
+[33mf4f1806[m more info in readme
+[33m8019835[m fix output directories
+[33m5b7579e[m vsix fix sobel
+[33m52d55f0[m fix naivematrix
+[33mfdfd50d[m fix blackscholes float 4
+[33m129ad0a[m improve performances on 2D kernels
+[33m21971e9[m move sobel to right directory
+[33m30dc609[m add subtitles
+[33mcf7bfc7[m delete unused project
+[33m12acea1[m revive cublas example
+[33mddb66c5[m add video explanation
+[33mabce1a7[m montercarlo : finalize
+[33m6d22912[m add resulting image + acceptable default configuration
+[33m187c9f2[m montecarlo : add another problem type
+[33mb8779cc[m add another template parameter
+[33mef0412f[m add montecarlo heat equation sample
+[33me6e0a6e[m conjugate gradient on GPU
+[33m44cc01f[m Merge branch 'master' of https://github.com/altimesh/hybridizer-basic-samples.git
+[33m85e1c2e[m fix cusparse
+[33m51ec95e[m cublas
+[33m41d17ad[m Merge branch 'master' of https://github.com/altimesh/hybridizer-basic-samples.git
+[33m9e2fa6d[m fix basic samples (reference to cudaimports)
+[33m8b75c2d[m Merge pull request #27 from altimesh/axel-branch
+[33mc5baa92[m Merge branch 'master' into axel-branch
+[33me051a9e[m save
+[33m4f734ee[m upgrade basic samples to new version of basic (breaking changes!)
+[33m1575fb2[m Update Program.cs
+[33me0c72c9[m Update Program.cs
+[33m52baac3[m Update Program.cs
+[33m3dadc62[m Update Program.cs
+[33m30afbdb[m Update Program.cs
+[33m6221e25[m Merge pull request #26 from altimesh/axel-branch
+[33m1b3ba61[m hyb basic sample : change on the FillMatrix method , uses of min and max parameters with default values.
+[33mc316ab1[m Merge pull request #25 from altimesh/axel-branch
+[33mf4786fc[m hyb basic sample : Creation of a library that using cub, with complex, cache and two operation on vectors (sum and scalar product).
+[33mc5703ad[m Merge pull request #21 from altimesh/axel-branch
+[33m22e2d6f[m hyb basic sample : change namespace typo
+[33mcd783b8[m Hyb Basic sample :  creation of a Conjugate Gradient method with sparse matrix, only in C#.
+[33m1a6e849[m Hyb Basic Sample: Creation of an Utils directory that gather some files reusable.
+[33mca23168[m Merge pull request #20 from altimesh/axel-branch
+[33m3ba0af8[m hyb basic sample: Sparse matrix with cusparse.
+[33m0486e25[m Hyb Basic sample: SparseMatrix, print of the bandwith on C# and CUDA
+[33m24c5d71[m Merge pull request #19 from altimesh/axel-branch
+[33m8be4116[m Hyb Basic samples: SparseMatrix do some changes like creation of SparseMatrixReader and Vector Reader in two other files and little fixes.
+[33mc1eb8f7[m Hyb Basic samples: Creation of SparseMatrix with reading of .mtx files.
+[33m489f106[m use fastmath for blackscholes float4 (94% of peak bandwidth) -- cuda sample is at 96%
+[33m750cf57[m Merge pull request #18 from altimesh/axel-branch
+[33m4b3d6a6[m Update Program.cs
+[33m40ecfea[m hyb basic sample: BlackScholes with Float4, create static class randomExtension and minor fix.
+[33mb859dbc[m hyb basic sample: BlackScholes with float 4 change typo.
+[33m146e728[m hyb basic sample: creation of BlackScholes with float 4, same compute time than normal for cuda but it's better for c#.
+[33mcef3bf1[m Merge pull request #17 from altimesh/axel-branch
+[33mb283fcb[m hyb basic sample: BlackScholes display of the calculation error beween cuda and c#.
+[33md78a7e8[m hyb basic sample: creation of BlackScholes sample.
+[33m6f48412[m Merge pull request #16 from altimesh/axel-branch
+[33m0d5d82f[m hyb basic samples: creation and completion of shared memory matrix multiplication sample.
+[33m189c830[m Merge pull request #15 from altimesh/axel-branch
+[33ma4095a4[m hyb basic sample: change typo on NaiveMatrix class and the main program.
+[33m4c8476c[m hyb basic sample: separation fo the NaiveMatrix class and the Main program.
+[33m0881ccd[m Merge pull request #14 from altimesh/axel-branch
+[33m41ef923[m hyb basic sample: minor fix in NaiveMatrix.
+[33mfb7d37a[m hyb basic sample: creation of a NaiveMatrix class, test if the matrix size matchs.
+[33ma0e2759[m hyb basic sample : creation and completion of a naive matrix multiplication.
+[33maa58036[m Merge pull request #13 from altimesh/axel-branch
+[33ma72925b[m Improvement of the newton fractal program.
+[33me8583d6[m Merge pull request #12 from altimesh/axel-branch
+[33md6d7301[m hyb basic sample: creation and completion of newton fractal.
+[33m1410dc5[m Update timer.h
+[33m89f1d67[m Merge pull request #11 from altimesh/axel-branch
+[33m4cc5cb4[m sobel cuda
+[33mf74dab5[m Merge pull request #10 from altimesh/axel-branch
+[33m30d088d[m move sobel to imaging
+[33m9627e26[m Merge pull request #9 from altimesh/axel-branch
+[33mc10489b[m add gitignore
+[33m4cea743[m fix comment for review
+[33m8411d88[m hyb basic sample : sobel ready to hybridyze
+[33m4171dc2[m fix typo in helloworld
+[33m110cd3b[m test commit
+[33m494e4bd[m hyb basic samples : create a c# sobel filter for black and white image with an image to test it.
+[33m53b2dae[m hyb basic samples : attribute randoms doubles to arrays and test if the two results are equals.
+[33m0906723[m hyb basic samples : change int to double in hello world sample
+[33m4dabfbd[m first commit: multi implementation high resolution timer missing : linux implementation
+[33m495ca13[m Adding simple printf sample
+[33mffea6eb[m Adding Mandelbrot float sample
+[33m98be4c0[m Hello World sample
+[33m2a2b67d[m Adding short Getting Started tutorial
+[33m8cbeb7c[m Initial version
+[33m9dd2f3d[m Initial commit
