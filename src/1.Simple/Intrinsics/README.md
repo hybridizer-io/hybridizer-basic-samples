@@ -1,4 +1,4 @@
-﻿INTRINSICS EXAMPLE
+INTRINSICS EXAMPLE
 =====================
 
 What this sample shows
