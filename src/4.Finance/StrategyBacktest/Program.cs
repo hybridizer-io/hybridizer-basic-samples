@@ -14,6 +14,7 @@ namespace Hybridizer.Basic.Finance
     ///   StrategyBacktest --file history.csv
     ///   StrategyBacktest --symbol BTC-USD
     ///   StrategyBacktest --symbol AAPL --days 3650
+    ///   StrategyBacktest --synthetic
     /// </summary>
     class Program
     {
@@ -50,12 +51,18 @@ namespace Hybridizer.Basic.Finance
             float[] returns_gpu = new float[TotalCombinations];
 
             // ── 2. CPU Sequential ───────────────────────────────────────
-            Console.Write("Running CPU sequential benchmark...    ");
+            // --no-sequential skips it, the longest part: the parallel run computes the same returns
+            bool sequential = !args.Contains("--no-sequential");
             var sw = Stopwatch.StartNew();
-            BacktestAllCpuSequential(prices, N, returns_cpu);
-            sw.Stop();
-            long cpuSeqMs = sw.ElapsedMilliseconds;
-            Console.WriteLine($"{cpuSeqMs,8} ms");
+            long cpuSeqMs = 0;
+            if (sequential)
+            {
+                Console.Write("Running CPU sequential benchmark...    ");
+                BacktestAllCpuSequential(prices, N, returns_cpu);
+                sw.Stop();
+                cpuSeqMs = sw.ElapsedMilliseconds;
+                Console.WriteLine($"{cpuSeqMs,8} ms");
+            }
 
             // ── 3. CPU Parallel ─────────────────────────────────────────
             Console.Write($"Running CPU parallel ({Environment.ProcessorCount} cores)...      ");
@@ -64,6 +71,11 @@ namespace Hybridizer.Basic.Finance
             sw.Stop();
             long cpuParMs = sw.ElapsedMilliseconds;
             Console.WriteLine($"{cpuParMs,8} ms");
+            if (!sequential)
+            {
+                returns_cpu = returns_par;
+                cpuSeqMs = cpuParMs * Environment.ProcessorCount; // an estimate, for the table
+            }
 
             // ── 4. GPU Hybridizer ───────────────────────────────────────
             gpuDeviceProp prop;
@@ -116,7 +128,8 @@ namespace Hybridizer.Basic.Finance
             Console.WriteLine("└──────────────────────┴──────────┴────────────────────────┘");
 
             // ── 6. Validate results ─────────────────────────────────────
-            ValidateResults(returns_cpu, returns_gpu);
+            bool valid = ValidateResults(returns_cpu, returns_gpu);
+            valid &= ValidateResults(returns_cpu, returns_gpu_naive);
 
             // ── 7. Find best strategy ───────────────────────────────────
             FindBestStrategy(returns_gpu);
@@ -132,6 +145,9 @@ namespace Hybridizer.Basic.Finance
             HeatmapGenerator.PrintConsoleHeatmap(returns_gpu,
                 SHORT_MA_MIN, SHORT_MA_MAX, ShortRange,
                 LONG_MA_MIN, LONG_MA_MAX, LongRange);
+
+            if (!valid)
+                Environment.Exit(6); // abort
 
             Console.WriteLine("\nDONE");
         }
@@ -404,7 +420,7 @@ namespace Hybridizer.Basic.Finance
         // =====================================================================
         //  Validation & Analysis
         // =====================================================================
-        static void ValidateResults(float[] cpu, float[] gpu)
+        static bool ValidateResults(float[] cpu, float[] gpu)
         {
             float maxErr = 0, sumErr = 0;
             int count = 0;
@@ -419,9 +435,12 @@ namespace Hybridizer.Basic.Finance
             Console.WriteLine();
             Console.WriteLine($"Validation (CPU vs GPU): max error = {maxErr:G6}, avg error = {(count > 0 ? sumErr / count : 0):G6}");
             if (maxErr < 1.0f)
+            {
                 Console.WriteLine("✓ Results match within acceptable tolerance.");
-            else
-                Console.WriteLine("⚠ Results differ — check floating-point precision (float32 GPU vs CPU).");
+                return true;
+            }
+            Console.WriteLine("⚠ Results differ — check floating-point precision (float32 GPU vs CPU).");
+            return false;
         }
 
         static void FindBestStrategy(float[] returns)

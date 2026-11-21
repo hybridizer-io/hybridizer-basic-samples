@@ -25,6 +25,12 @@ namespace Hybridizer.Basic.Finance
                     symbol = args[++i];
                 else if (args[i] == "--days" && i + 1 < args.Length)
                     days = int.Parse(args[++i]);
+                else if (args[i] == "--synthetic")
+                {
+                    // no download: the synthetic prices the sample falls back to
+                    Console.WriteLine("Using synthetic price data");
+                    return GenerateSyntheticPrices(2500);
+                }
             }
 
             if (filePath != null)

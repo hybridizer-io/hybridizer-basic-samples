@@ -44,6 +44,8 @@ dotnet run --configuration Release --no-build -- [options]
 | `--file <path>` | Load price data from a local CSV file | *(downloads from internet)* |
 | `--symbol <ticker>` | Yahoo Finance ticker symbol to download | `BTC-USD` |
 | `--days <count>` | Number of days of history to download | `3650` (10 years) |
+| `--synthetic` | Use synthetic prices (geometric Brownian motion), without downloading | |
+| `--no-sequential` | Skip the sequential CPU run, the longest; check the GPU against the parallel one | |
 
 ### Examples
 
