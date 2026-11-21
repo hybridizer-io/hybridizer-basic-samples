@@ -63,6 +63,24 @@ LambdaReduction|6.Advanced/LambdaReduction||self
 SimpleMetadataDecorator|6.Advanced/SimpleMetadataDecorator||self
 "
 
+# timeout is GNU coreutils' (gtimeout with Homebrew), or that of the latest macOS; perl does it elsewhere (macOS 15)
+if command -v timeout > /dev/null 2>&1; then
+  bounded() { timeout "$@"; }
+elif command -v gtimeout > /dev/null 2>&1; then
+  bounded() { gtimeout "$@"; }
+else
+  bounded() {
+    perl -MPOSIX=:sys_wait_h -e 'my $s = shift; my $pid = fork() // die "fork: $!";
+             if ($pid == 0) { exec @ARGV or exit 127; }
+             $SIG{ALRM} = sub { kill "TERM", $pid;
+                                for (1 .. 50) { last if waitpid($pid, WNOHANG) > 0; select(undef, undef, undef, 0.1); }
+                                kill "KILL", $pid; exit 124 };
+             alarm $s; waitpid($pid, 0); exit($? & 127 ? 128 + ($? & 127) : $? >> 8)' "$@"
+  }
+fi
+# seconds since the epoch, with a fraction: the date of macOS 15 has no %N
+now() { perl -MTime::HiRes=time -e 'printf "%.3f\n", time'; }
+
 declare -a ONLY=("$@")
 selected() {
   [ ${#ONLY[@]} -eq 0 ] && return 0
@@ -113,11 +131,11 @@ echo "$SAMPLES" | while IFS='|' read -r name dir args check; do
   else
     dll="$(sed -n 's/^ *[^ ]* -> \(.*\.dll\)$/\1/p' "$log.build.log" | grep "/$name.dll\$" | tail -1)"
     [ -n "$dll" ] || dll="$(ls "$project"/bin/"$CONFIGURATION"/net*/"$name".dll 2>/dev/null | head -1)"
-    start=$(date +%s.%N)
+    start=$(now)
     # shellcheck disable=SC2086
-    ( cd "$project" && timeout "$TIMEOUT" dotnet "$dll" $args ) > "$log.run.log" 2>&1
+    ( cd "$project" && bounded "$TIMEOUT" dotnet "$dll" $args ) > "$log.run.log" 2>&1
     rc=$?
-    end=$(date +%s.%N)
+    end=$(now)
     seconds="$(printf "%.1f" "$(echo "$end - $start" | bc)")"
     if [ $rc -eq 0 ]; then run=ok; elif [ $rc -eq 124 ]; then run=TIMEOUT; else run="FAIL($rc)"; fi
     if [ "$HybridizerFlavor" = METAL ]; then
