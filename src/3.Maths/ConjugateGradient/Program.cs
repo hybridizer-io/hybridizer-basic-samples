@@ -32,6 +32,22 @@ namespace Hybridizer.Basic.Maths
             }
             
             ConjugateGradient(X, A, B, maxiter, eps);
+
+            // the exact solution of this system is x[i] = (i + 1) (size - i) / 2
+            double error = 0.0, norm = 0.0;
+            for (int i = 0; i < size; ++i)
+            {
+                double exact = (i + 1.0) * (size - i) / 2.0;
+                error += (X[i] - exact) * (X[i] - exact);
+                norm += exact * exact;
+            }
+            double relativeError = Math.Sqrt(error / norm);
+            Console.WriteLine($"relative error to the exact solution : {relativeError}");
+            if (!(relativeError < 1.0E-3))
+            {
+                Console.Error.WriteLine("ERROR : the solution is not accurate enough");
+                Environment.Exit(6); // abort
+            }
         }
 
         public static void ConjugateGradient(FloatResidentArray X, SparseMatrix A, FloatResidentArray B, int maxiter, float eps)

@@ -50,7 +50,13 @@ namespace SharedMatrix
             #region C#
             Reference(res_net, matrixA, matrixB);
             #endregion
-            
+
+            // NaiveMatrix.Equals allows a difference of 1E-3 per element
+            if (!res_net.Equals(res_cuda))
+            {
+                Console.Error.WriteLine("ERROR : the GPU and C# products differ");
+                Environment.Exit(6); // abort
+            }
             Console.Out.WriteLine("DONE");
         }
 

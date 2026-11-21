@@ -57,6 +57,19 @@ namespace Malloc
             HybRunner runner = SatelliteLoader.Load().SetDistrib(prop.multiProcessorCount, 512);
             dynamic wrapper = runner.Wrap(new Program());
             wrapper.test(dst, src, N);
+            gpu.Check(gpu.DeviceSynchronize());
+
+            double[] expected = new double[N];
+            test(expected, src, N);
+            for (int k = 4; k < N - 4; ++k)
+            {
+                if (dst[k] != expected[k])
+                {
+                    Console.Error.WriteLine("ERROR at {0} : {1} != {2}", k, dst[k], expected[k]);
+                    Environment.Exit(6); // abort
+                }
+            }
+            Console.Out.WriteLine("OK");
         }
     }
 }

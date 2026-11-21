@@ -42,6 +42,18 @@ namespace ConstantMemory
 
             wrapped.Run(input, output, N);
 
+            // the same computation in C#: Run writes its first argument from its second
+            float[] expected = new float[N];
+            Run(expected, output, N);
+            for (int k = 2; k < N - 2; ++k)
+            {
+                if (input[k] != expected[k])
+                {
+                    Console.Error.WriteLine($"ERROR at {k} : {input[k]} != {expected[k]}");
+                    Environment.Exit(6); // abort
+                }
+            }
+
             Console.Out.WriteLine("DONE");
         }
     }

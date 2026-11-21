@@ -64,6 +64,24 @@ namespace GenericMemoryAccess
 
             m.Print();
             t.Print();
+
+            // the same in C#
+            var mExpected = new Matrix(4);
+            var tExpected = new Transposed(4);
+            RunNormal(new MatrixOperations<Matrix>(mExpected));
+            RunTranposed(new MatrixOperations<Transposed>(tExpected));
+            for (int x = 0; x < 4; ++x)
+            {
+                for (int y = 0; y < 4; ++y)
+                {
+                    if (m[x, y] != mExpected[x, y] || t[x, y] != tExpected[x, y])
+                    {
+                        Console.Error.WriteLine($"ERROR at ({x}, {y}) : {m[x, y]}, {t[x, y]} instead of {mExpected[x, y]}, {tExpected[x, y]}");
+                        Environment.Exit(6); // abort
+                    }
+                }
+            }
+            Console.Out.WriteLine("OK");
         }
     }
 }

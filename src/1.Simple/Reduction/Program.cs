@@ -65,8 +65,13 @@ namespace Reduction
             wrapped.ReduceAdd(N, a, result);
 
             gpu.Check(gpu.DeviceSynchronize());
+            int expected = a.Aggregate((i, j) => i + j);
             Console.Out.WriteLine("sum =      {0}", result[0]);
-            Console.Out.WriteLine("expected = {0}", a.Aggregate((i, j) => i + j));
+            Console.Out.WriteLine("expected = {0}", expected);
+            if (result[0] != expected)
+            {
+                Environment.Exit(6); // abort
+            }
         }
     }
 }

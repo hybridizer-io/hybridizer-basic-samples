@@ -98,7 +98,24 @@ namespace Mandelbrot
                 light_cuda.RefreshHost(); // included for fair comparison
             }
             w.Stop();
-            Console.WriteLine($"elapsed time per image (CUDA) : {w.ElapsedMilliseconds/redo} ms");
+            Console.WriteLine($"elapsed time per image (GPU) : {w.ElapsedMilliseconds/redo} ms");
+            #endregion
+
+            #region check
+            // the GPU may contract x * y + c into a fused multiply-add, which C# does not: a point on the edge of the
+            // set may then take another number of iterations
+            int differences = 0;
+            for (int i = 0; i < N * N; ++i)
+            {
+                if (light_cuda[i] != light_net[i])
+                    ++differences;
+            }
+            Console.WriteLine($"{differences} pixels differ from C#");
+            if (differences > N * N / 1000)
+            {
+                Console.Error.WriteLine("ERROR : more than 0.1% of the pixels differ");
+                Environment.Exit(6); // abort
+            }
             #endregion
 
             #region save to image

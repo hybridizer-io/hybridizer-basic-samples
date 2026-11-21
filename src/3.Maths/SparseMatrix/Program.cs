@@ -31,6 +31,19 @@ namespace Hybridizer.Basic.Maths
                 wrapper.Multiply(B, A, X, X.Length);
             }
             #endregion
+
+            // the same product in C#: the same sums in the same order
+            float[] expected = new float[B.Length];
+            Multiply(expected, A, X, X.Length);
+            for (int i = 0; i < B.Length; ++i)
+            {
+                if (B[i] != expected[i])
+                {
+                    Console.Error.WriteLine($"ERROR at {i} : {B[i]} != {expected[i]}");
+                    Environment.Exit(6); // abort
+                }
+            }
+            Console.Out.WriteLine("OK");
         }
 
         private static void ReadArguments(string[] args, out string matrixFile, out string? vectorFile)

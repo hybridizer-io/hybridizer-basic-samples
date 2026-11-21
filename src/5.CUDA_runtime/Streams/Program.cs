@@ -81,6 +81,25 @@ namespace Streams
 
             handle_a.Free();
             handle_b.Free();
+            gpu.Free(d_a);
+            gpu.Free(d_b);
+
+            // the same computation in C#
+            float[] expected = new float[N];
+            for (int k = 0; k < N; ++k)
+            {
+                expected[k] = (float)k;
+            }
+            Parallel.For(0, nStreams, s => Add(expected, b, s * slice, s * slice + slice, 100));
+            for (int k = 0; k < N; ++k)
+            {
+                if (a[k] != expected[k])
+                {
+                    Console.Error.WriteLine($"ERROR at {k} : got {a[k]} instead of {expected[k]}");
+                    Environment.Exit(6); // abort
+                }
+            }
+            Console.WriteLine("OK");
         }
     }
 }

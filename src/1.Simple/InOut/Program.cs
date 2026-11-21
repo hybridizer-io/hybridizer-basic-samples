@@ -64,7 +64,16 @@ namespace InOut
 
             if (!GpuErrorCheck())
             {
-                return;
+                Environment.Exit(6);
+            }
+
+            for (int i = 0; i < N; ++i)
+            {
+                if (cuda_dst_1[i] != src[i] + i || cuda_dst_2[i] != src[i] + i)
+                {
+                    Console.Error.WriteLine($"ERROR at {i} : got {cuda_dst_1[i]} and {cuda_dst_2[i]} instead of {src[i] + i}");
+                    Environment.Exit(6);
+                }
             }
 
             Console.WriteLine("OK");

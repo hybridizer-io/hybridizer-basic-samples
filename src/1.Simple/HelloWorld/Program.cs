@@ -52,7 +52,7 @@ namespace HelloWorld
             {
                 if (acuda[k] != adotnet[k]) {
                     Console.Out.WriteLine("ERROR !");
-                    return;
+                    Environment.Exit(1);
                 }
             }
             Console.Out.WriteLine("DONE");
