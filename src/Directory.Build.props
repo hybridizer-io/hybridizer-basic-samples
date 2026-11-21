@@ -17,4 +17,25 @@
     <CudaCcclIncludeDir Condition="Exists('$(CUDA_PATH)/include/cccl')">$(CUDA_PATH)/include/cccl</CudaCcclIncludeDir>
     <CudaCcclIncludeDir Condition="'$(CudaCcclIncludeDir)' == ''">$(CUDA_PATH)/include</CudaCcclIncludeDir>
   </PropertyGroup>
+
+  <!-- The GPU the samples are built for. CUDA, or METAL on macOS, which has no CUDA: Apple GPUs run the Metal
+       Shading Language Hybridizer generates (Hybridizer.Metal.targets). -p:HybridizerFlavor=CUDA overrides it. -->
+  <PropertyGroup>
+    <HybridizerFlavor Condition="'$(HybridizerFlavor)' == '' And $([MSBuild]::IsOSPlatform('OSX'))">METAL</HybridizerFlavor>
+    <HybridizerFlavor Condition="'$(HybridizerFlavor)' == ''">CUDA</HybridizerFlavor>
+  </PropertyGroup>
+
+  <!-- HybridizerDir: a build of hybridizer-software-suite (the runtime and the transcoder built into one directory,
+       see README.md), which then replaces the Hybridizer.Runtime.CUDAImports package and the hybridizer dotnet tool.
+       The samples need it as long as no published package has the backend-agnostic GPU API they use (gpu.*,
+       HybRunner.Create) and the METAL backend. -->
+  <PropertyGroup Condition="'$(HybridizerDir)' != ''">
+    <!-- HybridizerDir as given (a global property cannot be changed), _HybridizerDir with its full path and a slash -->
+    <_HybridizerDir>$([MSBuild]::EnsureTrailingSlash('$([System.IO.Path]::GetFullPath('$(HybridizerDir)'))'))</_HybridizerDir>
+    <HybridizerTranscoder Condition="'$(HybridizerTranscoder)' == ''">dotnet "$(_HybridizerDir)Hybridizer.Application.dll"</HybridizerTranscoder>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- the command that transcodes, which GenerateCUDA and GenerateMETAL run -->
+    <HybridizerTranscoder Condition="'$(HybridizerTranscoder)' == ''">hybridizer</HybridizerTranscoder>
+  </PropertyGroup>
 </Project>

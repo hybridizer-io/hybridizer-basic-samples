@@ -24,6 +24,8 @@
     <LangVersion>latest</LangVersion>
     <CompileCUDA>enable</CompileCUDA>
     <Platforms>x64</Platforms>
+    <!-- CUDA only: no METAL build on macOS (Hybridizer.Metal.targets) -->
+    <HybridizerMetal>false</HybridizerMetal>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
@@ -44,7 +46,7 @@
   <Target Name="GenerateCUDA" AfterTargets="Build">
     <MakeDir Directories="generated-sources" />
     <Copy SourceFiles="wmma_helpers.cuh" DestinationFolder="generated-sources" />
-    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)$(TargetName).dll&quot; --additional-jit-headers &quot;wmma_helpers.cuh=generated-sources&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot; --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;-I$(CUDA_PATH)/include;-I$(CudaCcclIncludeDir);--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
+    <Exec Command="$(HybridizerTranscoder) --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)$(TargetName).dll&quot; --additional-jit-headers &quot;wmma_helpers.cuh=generated-sources&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot; --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;-I$(CUDA_PATH)/include;-I$(CudaCcclIncludeDir);--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
   </Target>
 
 </Project>

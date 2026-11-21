@@ -13,6 +13,8 @@
     <AssemblyName>llama-csharp</AssemblyName>
     <DefaultItemExcludes>$(DefaultItemExcludes);LlamaCsharp.Tests/**</DefaultItemExcludes>
     <CompileCUDA>enable</CompileCUDA>
+    <!-- CUDA only: no METAL build on macOS (Hybridizer.Metal.targets) -->
+    <HybridizerMetal>false</HybridizerMetal>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,7 +32,7 @@
   <Target Name="GenerateCUDA" AfterTargets="Build">
     <MakeDir Directories="generated-sources" />
     <Copy SourceFiles="intrinsics.cuh" DestinationFolder="generated-sources" />
-    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)$(TargetName).dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;-I$(CUDA_PATH)/include;-I$(CudaCcclIncludeDir);--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --additional-jit-headers &quot;intrinsics.cuh=generated-sources&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
+    <Exec Command="$(HybridizerTranscoder) --dll-fullpaths &quot;$(OutDir)$(TargetName).dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;-I$(CUDA_PATH)/include;-I$(CudaCcclIncludeDir);--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --additional-jit-headers &quot;intrinsics.cuh=generated-sources&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
   </Target>
 
 </Project>

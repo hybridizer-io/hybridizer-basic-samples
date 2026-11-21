@@ -7,6 +7,8 @@
     <Nullable>enable</Nullable>
     <CompileCUDA>enable</CompileCUDA>
     <Platforms>x64</Platforms>
+    <!-- the builtins GenerateCUDA adds, for the other flavors (Hybridizer.Metal.targets) -->
+    <HybridizerBuiltins>interlocked.builtins</HybridizerBuiltins>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +22,6 @@
   <Target Name="GenerateCUDA" AfterTargets="Build">
     <MakeDir Directories="generated-sources" />
     <Copy SourceFiles="interlocked.builtins" DestinationFolder="generated-sources" />
-    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)Reduction.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins &quot;hybridizer.cuda.builtins;interlocked.builtins&quot; --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
+    <Exec Command="$(HybridizerTranscoder) --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)Reduction.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins &quot;hybridizer.cuda.builtins;interlocked.builtins&quot; --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
   </Target>
 </Project>
