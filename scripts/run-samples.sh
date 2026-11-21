@@ -29,7 +29,8 @@ fi
 mkdir -p "$OUT/logs"
 
 # sample | project directory (under src) | arguments of the run | what the sample checks
-#   check: "self" when it compares to C# and fails otherwise, "none" when it only runs
+#   check: "self" when it compares to C# and fails otherwise, "lines:<text>:<n>" when its output must have n lines
+#   holding text (what the GPU prints), "none" when it only runs
 SAMPLES="
 Builtin|1.Simple/Builtin||self
 HelloWorld|1.Simple/HelloWorld||self
@@ -37,7 +38,7 @@ InOut|1.Simple/InOut||self
 Intrinsics|1.Simple/Intrinsics||self
 Malloc|1.Simple/Malloc||self
 Mandelbrot|1.Simple/Mandelbrot||self
-SimplePrintf|1.Simple/Printf||none
+SimplePrintf|1.Simple/Printf||lines:hello from thread:13
 Recursion|1.Simple/Recursion||self
 Reduction|1.Simple/Reduction||self
 Sobel|2.Imaging/Sobel||self
@@ -124,7 +125,13 @@ echo "$SAMPLES" | while IFS='|' read -r name dir args check; do
     else
       msl=n/a
     fi
-    if [ "$check" = none ]; then correct=-; elif [ $rc -eq 0 ]; then correct=ok; else correct=FAIL; fi
+    case "$check" in
+      none) correct=- ;;
+      lines:*)
+        text="${check#lines:}"; count="${text##*:}"; text="${text%:*}"
+        if [ $rc -eq 0 ] && [ "$(grep -c -F "$text" "$log.run.log")" -eq "$count" ]; then correct=ok; else correct=FAIL; fi ;;
+      *) if [ $rc -eq 0 ]; then correct=ok; else correct=FAIL; fi ;;
+    esac
     if [ $rc -ne 0 ]; then
       first="$(grep -m1 -E ' error: |ERROR|Exception|exception' "$log.run.log" | sed 's/^program_source:[0-9]*:[0-9]*: //' | cut -c1-120)"
     fi
