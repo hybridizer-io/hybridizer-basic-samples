@@ -88,7 +88,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        private static void ScalarProd([Out] float[] result, FloatResidentArray r1, FloatResidentArray r2, int N)
+        private static void ScalarProd([Out] float[] result, [In] FloatResidentArray r1, [In] FloatResidentArray r2, int N)
         {
             var cache = new SharedMemoryAllocator<float>().allocate(blockDim.x);
             int tid = threadIdx.x + blockDim.x * blockIdx.x;
@@ -124,7 +124,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        public static void Copy(FloatResidentArray res, FloatResidentArray src, int N)
+        public static void Copy([In] FloatResidentArray res, [In] FloatResidentArray src, int N)
         {
             Parallel.For(0, N, (i) =>
             {
@@ -133,7 +133,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        public static void Saxpy(FloatResidentArray res, FloatResidentArray x, float alpha, FloatResidentArray y, int N)
+        public static void Saxpy([In] FloatResidentArray res, [In] FloatResidentArray x, float alpha, [In] FloatResidentArray y, int N)
         {
             Parallel.For(0, N, (i) =>
             {
@@ -143,7 +143,7 @@ namespace Hybridizer.Basic.Maths
 
         // res = A - m*v
         [EntryPoint]
-        public static void Fmsub(FloatResidentArray res, FloatResidentArray A, SparseMatrix m, FloatResidentArray v, int N)
+        public static void Fmsub([In] FloatResidentArray res, [In] FloatResidentArray A, [In] SparseMatrix m, [In] FloatResidentArray v, int N)
         {
             Parallel.For(0, N, (i) =>
             {
@@ -160,7 +160,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        public static void Multiply(FloatResidentArray res, SparseMatrix m, FloatResidentArray v, int N)
+        public static void Multiply([In] FloatResidentArray res, [In] SparseMatrix m, [In] FloatResidentArray v, int N)
         {
             Parallel.For(0, N, (i) =>
             {
