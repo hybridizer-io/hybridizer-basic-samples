@@ -18,7 +18,7 @@ namespace MonteCarloHeatEquation
             // example of another instanciation
             // var problem = new TetrisProblem<SimpleWalker, TetrisBoundaryCondition>(N, iterCount);
 
-            cuda.GetDeviceProperties(out cudaDeviceProp prop, 0);
+            gpu.GetDeviceProperties(out gpuDeviceProp prop, 0);
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(16 * prop.multiProcessorCount, 128);
             var solver = new MonteCarloHeatSolver(problem);

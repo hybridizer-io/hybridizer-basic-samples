@@ -34,7 +34,7 @@ namespace HelloWorld
                 b[i] = rand.NextDouble();
             }
 
-            cuda.GetDeviceProperties(out cudaDeviceProp prop, 0);
+            gpu.GetDeviceProperties(out gpuDeviceProp prop, 0);
             HybRunner runner = SatelliteLoader.Load().SetDistrib(prop.multiProcessorCount * 16, 128);
 
             // create a wrapper object to call GPU methods instead of C#
@@ -42,7 +42,7 @@ namespace HelloWorld
             
             // run the method on GPU
             wrapped.Run(N, acuda, b);
-            cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+            gpu.Check(gpu.DeviceSynchronize());
             
             // run .Net method
             Run(N, adotnet, b);

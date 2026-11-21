@@ -66,9 +66,9 @@ namespace Hybridizer.Basic.Finance
             Console.WriteLine($"{cpuParMs,8} ms");
 
             // ── 4. GPU Hybridizer ───────────────────────────────────────
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
-            Console.WriteLine($"GPU detected: {new string(prop.name).TrimEnd('\0')}");
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
+            Console.WriteLine($"GPU detected: {prop.name}");
 
             HybRunner runner = SatelliteLoader.Load()
                 .SetDistrib(16 * prop.multiProcessorCount, 256);
@@ -80,14 +80,14 @@ namespace Hybridizer.Basic.Finance
                 SHORT_MA_MIN, ShortRange, LONG_MA_MIN, LongRange);
             wrapper.BacktestKernelNaive(prices, N, returns_gpu_naive,
                 SHORT_MA_MIN, ShortRange, LONG_MA_MIN, LongRange);
-            cuda.DeviceSynchronize();
+            gpu.Check(gpu.DeviceSynchronize());
 
             // ── 4a. GPU Naive (Parallel.For style → GPU) ────────────────
             Console.Write("Running GPU naive (from Parallel)...    ");
             sw.Restart();
             wrapper.BacktestKernelNaive(prices, N, returns_gpu_naive,
                 SHORT_MA_MIN, ShortRange, LONG_MA_MIN, LongRange);
-            cuda.DeviceSynchronize();
+            gpu.Check(gpu.DeviceSynchronize());
             sw.Stop();
             long gpuNaiveMs = sw.ElapsedMilliseconds;
             Console.WriteLine($"{gpuNaiveMs,8} ms");
@@ -97,7 +97,7 @@ namespace Hybridizer.Basic.Finance
             sw.Restart();
             wrapper.BacktestKernel(prices, N, returns_gpu,
                 SHORT_MA_MIN, ShortRange, LONG_MA_MIN, LongRange);
-            cuda.DeviceSynchronize();
+            gpu.Check(gpu.DeviceSynchronize());
             sw.Stop();
             long gpuMs = sw.ElapsedMilliseconds;
             Console.WriteLine($"{gpuMs,8} ms");

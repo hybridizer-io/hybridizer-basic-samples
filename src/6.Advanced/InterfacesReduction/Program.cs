@@ -91,19 +91,19 @@ namespace InterfacesReduction
             Parallel.For(0, N, i => a[i] = (float)random.NextDouble());
 
             // hybridizer configuration
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
             int gridDimX = 8 * prop.multiProcessorCount;
             int blockDimX = 128;
-            cuda.DeviceSetCacheConfig(cudaFuncCache.cudaFuncCachePreferShared);
+            gpu.DeviceSetCacheConfig(gpuFuncCache.gpuFuncCachePreferShared);
             HybRunner runner = SatelliteLoader.Load().SetDistrib(gridDimX, 1, blockDimX, 1, 1, blockDimX * sizeof(float));
             float[] buffMax = new float[1];
             float[] buffAdd = new float[1];
             dynamic wrapped = runner.Wrap(new Program());
 
             // device reduction
-            cuda.ERROR_CHECK((cudaError_t) wrapped.Reduce(buffMax, a, N, new MaxLocalReductor()));
-            cuda.ERROR_CHECK((cudaError_t) wrapped.Reduce(buffAdd, a, N, new AddLocalReductor()));
+            gpu.Check((gpuError_t) wrapped.Reduce(buffMax, a, N, new MaxLocalReductor()));
+            gpu.Check((gpuError_t) wrapped.Reduce(buffAdd, a, N, new AddLocalReductor()));
 
             // check results
             float expectedMax = a.AsParallel().Aggregate((x, y) => Math.Max(x, y));

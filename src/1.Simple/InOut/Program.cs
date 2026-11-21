@@ -1,4 +1,5 @@
 ﻿using Hybridizer.Runtime.CUDAImports;
+using Hybridizer.Basic.Utilities;
 using System;
 using System.Diagnostics;
 using System.Reflection;
@@ -30,9 +31,9 @@ namespace InOut
 
         public static void Main(string[] args)
         {
-            // setup cuda and generated dll
-            cudaDeviceProp prop = DetectAndSelectCudaDevice();
-            dynamic wrapped = WrapCudaDll(prop);
+            // setup the GPU and the generated satellite
+            gpuDeviceProp prop = DetectAndSelectDevice();
+            dynamic wrapped = WrapSatellite(prop);
 
             // prepare data
             const int N = 1 << 24; // 4 millions random integers
@@ -46,22 +47,22 @@ namespace InOut
             }
 
             // run
-            Console.WriteLine("running generated CUDA (no attributes)");
+            Console.WriteLine("running generated GPU code (no attributes)");
             Stopwatch w = new ();
             w.Start();
             wrapped.NoAttributes(cuda_dst_1, src, N);
-            cuda.DeviceSynchronize();
+            gpu.DeviceSynchronize();
             w.Stop();
             Console.WriteLine($"no in/out attribute time : {w.ElapsedMilliseconds} ms");
-            Console.WriteLine("running generated CUDA (attributes)");
+            Console.WriteLine("running generated GPU code (attributes)");
             w.Reset();
             w.Start();
             wrapped.Attributes(cuda_dst_2, src, N);
-            cuda.DeviceSynchronize();
+            gpu.DeviceSynchronize();
             w.Stop();
             Console.WriteLine($"in/out attributes time : {w.ElapsedMilliseconds} ms");
 
-            if (!CudaErrorCheck())
+            if (!GpuErrorCheck())
             {
                 return;
             }
@@ -70,24 +71,24 @@ namespace InOut
         }
 
         /// <summary>
-        /// Selects CUDA enabled device with highest compute capability
+        /// Selects the GPU with highest compute capability (Apple GPU family on Metal)
         /// </summary>
-        /// <returns>its cuda device properties</returns>
-        private static cudaDeviceProp DetectAndSelectCudaDevice()
+        /// <returns>its device properties</returns>
+        private static gpuDeviceProp DetectAndSelectDevice()
         {
-            cuda.GetDeviceCount(out int deviceCount);
+            gpu.GetDeviceCount(out int deviceCount);
             if(deviceCount <= 0)
             {
-                Console.Error.WriteLine("No CUDA-capable device detected -- aborting");
+                Console.Error.WriteLine("No GPU detected -- aborting");
                 Environment.Exit(6);
             }
 
             int maxCC = -1;
             int deviceId = -1;
-            cuda.GetDeviceProperties(out cudaDeviceProp result, 0);
+            gpu.GetDeviceProperties(out gpuDeviceProp result, 0);
             for(int i = 0; i < deviceCount; ++i)
             {
-                cuda.GetDeviceProperties(out cudaDeviceProp prop, i);
+                gpu.GetDeviceProperties(out gpuDeviceProp prop, i);
                 int cc = 10 * prop.major + prop.minor;
                 if(cc > maxCC)
                 {
@@ -97,45 +98,31 @@ namespace InOut
                 }
             }
 
-            Console.WriteLine($"Selecting device {new string(result.name)} with compute capability {maxCC}");
-            cuda.SetDevice(deviceId);
+            Console.WriteLine($"Selecting device {result.name} with compute capability {maxCC}");
+            gpu.SetDevice(deviceId);
             return result;
         }
 
-        private static dynamic WrapCudaDll(cudaDeviceProp deviceProp)
+        private static dynamic WrapSatellite(gpuDeviceProp deviceProp)
         {
-            var executing_assembly = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory;
-            if(executing_assembly == null)
-            {
-                Console.Error.WriteLine("Cannot find executing assembly");
-                Environment.Exit(6); // abort
-            }
-
-            string cuda_dll = Path.Combine(executing_assembly.FullName, "InOut_CUDA.dll");
-            if(!File.Exists(cuda_dll))
-            {
-                Console.Error.WriteLine($"CUDA dll({cuda_dll}) not found");
-                Environment.Exit(6); // abort
-            }
-
-            // register dll and configure default execution grid
-            HybRunner runner = HybRunner.Cuda(cuda_dll).SetDistrib(deviceProp.multiProcessorCount * 4, 1, 1, 256, 1, 1, 0);
+            // register the satellite and configure default execution grid
+            HybRunner runner = SatelliteLoader.Load().SetDistrib(deviceProp.multiProcessorCount * 4, 1, 1, 256, 1, 1, 0);
             dynamic wrapped = runner.Wrap(new Program());
             return wrapped;
         }
 
-        private static bool CudaErrorCheck()
+        private static bool GpuErrorCheck()
         {
-            cudaError_t err = cuda.GetPeekAtLastError();
-            if (err != cudaError_t.cudaSuccess)
+            gpuError_t err = gpu.PeekAtLastError();
+            if (err != gpuError_t.gpuSuccess)
             {
-                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {cuda.GetErrorString(err)}");
+                Console.Error.WriteLine($"GPUAssert (peek at last error): {err} -- {gpu.GetErrorString(err)}");
                 return false;
             }
-            err = cuda.DeviceSynchronize();
-            if (err != cudaError_t.cudaSuccess)
+            err = gpu.DeviceSynchronize();
+            if (err != gpuError_t.gpuSuccess)
             {
-                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {cuda.GetErrorString(err)}");
+                Console.Error.WriteLine($"GPUAssert (device synchronize): {err} -- {gpu.GetErrorString(err)}");
                 return false;
             }
 

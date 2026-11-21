@@ -22,11 +22,11 @@ namespace Streams
         static void Main(string[] args)
         {
             int nStreams = 8;
-            cudaStream_t[] streams = new cudaStream_t[nStreams];
+            gpuStream_t[] streams = new gpuStream_t[nStreams];
             dynamic wrapped = SatelliteLoader.Load().Wrap(new Program());
             for (int k = 0; k < nStreams; ++k)
             {
-                cuda.StreamCreate(out streams[k]);
+                gpu.Check(gpu.StreamCreate(out streams[k]));
             }
 
             int N = 1024 * 1024 * 32;
@@ -34,8 +34,8 @@ namespace Streams
             float[] a = new float[N];
             float[] b = new float[N];
 
-            cuda.Malloc(out d_a, N * sizeof(float));
-            cuda.Malloc(out d_b, N * sizeof(float));
+            gpu.Check(gpu.Malloc(out d_a, N * sizeof(float)));
+            gpu.Check(gpu.Malloc(out d_b, N * sizeof(float)));
 
             for(int k = 0; k < N; ++k)
             {
@@ -50,10 +50,10 @@ namespace Streams
 
             int slice = N / nStreams;
 
-            cuda.DeviceSynchronize();
+            gpu.Check(gpu.DeviceSynchronize());
 
-            cuda.Memcpy(d_a, h_a, N * sizeof(float), cudaMemcpyKind.cudaMemcpyHostToDevice);
-            cuda.Memcpy(d_b, h_b, N * sizeof(float), cudaMemcpyKind.cudaMemcpyHostToDevice);
+            gpu.Check(gpu.Memcpy(d_a, h_a, N * sizeof(float), gpuMemcpyKind.gpuMemcpyHostToDevice));
+            gpu.Check(gpu.Memcpy(d_b, h_b, N * sizeof(float), gpuMemcpyKind.gpuMemcpyHostToDevice));
             
             for (int k = 0; k < nStreams; ++k)
             {
@@ -65,13 +65,13 @@ namespace Streams
             for (int k = 0; k < nStreams; ++k)
             {
                 int start = k * slice;
-                cuda.MemcpyAsync(h_a + start * sizeof(float), d_a + start * sizeof(float), slice * sizeof(float), cudaMemcpyKind.cudaMemcpyDeviceToHost, streams[k]);
+                gpu.Check(gpu.MemcpyAsync(h_a + start * sizeof(float), d_a + start * sizeof(float), slice * sizeof(float), gpuMemcpyKind.gpuMemcpyDeviceToHost, streams[k]));
             }
 
             for (int k = 0; k < nStreams; ++k)
             {
-                cuda.StreamSynchronize(streams[k]);
-                cuda.StreamDestroy(streams[k]);
+                gpu.Check(gpu.StreamSynchronize(streams[k]));
+                gpu.Check(gpu.StreamDestroy(streams[k]));
             }
 
             for(int k = 0; k < 10; ++k)

@@ -20,8 +20,8 @@ namespace Hybridizer.Basic.Maths
             float[] B = new float[A.rows.Length - 1];
 
             #region CUDA
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(8 * prop.multiProcessorCount, 256);
             dynamic wrapper = runner.Wrap(new Program());

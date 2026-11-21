@@ -54,8 +54,8 @@ namespace Reduction
 
             int[] result = new int[1];
 
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
 
             const int BLOCK_DIM = 256;
             HybRunner runner = SatelliteLoader.Load().SetDistrib(16 * prop.multiProcessorCount, 1, BLOCK_DIM, 1, 1, BLOCK_DIM * sizeof(int));
@@ -64,7 +64,7 @@ namespace Reduction
 
             wrapped.ReduceAdd(N, a, result);
 
-            cuda.DeviceSynchronize();
+            gpu.Check(gpu.DeviceSynchronize());
             Console.Out.WriteLine("sum =      {0}", result[0]);
             Console.Out.WriteLine("expected = {0}", a.Aggregate((i, j) => i + j));
         }

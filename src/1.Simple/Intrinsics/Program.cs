@@ -56,7 +56,7 @@ namespace Intrinsics
             HybRunner runner = SatelliteLoader.Load();
             dynamic wrapped = runner.Wrap(new Program());
             wrapped.Compute(input, N);
-            cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+            gpu.Check(gpu.DeviceSynchronize());
         }
     }
 }

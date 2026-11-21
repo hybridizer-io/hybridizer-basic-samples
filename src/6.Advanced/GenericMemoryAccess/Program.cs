@@ -50,8 +50,8 @@ namespace GenericMemoryAccess
             var opnormal = new MatrixOperations<Matrix>(m);
             var optransposed = new MatrixOperations<Transposed>(t);
 
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(2, 2, 2, 2, 1, 0);
             dynamic wrapped = runner.Wrap(new Program());
@@ -60,7 +60,7 @@ namespace GenericMemoryAccess
             //IntPtr d_t = runner.Marshaller.MarshalManagedToNative(t);
             wrapped.RunNormal(opnormal);
             wrapped.RunTranposed(optransposed);
-            cuda.DeviceSynchronize();
+            gpu.Check(gpu.DeviceSynchronize());
 
             m.Print();
             t.Print();

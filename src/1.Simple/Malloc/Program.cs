@@ -52,7 +52,7 @@ namespace Malloc
                 dst[i] = src[i];
             }
             
-            cuda.GetDeviceProperties(out cudaDeviceProp prop, 0);
+            gpu.GetDeviceProperties(out gpuDeviceProp prop, 0);
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(prop.multiProcessorCount, 512);
             dynamic wrapper = runner.Wrap(new Program());

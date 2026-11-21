@@ -32,8 +32,8 @@ namespace NBody
                    })
         {
             Console.WriteLine(sizeof(float4));
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
             _random = new Random();
             _numBodies = 256 * 4 * prop.multiProcessorCount;
             _deltaT = 0.001F;
@@ -45,17 +45,17 @@ namespace NBody
             initializeBuffers();
             initializeResources();
 
-            cuda.ERROR_CHECK(cuda.Malloc(out _velocities, _numBodies * sizeof(float4)));
+            gpu.Check(gpu.Malloc(out _velocities, _numBodies * sizeof(float4)));
 
             BodyInitializer.Initialize(_clusterScale, _velocityScale, _numBodies, out float4[] hpositions, out float4[] hvelocities);
 
             // initialize bodies here
             GCHandle posHandle = GCHandle.Alloc(hpositions, GCHandleType.Pinned);
             GCHandle velHandle = GCHandle.Alloc(hvelocities, GCHandleType.Pinned);
-            cuda.ERROR_CHECK(cuda.Memcpy(_velocities, velHandle.AddrOfPinnedObject(), _numBodies * sizeof(float4), cudaMemcpyKind.cudaMemcpyHostToDevice));
+            gpu.Check(gpu.Memcpy(_velocities, velHandle.AddrOfPinnedObject(), _numBodies * sizeof(float4), gpuMemcpyKind.gpuMemcpyHostToDevice));
 
             MapResources(out nint a, out nint b);
-            cuda.ERROR_CHECK(cuda.Memcpy(b, posHandle.AddrOfPinnedObject(), _numBodies * sizeof(float4), cudaMemcpyKind.cudaMemcpyHostToDevice));
+            gpu.Check(gpu.Memcpy(b, posHandle.AddrOfPinnedObject(), _numBodies * sizeof(float4), gpuMemcpyKind.gpuMemcpyHostToDevice));
             UnMapResources();
 
             posHandle.Free();
@@ -220,7 +220,7 @@ namespace NBody
             }
             if (manual)
             {
-                cuda.Free(_velocities);
+                gpu.Free(_velocities);
             }
 
             base.Dispose(manual);

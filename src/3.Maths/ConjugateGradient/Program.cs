@@ -12,8 +12,8 @@ namespace Hybridizer.Basic.Maths
         static void Main(string[] args)
         {
             // configure CUDA
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
             runner = SatelliteLoader.Load().SetDistrib(prop.multiProcessorCount * 16, 1, 128, 1, 1, 128 * sizeof(float));
             wrapper = runner.Wrap(new Program());
 

@@ -37,8 +37,8 @@ namespace Hybridizer.Basic.Finance
                 optionYears_net[i] = (float)rand.NextDouble() * 9.75f + 0.25f;
             }
 
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
             HybRunner runner = SatelliteLoader.Load().SetDistrib(8 * prop.multiProcessorCount, 256);
             dynamic wrapper = runner.Wrap(new Program());
             

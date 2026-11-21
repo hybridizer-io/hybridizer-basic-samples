@@ -48,7 +48,7 @@ namespace SimpleMetadataDecorator
 
 		static void Main(string[] args)
 		{
-            cuda.GetDeviceProperties(out cudaDeviceProp prop, 0);
+            gpu.GetDeviceProperties(out gpuDeviceProp prop, 0);
             int N = prop.multiProcessorCount * 256;
 			var a = new Element[N];
 			var a_verif = new Element[N];
@@ -83,7 +83,7 @@ namespace SimpleMetadataDecorator
 			Console.WriteLine("Init done");
 			dynamic wrap = runner.Wrap(new Program());
 			wrap.Run(N, a, b, Filters.A);
-			cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+			gpu.Check(gpu.DeviceSynchronize());
 			Console.WriteLine("Kernel done");
 
 			Run(N, a_verif, b, Filters.A);
