@@ -1,5 +1,7 @@
 ﻿using Hybridizer.Basic.Utilities;
 using Hybridizer.Runtime.CUDAImports;
+using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -42,8 +44,12 @@ namespace Hybridizer.Basic.Finance
             HybRunner runner = SatelliteLoader.Load().SetDistrib(8 * prop.multiProcessorCount, 256);
             dynamic wrapper = runner.Wrap(new Program());
             
+            // the first launch compiles the kernel: the time per iteration is that of the ones after it
+            Stopwatch watch = new();
             for (int i = 0; i < NUM_ITERATIONS; ++i)
             {
+                if (i == 1)
+                    watch.Start();
                 wrapper.BlackScholes(callResult_cuda,
                              putResult_cuda,
                              stockPrice_net,
@@ -51,7 +57,10 @@ namespace Hybridizer.Basic.Finance
                              optionYears_net,
                              0, OPT_N);
             }
-            
+            watch.Stop();
+            Console.WriteLine($"GPU time per iteration : {(watch.Elapsed.TotalMilliseconds / (NUM_ITERATIONS - 1)).ToString("F1", CultureInfo.InvariantCulture)} ms ({OPT_N} options)");
+
+            watch.Restart();
             Parallel.For(0, OPT_N, (opt) =>
             {
                 BlackScholes(callResult_net,
@@ -62,6 +71,8 @@ namespace Hybridizer.Basic.Finance
                                 opt,
                                 opt + 1);
             });
+            watch.Stop();
+            Console.WriteLine($"C# time ({Environment.ProcessorCount} cores) : {watch.Elapsed.TotalMilliseconds.ToString("F1", CultureInfo.InvariantCulture)} ms");
 
             float maxCallError = 0.0F;
             float maxPutError = 0.0F;

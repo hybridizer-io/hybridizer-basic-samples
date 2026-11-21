@@ -76,6 +76,7 @@ timings() {
     InOut) gpu="$(sed -n 's/^in\/out attributes time : \([0-9]*\) ms.*/\1/p' "$log")" ;;
     Mandelbrot) gpu="$(sed -n 's/.*(GPU) : \([0-9]*\) ms.*/\1/p' "$log")"; net="$(sed -n 's/.*(C#) : \([0-9]*\) ms.*/\1/p' "$log")" ;;
     Newton) gpu="$(sed -n 's/^GPU time per image : \([0-9]*\) ms.*/\1/p' "$log")"; net="$(sed -n 's/^C# time per image : \([0-9]*\) ms.*/\1/p' "$log")" ;;
+    BlackScholes) gpu="$(sed -n 's/^GPU time per iteration : \([0-9.]*\) ms.*/\1/p' "$log")"; net="$(sed -n 's/^C# time ([0-9]* cores) : \([0-9.]*\) ms.*/\1/p' "$log")" ;;
     StrategyBacktest) gpu="$(sed -n 's/^Running GPU native kernel\.\.\. *\([0-9]*\) ms.*/\1/p' "$log")"
                       net="$(sed -n 's/^Running CPU parallel.*\.\.\. *\([0-9]*\) ms.*/\1/p' "$log")" ;;
   esac
