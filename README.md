@@ -26,7 +26,7 @@ dotnet run
 ```
 
 ## A build of Hybridizer in place of the packages (`HybridizerDir`)
-The samples call the GPU API common to every backend (`gpu.*`, `HybRunner.Create`), so that the same sample runs on CUDA and on Apple GPUs. No published `Hybridizer.Runtime.CUDAImports` package has it yet (3.7.1 is the latest): build the runtime and the transcoder of [hybridizer-software-suite](https://github.com/hybridizer-io/hybridizer-software-suite) into one directory, and point the samples at it with `HybridizerDir` (an MSBuild property or an environment variable). It then replaces the package and the `hybridizer` dotnet tool, for CUDA as for Metal; without it, the build stops and says so.
+The samples call the GPU API common to every backend (`gpu.*`, `HybRunner.Create`), so that the same sample runs on CUDA and on Apple GPUs. No published `Hybridizer.Runtime.CUDAImports` package has it yet (3.7.1 is the latest): build the runtime and the transcoder of [hybridizer-software-suite](https://github.com/hybridizer-io/hybridizer-software-suite) into one directory, and point the samples at it with `HybridizerDir` (an MSBuild property or an environment variable); without it, the build stops and says so. It replaces the package. For METAL its transcoder also replaces the `hybridizer` dotnet tool; for CUDA the tool stays, since `CompileCUDA` builds what the Essentials transcoder writes (`-p:HybridizerTranscoder=<command>` chooses another one). The Essentials (BASIC) build of the transcoder, the one the tool ships, does not handle METAL yet: build it as below (`HYBRIDIZER_MAIN`).
 
 ```
 SUITE=<hybridizer-software-suite checkout>

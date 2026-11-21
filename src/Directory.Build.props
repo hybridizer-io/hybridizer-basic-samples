@@ -26,13 +26,14 @@
   </PropertyGroup>
 
   <!-- HybridizerDir: a build of hybridizer-software-suite (the runtime and the transcoder built into one directory,
-       see README.md), which then replaces the Hybridizer.Runtime.CUDAImports package and the hybridizer dotnet tool.
-       The samples need it as long as no published package has the backend-agnostic GPU API they use (gpu.*,
-       HybRunner.Create) and the METAL backend. -->
+       see README.md), which then replaces the Hybridizer.Runtime.CUDAImports package; for METAL, its transcoder
+       replaces the hybridizer dotnet tool too. The samples need it as long as no published package has the
+       backend-agnostic GPU API they use (gpu.*, HybRunner.Create) and the METAL backend. -->
   <PropertyGroup Condition="'$(HybridizerDir)' != ''">
     <!-- HybridizerDir as given (a global property cannot be changed), _HybridizerDir with its full path and a slash -->
     <_HybridizerDir>$([MSBuild]::EnsureTrailingSlash('$([System.IO.Path]::GetFullPath('$(HybridizerDir)'))'))</_HybridizerDir>
-    <HybridizerTranscoder Condition="'$(HybridizerTranscoder)' == ''">dotnet "$(_HybridizerDir)Hybridizer.Application.dll"</HybridizerTranscoder>
+    <!-- CUDA keeps the tool: CompileCUDA builds what its transcoder, the Essentials one, writes -->
+    <HybridizerTranscoder Condition="'$(HybridizerTranscoder)' == '' And '$(HybridizerFlavor)' == 'METAL'">dotnet "$(_HybridizerDir)Hybridizer.Application.dll"</HybridizerTranscoder>
   </PropertyGroup>
   <PropertyGroup>
     <!-- the command that transcodes, which GenerateCUDA and GenerateMETAL run -->
