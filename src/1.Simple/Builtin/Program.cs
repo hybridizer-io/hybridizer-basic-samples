@@ -37,8 +37,13 @@ namespace Builtin
             dynamic wrapped = runner.Wrap(new Program());
 
             wrapped.Run(N, a, result);
-            cuda.DeviceSynchronize();
+            gpu.Check(gpu.DeviceSynchronize());
             Console.Out.WriteLine("sum = {0}", result[0]);
+            if (result[0] != N * (N - 1) / 2)
+            {
+                Console.Error.WriteLine("ERROR : expected {0}", N * (N - 1) / 2);
+                Environment.Exit(6); // abort
+            }
         }
     }
 }

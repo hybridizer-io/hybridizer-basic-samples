@@ -70,11 +70,11 @@ namespace LambdaReduction
 			Parallel.For(0, N, i => a[i] = (float) random.NextDouble());
 
 			// hybridizer configuration
-			cudaDeviceProp prop;
-			cuda.GetDeviceProperties(out prop, 0);
+			gpuDeviceProp prop;
+			gpu.GetDeviceProperties(out prop, 0);
 			int gridDimX = 16 * prop.multiProcessorCount;
             int blockDimX = 256;
-            cuda.DeviceSetCacheConfig(cudaFuncCache.cudaFuncCachePreferShared);
+            gpu.DeviceSetCacheConfig(gpuFuncCache.gpuFuncCachePreferShared);
             HybRunner runner = SatelliteLoader.Load().SetDistrib(gridDimX, 1, blockDimX, 1, 1, blockDimX * sizeof(float));
 			float[] buffMax = new float[1];
 			float[] buffAdd = new float[1];
@@ -83,7 +83,7 @@ namespace LambdaReduction
 			// device reduction
 			wrapped.ReduceMax(buffMax, a, N);
 			wrapped.ReduceAdd(buffAdd, a, N);
-			cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+			gpu.Check(gpu.DeviceSynchronize());
 
 			// check results
 			float expectedMax = a.AsParallel().Aggregate((x, y) => Math.Max(x, y));

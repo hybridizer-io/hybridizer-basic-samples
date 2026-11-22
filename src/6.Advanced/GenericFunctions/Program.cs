@@ -46,7 +46,7 @@ namespace GenericFunctions
             float[] a = new float[N];
             var vect = new Vector<float>(a);
             SatelliteLoader.Load().Wrap(new Operations()).Add(vect, 1.0F);
-            cuda.DeviceSynchronize();
+            gpu.Check(gpu.DeviceSynchronize());
             
             for (int i = 0; i < N; ++i)
             {

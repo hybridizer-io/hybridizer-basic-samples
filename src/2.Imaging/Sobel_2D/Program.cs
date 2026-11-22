@@ -29,6 +29,22 @@ namespace Hybridizer.Basic.Imaging
             wrapper.ComputeSobel(outputPixels, inputPixels);
 
             SaveImage("lena-sobel.bmp", outputPixels, size);
+
+            // the same filter in C#; the kernel writes no border pixel
+            byte[,] expected = new byte[size, size];
+            ComputeSobel(expected, inputPixels);
+            for (int i = 1; i < size - 1; ++i)
+            {
+                for (int j = 1; j < size - 1; ++j)
+                {
+                    if (outputPixels[i, j] != expected[i, j])
+                    {
+                        Console.Error.WriteLine($"ERROR at ({i}, {j}) : {outputPixels[i, j]} != {expected[i, j]}");
+                        Environment.Exit(6); // abort
+                    }
+                }
+            }
+            Console.Out.WriteLine("OK");
 			try { Process.Start("lena-sobel.bmp");} catch {} // catch exception for non interactives machines
         }
 

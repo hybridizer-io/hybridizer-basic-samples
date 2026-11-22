@@ -40,7 +40,8 @@ namespace Hybridizer.Basic.Maths
 
             #region CUDA 
 
-            HybRunner runner = SatelliteLoader.Load().SetDistrib(4, 5, 8, 32, 32, 0);
+            // a grid of 4 x 5 blocks of 8 x 32 threads (8 x 32 x 32 threads is more than a block of any GPU has)
+            HybRunner runner = SatelliteLoader.Load().SetDistrib(4, 5, 8, 32, 1, 0);
             dynamic wrapper = runner.Wrap(new Program());
             
             for (int i = 0; i < redo; ++i)
@@ -59,7 +60,13 @@ namespace Hybridizer.Basic.Maths
                 });
             }
             #endregion
-            
+
+            // NaiveMatrix.Equals allows a difference of 1E-3 per element
+            if (!res_net.Equals(res_cuda))
+            {
+                Console.Error.WriteLine("ERROR : the GPU and C# products differ");
+                Environment.Exit(6); // abort
+            }
             Console.Out.WriteLine("DONE");
         }
 

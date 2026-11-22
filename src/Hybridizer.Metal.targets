@@ -1,0 +1,51 @@
+<Project>
+  <!-- The METAL build of the samples (Apple GPUs, macOS), imported by Directory.Build.targets when HybridizerFlavor is
+       METAL. After the build of a sample, GenerateMETAL transcodes it for METAL, then builds its satellite,
+       <Name>_METAL.dylib, next to the program, where SatelliteLoader finds it: the host side of the kernels, compiled
+       by clang++, with their Metal Shading Language embedded, which the Metal runtime compiles at the first launch
+       (no Metal toolchain needed). It takes a build of hybridizer-software-suite with the METAL backend
+       (HybridizerDir): its transcoder, its runtime, libhyb_metal_rt.dylib and native/build-satellite.sh.
+
+       A sample transcodes Hybridizer.Runtime.CUDAImports.dll and its own assembly with the options of its
+       GenerateCUDA; one whose GenerateCUDA has more says it with these properties:
+         HybridizerAssemblies  assemblies to transcode with it, by name, as Utilities (NaiveMatrix, SparseMatrix...)
+         HybridizerOptions     more options of the transcoder, as the one of hybrid arrays (Sobel_2D)
+         HybridizerBuiltins    builtins files of the project, as sample.builtins (Builtin)
+       and HybridizerMetal=false leaves out a sample that only runs on CUDA. -->
+
+  <!-- CUDA is not built: the targets that would detect, generate and compile it do nothing -->
+  <Target Name="DetectCudaVersion" />
+  <Target Name="Hybridizer_GenerateCudaSettings" />
+  <Target Name="DetectVisualStudio" />
+  <Target Name="DetectGPUArch" />
+  <Target Name="GenerateCUDA" />
+  <Target Name="CompileCUDA" />
+
+  <ItemGroup Condition="'$(HybridizerDir)' != ''">
+    <!-- the Metal runtime, which the backend and the satellite load from the directory of the program -->
+    <None Include="$(_HybridizerDir)libhyb_metal_rt.dylib" Link="libhyb_metal_rt.dylib" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="HybridizerCheckMetal" BeforeTargets="CollectPackageReferences;ResolveAssemblyReferences">
+    <Error Condition="'$(HybridizerDir)' == ''"
+           Text="METAL needs a build of hybridizer-software-suite with the METAL backend: set HybridizerDir to its output (README.md), or build for another flavor with -p:HybridizerFlavor=..." />
+    <Error Condition="'$(HybridizerDir)' != '' And !Exists('$(_HybridizerDir)libhyb_metal_rt.dylib')"
+           Text="$(_HybridizerDir) has no libhyb_metal_rt.dylib: it is built with the METAL backend on macOS, with metal-cpp (METAL_CPP)" />
+  </Target>
+
+  <Target Name="GenerateMETAL" AfterTargets="Build" Condition="'$(OutputType)' == 'Exe' And '$(HybridizerMetal)' != 'false'">
+    <PropertyGroup>
+      <_HybridizerMetalSources>generated-sources</_HybridizerMetalSources>
+      <_HybridizerMetalSatellite>$(OutDir)$(MSBuildProjectName)_METAL.dylib</_HybridizerMetalSatellite>
+    </PropertyGroup>
+    <ItemGroup>
+      <_HybridizerMetalAssembly Include="Hybridizer.Runtime.CUDAImports;$(HybridizerAssemblies);$(TargetName)" />
+      <_HybridizerMetalBuiltins Include="hybridizer.metal.builtins;$(HybridizerBuiltins)" />
+    </ItemGroup>
+    <MakeDir Directories="$(_HybridizerMetalSources)" />
+    <Exec Command="$(HybridizerTranscoder) --dll-fullpaths &quot;@(_HybridizerMetalAssembly->'$(OutDir)%(Identity).dll')&quot; --generate-line-info --use-function-pointers $(HybridizerOptions) --working-directory $(_HybridizerMetalSources) --flavors METAL --builtins &quot;@(_HybridizerMetalBuiltins)&quot;"
+          StandardOutputImportance="High" StandardErrorImportance="High" />
+    <Exec Command="bash &quot;$(_HybridizerDir)native/build-satellite.sh&quot; $(_HybridizerMetalSources) &quot;$(_HybridizerMetalSatellite)&quot; &quot;$(_HybridizerDir)&quot;"
+          StandardOutputImportance="High" StandardErrorImportance="High" />
+  </Target>
+</Project>

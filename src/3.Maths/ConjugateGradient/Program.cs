@@ -12,8 +12,8 @@ namespace Hybridizer.Basic.Maths
         static void Main(string[] args)
         {
             // configure CUDA
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
             runner = SatelliteLoader.Load().SetDistrib(prop.multiProcessorCount * 16, 1, 128, 1, 1, 128 * sizeof(float));
             wrapper = runner.Wrap(new Program());
 
@@ -32,6 +32,22 @@ namespace Hybridizer.Basic.Maths
             }
             
             ConjugateGradient(X, A, B, maxiter, eps);
+
+            // the exact solution of this system is x[i] = (i + 1) (size - i) / 2
+            double error = 0.0, norm = 0.0;
+            for (int i = 0; i < size; ++i)
+            {
+                double exact = (i + 1.0) * (size - i) / 2.0;
+                error += (X[i] - exact) * (X[i] - exact);
+                norm += exact * exact;
+            }
+            double relativeError = Math.Sqrt(error / norm);
+            Console.WriteLine($"relative error to the exact solution : {relativeError}");
+            if (!(relativeError < 1.0E-3))
+            {
+                Console.Error.WriteLine("ERROR : the solution is not accurate enough");
+                Environment.Exit(6); // abort
+            }
         }
 
         public static void ConjugateGradient(FloatResidentArray X, SparseMatrix A, FloatResidentArray B, int maxiter, float eps)
@@ -72,7 +88,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        private static void ScalarProd([Out] float[] result, FloatResidentArray r1, FloatResidentArray r2, int N)
+        private static void ScalarProd([Out] float[] result, [In] FloatResidentArray r1, [In] FloatResidentArray r2, int N)
         {
             var cache = new SharedMemoryAllocator<float>().allocate(blockDim.x);
             int tid = threadIdx.x + blockDim.x * blockIdx.x;
@@ -108,7 +124,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        public static void Copy(FloatResidentArray res, FloatResidentArray src, int N)
+        public static void Copy([In] FloatResidentArray res, [In] FloatResidentArray src, int N)
         {
             Parallel.For(0, N, (i) =>
             {
@@ -117,7 +133,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        public static void Saxpy(FloatResidentArray res, FloatResidentArray x, float alpha, FloatResidentArray y, int N)
+        public static void Saxpy([In] FloatResidentArray res, [In] FloatResidentArray x, float alpha, [In] FloatResidentArray y, int N)
         {
             Parallel.For(0, N, (i) =>
             {
@@ -127,7 +143,7 @@ namespace Hybridizer.Basic.Maths
 
         // res = A - m*v
         [EntryPoint]
-        public static void Fmsub(FloatResidentArray res, FloatResidentArray A, SparseMatrix m, FloatResidentArray v, int N)
+        public static void Fmsub([In] FloatResidentArray res, [In] FloatResidentArray A, [In] SparseMatrix m, [In] FloatResidentArray v, int N)
         {
             Parallel.For(0, N, (i) =>
             {
@@ -144,7 +160,7 @@ namespace Hybridizer.Basic.Maths
         }
 
         [EntryPoint]
-        public static void Multiply(FloatResidentArray res, SparseMatrix m, FloatResidentArray v, int N)
+        public static void Multiply([In] FloatResidentArray res, [In] SparseMatrix m, [In] FloatResidentArray v, int N)
         {
             Parallel.For(0, N, (i) =>
             {

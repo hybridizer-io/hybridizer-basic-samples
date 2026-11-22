@@ -46,8 +46,8 @@ namespace Recursion
                 b[i] = i % 11;
             }
 
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
             //if .SetDistrib is not used, the default is .SetDistrib(prop.multiProcessorCount * 16, 128)
             HybRunner runner = SatelliteLoader.Load();
 
@@ -55,8 +55,8 @@ namespace Recursion
             dynamic wrapped = runner.Wrap(new Program());
 
             wrapped.Run(N, a, b);
-            cuda.ERROR_CHECK(cuda.GetLastError());
-            cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+            gpu.Check(gpu.GetLastError());
+            gpu.Check(gpu.DeviceSynchronize());
 
             for (int i = 0; i < N; ++i)
             {

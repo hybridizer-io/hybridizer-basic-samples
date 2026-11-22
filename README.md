@@ -25,6 +25,28 @@ cd hybridizer-basic-samples/src/<chapter>/<sample>
 dotnet run
 ```
 
+## A build of Hybridizer in place of the packages (`HybridizerDir`)
+The samples call the GPU API common to every backend (`gpu.*`, `HybRunner.Create`), so that the same sample runs on CUDA and on Apple GPUs. No published `Hybridizer.Runtime.CUDAImports` package has it yet (3.7.1 is the latest): build the runtime and the transcoder of [hybridizer-software-suite](https://github.com/hybridizer-io/hybridizer-software-suite) into one directory, and point the samples at it with `HybridizerDir` (an MSBuild property or an environment variable); without it, the build stops and says so. It replaces the package. For METAL its transcoder also replaces the `hybridizer` dotnet tool; for CUDA the tool stays, since `CompileCUDA` builds what the Essentials transcoder writes (`-p:HybridizerTranscoder=<command>` chooses another one). The Essentials (BASIC) build of the transcoder, the one the tool ships, does not handle METAL yet: build it as below (`HYBRIDIZER_MAIN`).
+
+```
+SUITE=<hybridizer-software-suite checkout>
+DIR=<a directory for the build>
+dotnet build $SUITE/Hybridizer/Runtime/CUDAImports/src/Hybridizer.Runtime.CUDAImports.csproj -c Release -property:Platform=x64 -p:PlatformTarget=AnyCPU -p:VERSION=3.7.0.0 -o $DIR
+dotnet build $SUITE/Hybridizer.Application/Hybridizer.Application.csproj -c Release -property:Platform=x64 -p:PlatformTarget=AnyCPU -p:MyConstants=HYBRIDIZER_MAIN -o $DIR
+export HybridizerDir=$DIR
+cd src/<chapter>/<sample> && dotnet run
+```
+
+## Apple GPUs (macOS, Metal)
+On macOS the samples are built for the METAL flavor (`HybridizerFlavor`, see `src/Directory.Build.props`): after the build, `src/Hybridizer.Metal.targets` transcodes the sample for Metal and builds its satellite, `<Name>_METAL.dylib`, next to the program; `SatelliteLoader` loads it. The Metal Shading Language it embeds is compiled by the Metal runtime at the first launch of a kernel: no Metal toolchain is needed, only the Xcode command line tools (`clang++`) and, to build the runtime of the suite, the [metal-cpp](https://developer.apple.com/metal/cpp/) headers (`/opt/homebrew/include/metal_cpp`, or `METAL_CPP`). Apple GPUs have no double precision: `double` is computed in software, IEEE-754 to the bit, much slower than `float`.
+
+On Metal a launch returns before its kernel is done, on the null stream too (the CUDA wrappers wait for theirs there): what reads the results waits for them, a copy back (`gpu.Memcpy`, `RefreshHost`), the managed arrays a call brings back before it returns, `gpu.DeviceSynchronize`; a time measured around launches alone is that of their launch. `HYB_METAL_LAUNCH_BLOCKING=1` makes each launch wait for its kernel, as `CUDA_LAUNCH_BLOCKING=1` does. Host memory from `gpu.HostAlloc`, or registered with `gpu.HostRegister` and `gpuHostRegisterMapped` (a pinned array), is read and written by kernels in place, through the device pointer `gpu.HostGetDevicePointer` gives: no copy.
+
+CUDA only: the window of NBody (`dotnet run -- --check` runs its simulation without one), Mandelbulb (OpenGL interop and CUDA surfaces), WmmaGemm (tensor cores) and tiny-llama. Not yet on Metal: Malloc (`new` in a kernel), SimpleMetadataDecorator (arrays of objects, strings). What kernels write to the console goes through `os_log`, macOS 15 and later.
+
+## Checking every sample
+`scripts/run-samples.sh` builds every sample, runs it on the GPU and tells which ones compute what their C# computes (each sample compares its results with C# and exits with an error when they differ): `HybridizerDir=$DIR scripts/run-samples.sh [sample ...]`, results in `/tmp/hyb-samples-run/matrix.tsv` (`OUT`).
+
 ## Troubleshooting
 - `cuLinkAddData (222)` "unsupported toolchain" — your driver is older than the nvrtc that produced the PTX. Update the NVIDIA driver, or build with `-p:CUDAVersion=<a version your driver supports>` (and have that CUDA toolkit installed).
 - `MSVC/cl.exe with traditional preprocessor` (CCCL header error on Windows) — already handled by the samples (they pass `/Zc:preprocessor` to `cl.exe`). If you adapt the build outside the samples, add `-Xcompiler /Zc:preprocessor` to your `nvcc` invocation.

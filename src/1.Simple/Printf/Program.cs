@@ -32,7 +32,7 @@ namespace SimplePrintf
 
             // synchronize the GPU to flush stdout on the device
             // add error checking
-            cuda.ERROR_CHECK(cuda.DeviceSynchronize());
+            gpu.Check(gpu.DeviceSynchronize());
         }
     }
 }

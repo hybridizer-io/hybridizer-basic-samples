@@ -37,8 +37,8 @@ namespace Hybridizer.Basic.Finance
                 optionYears_net[i] = rand.NextFloat4(0.25f, 10f);
             }
 
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
             HybRunner runner = SatelliteLoader.Load().SetDistrib(8 * prop.multiProcessorCount, 256);
             dynamic wrapper = runner.Wrap(new Program());
             
@@ -245,6 +245,13 @@ namespace Hybridizer.Basic.Finance
 
             Console.WriteLine("CALL ERRORS : Linf : {0:G17}, L2 : {1:G17}, L1: {2:G17}", maxCallError, callL2Error, callL1Error);
             Console.WriteLine("PUT ERRORS  : Linf : {0:G17}, L2 : {1:G17}, L1: {2:G17}", maxPutError, putL2Error, putL1Error);
+
+            // prices are below 30, and the GPU computes exp, log and sqrt in single precision
+            if (maxCallError > 1.0E-3F || maxPutError > 1.0E-3F)
+            {
+                Console.Error.WriteLine("ERROR : the GPU and C# prices differ by more than 1E-3");
+                Environment.Exit(6); // abort
+            }
         }
     }
 }

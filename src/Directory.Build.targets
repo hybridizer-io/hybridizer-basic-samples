@@ -129,4 +129,23 @@
     <Message Text="$(FullExecCommand)" Importance="High" />
     <Exec Command="$(FullExecCommand)" StandardOutputImportance="High" StandardErrorImportance="High" />
   </Target>
+
+  <!-- A build of hybridizer-software-suite (HybridizerDir, see Directory.Build.props) in place of the package: the
+       compatibility facade the samples reference, the runtime and every backend, which HybRunner loads by name. -->
+  <ItemGroup Condition="'$(HybridizerDir)' != ''">
+    <PackageReference Remove="Hybridizer.Runtime.CUDAImports" />
+    <Reference Include="Hybridizer.Runtime.CUDAImports;Hybridizer.Runtime;Hybridizer.Backends.CUDA;Hybridizer.Backends.HIP;Hybridizer.Backends.OMP;Hybridizer.Backends.AVX;Hybridizer.Backends.METAL">
+      <HintPath>$(_HybridizerDir)%(Identity).dll</HintPath>
+    </Reference>
+    <!-- the dependency of Hybridizer.Runtime its package would bring -->
+    <PackageReference Include="System.Text.Json" Version="10.0.1" />
+  </ItemGroup>
+
+  <!-- The published Hybridizer.Runtime.CUDAImports packages (3.x) predate the GPU API the samples call -->
+  <Target Name="HybridizerCheckRuntime" BeforeTargets="CollectPackageReferences;ResolveAssemblyReferences" Condition="'$(HybridizerDir)' == ''">
+    <Error Condition="'%(PackageReference.Identity)' == 'Hybridizer.Runtime.CUDAImports' And $([System.String]::Copy('%(PackageReference.Version)').StartsWith('3.'))"
+           Text="The samples call the GPU API common to every backend (gpu.*, HybRunner.Create), which Hybridizer.Runtime.CUDAImports %(PackageReference.Version) does not have: build hybridizer-software-suite and set HybridizerDir to its output (README.md)." />
+  </Target>
+
+  <Import Project="Hybridizer.Metal.targets" Condition="'$(HybridizerFlavor)' == 'METAL'" />
 </Project>

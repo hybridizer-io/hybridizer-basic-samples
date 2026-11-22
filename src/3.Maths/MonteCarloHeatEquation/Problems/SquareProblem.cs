@@ -79,6 +79,15 @@ namespace MonteCarloHeatEquation
             _inner[((int)(y - 1)) * (_N - 1) + (int)(x - 1)] = temperature * _invIter;
         }
 
+        /// <summary>
+        /// Temperature found at the inner point (x, y), 0 &lt; x, y &lt; N
+        /// </summary>
+        [HybridizerIgnore]
+        public float Temperature(int x, int y)
+        {
+            return _inner[(y - 1) * (_N - 1) + (x - 1)];
+        }
+
         [HybridizerIgnore]
         public void SaveImage(string fileName, Func<float, Color> GetColor)
         {

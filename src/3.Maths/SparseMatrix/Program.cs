@@ -20,8 +20,8 @@ namespace Hybridizer.Basic.Maths
             float[] B = new float[A.rows.Length - 1];
 
             #region CUDA
-            cudaDeviceProp prop;
-            cuda.GetDeviceProperties(out prop, 0);
+            gpuDeviceProp prop;
+            gpu.GetDeviceProperties(out prop, 0);
 
             HybRunner runner = SatelliteLoader.Load().SetDistrib(8 * prop.multiProcessorCount, 256);
             dynamic wrapper = runner.Wrap(new Program());
@@ -31,6 +31,19 @@ namespace Hybridizer.Basic.Maths
                 wrapper.Multiply(B, A, X, X.Length);
             }
             #endregion
+
+            // the same product in C#: the same sums in the same order
+            float[] expected = new float[B.Length];
+            Multiply(expected, A, X, X.Length);
+            for (int i = 0; i < B.Length; ++i)
+            {
+                if (B[i] != expected[i])
+                {
+                    Console.Error.WriteLine($"ERROR at {i} : {B[i]} != {expected[i]}");
+                    Environment.Exit(6); // abort
+                }
+            }
+            Console.Out.WriteLine("OK");
         }
 
         private static void ReadArguments(string[] args, out string matrixFile, out string? vectorFile)

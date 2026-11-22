@@ -22,6 +22,6 @@
 
   <Target Name="GenerateCUDA" AfterTargets="Build">
     <MakeDir Directories="generated-sources" />
-    <Exec Command="hybridizer --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)Intrinsics.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --additional-jit-headers &quot;cuda_fp16.h=$(CUDA_PATH)/include;cuda_fp16.hpp=$(CUDA_PATH)/include&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
+    <Exec Command="$(HybridizerTranscoder) --dll-fullpaths &quot;$(OutDir)Hybridizer.Runtime.CUDAImports.dll;$(OutDir)Intrinsics.dll&quot; --generate-line-info --use-function-pointers --working-directory generated-sources --flavors CUDA --jit-cuda-version &quot;$(CUDAVersion)&quot;  --builtins hybridizer.cuda.builtins --jit-compil-options &quot;-I.;-Igenerated-sources;--std=c++17;--gpu-architecture=auto;-DNO_EXCEPTION;--relocatable-device-code=true&quot; --additional-jit-headers &quot;cuda_fp16.h=$(CUDA_PATH)/include;cuda_fp16.hpp=$(CUDA_PATH)/include&quot; --display-license-details" StandardOutputImportance="High" StandardErrorImportance="High" IgnoreExitCode="false" />
   </Target>
 </Project>

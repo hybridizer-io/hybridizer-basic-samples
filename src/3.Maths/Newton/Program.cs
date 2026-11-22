@@ -151,8 +151,27 @@ namespace Newton
                 ComputeImage(result_cuda, true);
             }
             stopwatch.Stop();
-            Console.WriteLine($"CUDA time per image : {stopwatch.ElapsedMilliseconds / redo} ms");
+            Console.WriteLine($"GPU time per image : {stopwatch.ElapsedMilliseconds / redo} ms");
 
+            #endregion
+
+            #region check
+            // the iteration stops within tol = 1E-7 of a root, the resolution of float: an operation the GPU rounds
+            // otherwise than C# (a contraction into a fused multiply-add, a division) may make it stop an iteration
+            // or two earlier or later (one pixel in eight), and a point on the edge of a basin may reach another root
+            result_cuda.RefreshHost();
+            int differences = 0;
+            for (int i = 0; i < N * N; ++i)
+            {
+                if (result_cuda[i].x != result_net[i].x || Math.Abs(result_cuda[i].y - result_net[i].y) > 2)
+                    ++differences;
+            }
+            Console.WriteLine($"{differences} pixels differ from C# by another root or more than two iterations");
+            if (differences > N * N / 1000)
+            {
+                Console.Error.WriteLine("ERROR : more than 0.1% of the pixels differ");
+                Environment.Exit(6); // abort
+            }
             #endregion
 
             #region save to image

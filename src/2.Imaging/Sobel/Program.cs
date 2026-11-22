@@ -30,6 +30,22 @@ namespace Sobel
            
 
             SaveImage("lena-sobel.bmp", outputPixels, width, height);
+
+            // the same filter in C#; the kernel writes no border pixel
+            byte[] expected = new byte[width * height];
+            ComputeSobel(expected, inputPixels, width, height, 0, height);
+            for (int i = 1; i < height - 1; ++i)
+            {
+                for (int j = 1; j < width - 1; ++j)
+                {
+                    if (outputPixels[i * width + j] != expected[i * width + j])
+                    {
+                        Console.Error.WriteLine($"ERROR at ({i}, {j}) : {outputPixels[i * width + j]} != {expected[i * width + j]}");
+                        Environment.Exit(6); // abort
+                    }
+                }
+            }
+            Console.Out.WriteLine("OK");
         }
 
         public static void ReadImage(byte[] inputPixel, Image<Rgba32> image, int width, int height)
